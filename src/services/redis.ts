@@ -1,58 +1,25 @@
 /**
- * Redis Cloud Service Client
+ * Upstash Redis Service Client
  * 
- * Provides functions to interact with Redis Cloud via REST API
+ * Provides functions to interact with Upstash Redis via REST API
  */
 
+import { Redis } from '@upstash/redis';
 import type { User } from '../../schema/v1/user';
 import { createUserKey, normalizeFullName, validateFullName } from '../../schema/v1/user';
-import type { RedisResponse } from '../types';
 
-const REDIS_ENDPOINT = import.meta.env.VITE_REDIS_ENDPOINT || '';
-const REDIS_AUTH_TOKEN = import.meta.env.VITE_REDIS_AUTH_TOKEN || '';
+const UPSTASH_REDIS_REST_URL = import.meta.env.VITE_UPSTASH_REDIS_REST_URL || '';
+const UPSTASH_REDIS_REST_TOKEN = import.meta.env.VITE_UPSTASH_REDIS_REST_TOKEN || '';
 
-if (!REDIS_ENDPOINT) {
-  console.warn('VITE_REDIS_ENDPOINT is not set. Redis operations will fail.');
+if (!UPSTASH_REDIS_REST_URL || !UPSTASH_REDIS_REST_TOKEN) {
+  console.warn('Upstash Redis credentials are not set. Redis operations will fail.');
 }
 
-/**
- * Makes a request to the Redis Cloud REST API
- * 
- * @param command - Redis command to execute
- * @param args - Arguments for the command
- * @returns Promise with Redis response
- */
-async function redisRequest<T = string>(
-  command: string,
-  ...args: string[]
-): Promise<RedisResponse<T>> {
-  try {
-    const url = `${REDIS_ENDPOINT}/${command}`;
-    const body = args.length > 0 ? JSON.stringify({ args }) : undefined;
-
-    const response = await fetch(url, {
-      method: args.length > 0 ? 'POST' : 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(REDIS_AUTH_TOKEN && { Authorization: `Bearer ${REDIS_AUTH_TOKEN}` }),
-      },
-      body,
-    });
-
-    if (!response.ok) {
-      throw new Error(`Redis API error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Redis request failed:', error);
-    return {
-      result: null,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
-  }
-}
+// Initialize Upstash Redis client
+const redis = new Redis({
+  url: UPSTASH_REDIS_REST_URL,
+  token: UPSTASH_REDIS_REST_TOKEN,
+});
 
 /**
  * Gets a value from Redis by key
@@ -61,8 +28,13 @@ async function redisRequest<T = string>(
  * @returns Promise with the value or null if not found
  */
 async function get(key: string): Promise<string | null> {
-  const response = await redisRequest<string>(`GET/${encodeURIComponent(key)}`);
-  return response.result;
+  try {
+    const result = await redis.get(key);
+    return result as string | null;
+  } catch (error) {
+    console.error('Redis GET failed:', error);
+    return null;
+  }
 }
 
 /**
@@ -73,8 +45,13 @@ async function get(key: string): Promise<string | null> {
  * @returns Promise indicating success
  */
 async function set(key: string, value: string): Promise<boolean> {
-  const response = await redisRequest(`SET`, key, value);
-  return response.result !== null && !response.error;
+  try {
+    await redis.set(key, value);
+    return true;
+  } catch (error) {
+    console.error('Redis SET failed:', error);
+    return false;
+  }
 }
 
 /**
@@ -145,4 +122,27 @@ export async function setUser(fullName: string): Promise<User | null> {
     normalizedName: normalized,
     fullName,
   };
+}
+
+/**
+ * Gets a user's password from Redis
+ * 
+ * @param redisKey - The Redis key for the user (e.g., "emily_kwan")
+ * @returns Promise with the password or null if not found
+ */
+export async function getUserPassword(redisKey: string): Promise<string | null> {
+  const passwordKey = `user:${redisKey}:password`;
+  return await get(passwordKey);
+}
+
+/**
+ * Validates a user's password
+ * 
+ * @param redisKey - The Redis key for the user
+ * @param password - The password to validate
+ * @returns Promise with true if password matches, false otherwise
+ */
+export async function validatePassword(redisKey: string, password: string): Promise<boolean> {
+  const storedPassword = await getUserPassword(redisKey);
+  return storedPassword === password;
 }

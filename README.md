@@ -55,7 +55,13 @@ cd wed
 npm install
 ```
 
-### 3. Configure Environment Variables
+### 3. Install Dependencies
+
+```bash
+npm install
+```
+
+### 4. Configure Environment Variables
 
 Create a `.env` file in the root directory:
 
@@ -63,42 +69,43 @@ Create a `.env` file in the root directory:
 cp .env.example .env
 ```
 
-Edit `.env` and add your Redis Cloud credentials:
+Edit `.env` and add your Upstash Redis credentials:
 
 ```env
-VITE_REDIS_ENDPOINT=https://your-redis-cloud-endpoint.com
-VITE_REDIS_AUTH_TOKEN=your-auth-token-here
+VITE_UPSTASH_REDIS_REST_URL=https://your-upstash-redis-url.upstash.io
+VITE_UPSTASH_REDIS_REST_TOKEN=your-upstash-rest-token-here
 ```
 
-**Important**: Replace these values with your actual Redis Cloud REST API endpoint and authentication token.
+**Important**: Replace these values with your actual Upstash Redis REST URL and token.
 
-### 4. Redis Cloud Setup
+### 5. Upstash Redis Setup
 
-To use Redis Cloud with this application:
+To use Upstash Redis with this application:
 
-1. Create a Redis Cloud account at [redis.com](https://redis.com)
-2. Create a database with REST API enabled
-3. Configure CORS to allow requests from your GitHub Pages domain
-4. Obtain your REST API endpoint and authentication token
-5. Add these to your `.env` file
+1. Create an Upstash account at [upstash.com](https://upstash.com)
+2. Create a new Redis database
+3. Copy the **REST URL** and **REST Token** from your database dashboard
+4. Add these to your `.env` file
 
-**Note**: The Redis Cloud REST API must support:
-- GET requests for reading values
-- POST requests for writing values
-- Proper CORS configuration for browser access
+**Note**: Upstash Redis provides a REST API that works directly from browsers, making it perfect for client-side applications. The REST API supports all standard Redis commands via HTTP requests.
 
-### 5. Populate User Data
+### 6. Populate User Data
 
-Before users can sign in, you need to populate the Redis database with user names. Each user should be stored with:
+Before users can sign in, you need to populate the Upstash Redis database with user passwords. Each user's password should be stored with:
 
-- **Key**: `user:{normalized-full-name}` (lowercase, trimmed)
-- **Value**: Full name (original capitalization)
+- **Key**: `user:{redis_key}:password` (where `redis_key` comes from `src/config/users.ts`)
+- **Value**: The user's password (plain text for now, as this is a small private wedding)
 
-Example:
-- Key: `user:john doe`
-- Value: `John Doe`
+Example for the seeded users:
+- Key: `user:emily_kwan:password`
+- Value: `your-password-here`
+- Key: `user:arden_chew:password`
+- Value: `your-password-here`
 
-You can populate users using the Redis Cloud console, CLI, or the `setUser` function in the codebase during development.
+You can populate passwords using:
+- The Upstash Redis console web interface
+- The Upstash CLI
+- A simple script using the `@upstash/redis` package
 
 ### 6. Development
 

@@ -140,6 +140,55 @@ body {
   cursor: not-allowed;
 }
 
+.user-name {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--secondary-color);
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  background-color: #f5f5f5;
+  border-radius: 6px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+}
+
+.form-actions .submit-button {
+  flex: 1;
+  width: auto;
+}
+
+.back-button {
+  flex: 1;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-color);
+  background-color: var(--white);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.back-button:hover:not(:disabled) {
+  border-color: var(--text-light);
+  background-color: #fafafa;
+}
+
+.back-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.back-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Home Page Styles */
 .home-container {
   min-height: 100vh;

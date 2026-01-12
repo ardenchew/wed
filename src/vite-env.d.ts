@@ -1,8 +1,8 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_REDIS_ENDPOINT: string
-  readonly VITE_REDIS_AUTH_TOKEN: string
+  readonly VITE_UPSTASH_REDIS_REST_URL: string
+  readonly VITE_UPSTASH_REDIS_REST_TOKEN: string
 }
 
 interface ImportMeta {
