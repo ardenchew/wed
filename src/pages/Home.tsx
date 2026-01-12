@@ -21,7 +21,7 @@ export default function Home() {
     <div className="home-container">
       <div className="home-content">
         <header className="home-header">
-          <h1>Welcome, {user?.fullName}!</h1>
+          <h1>Welcome, {user ? (user.nickname || user.first) : 'Guest'}!</h1>
           <button onClick={signOut} className="sign-out-button">
             Sign Out
           </button>

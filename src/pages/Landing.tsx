@@ -9,8 +9,8 @@ import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { validatePassword } from '../services/redis';
 import { getAllDisplayNames, getRedisKeyForDisplayName } from '../config/users';
+import { GUESTS } from '../config/guests';
 import { searchDisplayName } from '../utils/search';
-import { normalizeFullName } from '../../schema/v1/user';
 import '../styles/index.css';
 
 export default function Landing() {
@@ -85,13 +85,14 @@ export default function Landing() {
       const isValid = await validatePassword(redisKey, password.trim());
       
       if (isValid) {
-        // Sign in the user
-        const normalizedName = normalizeFullName(matchedDisplayName);
-        signIn({
-          normalizedName,
-          fullName: matchedDisplayName,
-        });
-        navigate('/home');
+        // Get guest from config using the user_key
+        const guest = GUESTS[redisKey];
+        if (guest) {
+          signIn(guest);
+          navigate('/home');
+        } else {
+          setError('Failed to load guest data. Please try again.');
+        }
       } else {
         setError('Incorrect password. Please try again.');
         setPassword('');

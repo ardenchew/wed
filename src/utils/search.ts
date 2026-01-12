@@ -81,18 +81,15 @@ export function searchDisplayName(
       let partialWordMatchCount = 0;
 
       for (const queryWord of queryWords) {
-        let matched = false;
         for (const nameWord of nameWords) {
           // Exact word match
           if (nameWord === queryWord) {
             wordMatchCount++;
-            matched = true;
             break;
           }
           // Partial word match (substring)
           if (nameWord.includes(queryWord) || queryWord.includes(nameWord)) {
             partialWordMatchCount++;
-            matched = true;
             break;
           }
         }

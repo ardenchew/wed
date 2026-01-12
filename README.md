@@ -4,10 +4,9 @@ A lightweight React + TypeScript wedding website that uses Redis Cloud as its da
 
 ## Features
 
-- **Simple Authentication**: Name-based sign-in (no passwords required)
+- **Simple Authentication**: Name-based sign-in with password validation
 - **Redis Integration**: Direct client-side interaction with Redis Cloud via REST API
 - **Responsive Design**: Mobile-first design that works on all devices
-- **Clean Architecture**: Versioned schema system for data structure management
 - **GitHub Pages Ready**: Configured for easy deployment to GitHub Pages
 
 ## Tech Stack
@@ -22,9 +21,8 @@ A lightweight React + TypeScript wedding website that uses Redis Cloud as its da
 
 ```
 wed/
-├── schema/              # Versioned Redis schema definitions
-│   └── v1/             # Schema version 1
 ├── src/
+│   ├── config/         # Configuration files (users, guests, events)
 │   ├── context/        # React Context providers
 │   ├── pages/          # Page components
 │   ├── services/       # External service integrations
@@ -89,17 +87,17 @@ To use Upstash Redis with this application:
 
 **Note**: Upstash Redis provides a REST API that works directly from browsers, making it perfect for client-side applications. The REST API supports all standard Redis commands via HTTP requests.
 
-### 6. Populate User Data
+### 6. Populate User Passwords
 
 Before users can sign in, you need to populate the Upstash Redis database with user passwords. Each user's password should be stored with:
 
-- **Key**: `user:{redis_key}:password` (where `redis_key` comes from `src/config/users.ts`)
-- **Value**: The user's password (plain text for now, as this is a small private wedding)
+- **Key**: `password:{user_key}` (where `user_key` comes from `src/config/users.ts`)
+- **Value**: The user's password (plain text string)
 
 Example for the seeded users:
-- Key: `user:emily_kwan:password`
+- Key: `password:emily_kwan`
 - Value: `your-password-here`
-- Key: `user:arden_chew:password`
+- Key: `password:arden_chew`
 - Value: `your-password-here`
 
 You can populate passwords using:
@@ -107,7 +105,7 @@ You can populate passwords using:
 - The Upstash CLI
 - A simple script using the `@upstash/redis` package
 
-### 6. Development
+### 7. Development
 
 Start the development server:
 
@@ -117,7 +115,7 @@ npm run dev
 
 The application will be available at `http://localhost:5173`
 
-### 7. Build for Production
+### 8. Build for Production
 
 ```bash
 npm run build
@@ -169,28 +167,6 @@ For GitHub Pages deployment, you have a few options:
 
 **Option 3: Public Configuration**
 - If using public endpoints, you can hardcode them (not recommended for production)
-
-## Schema Versioning
-
-The application uses a versioned schema system located in the `schema/` directory. This allows for:
-
-- **Future migrations**: Easy schema evolution without breaking existing data
-- **Type safety**: Schema definitions inform TypeScript types
-- **Documentation**: Clear structure of data models
-
-Current schema version: **v1**
-
-### User Schema (v1)
-
-- **Key Format**: `user:{normalized-full-name}`
-- **Value Format**: Full name (string)
-- **Normalization**: Lowercase, trimmed whitespace
-
-Example:
-```typescript
-Key: "user:john doe"
-Value: "John Doe"
-```
 
 ## Usage
 

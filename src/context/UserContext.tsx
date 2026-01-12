@@ -5,7 +5,7 @@
  */
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import type { User, UserContextType } from '../types';
+import type { Guest, UserContextType } from '../types';
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
@@ -16,7 +16,7 @@ interface UserProviderProps {
 }
 
 export function UserProvider({ children }: UserProviderProps) {
-  const [user, setUser] = useState<User | null>(() => {
+  const [user, setUser] = useState<Guest | null>(() => {
     // Load user from localStorage on mount
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -42,8 +42,8 @@ export function UserProvider({ children }: UserProviderProps) {
     }
   }, [user]);
 
-  const signIn = (userData: User) => {
-    setUser(userData);
+  const signIn = (guest: Guest) => {
+    setUser(guest);
   };
 
   const signOut = () => {
