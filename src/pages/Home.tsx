@@ -29,13 +29,6 @@ export default function Home() {
 
         <div className="action-buttons">
           <button
-            onClick={() => handleButtonClick('RSVP')}
-            className="action-button"
-          >
-            RSVP
-          </button>
-          
-          <button
             onClick={() => handleButtonClick('Schedule')}
             className="action-button"
           >

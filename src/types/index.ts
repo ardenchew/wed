@@ -9,34 +9,7 @@ export interface UserContextType {
   signOut: () => void;
 }
 
-// Redis response types
-export interface RedisResponse<T = string> {
-  result: T | null;
-  error?: string;
-}
-
-export interface RedisError {
-  error: string;
-  message?: string;
-}
-
 // Data models
-export enum RsvpResponse {
-  YES = 'YES',
-  NO = 'NO',
-}
-
-export interface RsvpEvent {
-  event_slug: string;
-  response: RsvpResponse;
-}
-
-export interface Rsvp {
-  guest: string; // guest slug
-  events: RsvpEvent[];
-  diet: string;
-}
-
 export interface Event {
   slug: string;
   name: string;
@@ -44,7 +17,6 @@ export interface Event {
   location: string;
   description: string;
   attire?: string;
-  rsvpable: boolean;
 }
 
 export interface Guest {
