@@ -4,16 +4,18 @@
  * Name input and password authentication page
  */
 
-import { useState, FormEvent } from 'react';
+import { useEffect, useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { GUESTS } from '../config/guests';
 import { getAllDisplayNames, getGuestSlugForDisplayName } from '../config/users';
 import { validatePassword } from '../services/store';
 import { searchDisplayName } from '../utils/search';
+import { Button } from '../components/Button';
 import '../styles/index.css';
 
 export default function Landing() {
+  const [isAuthVisible, setIsAuthVisible] = useState(false);
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [matchedDisplayName, setMatchedDisplayName] = useState<string | null>(null);
@@ -21,6 +23,16 @@ export default function Landing() {
   const [loading, setLoading] = useState(false);
   const { signIn } = useUser();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.body.classList.add('landing-no-scroll');
+    document.documentElement.classList.add('landing-no-scroll');
+
+    return () => {
+      document.body.classList.remove('landing-no-scroll');
+      document.documentElement.classList.remove('landing-no-scroll');
+    };
+  }, []);
 
   const handleNameSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -111,83 +123,94 @@ export default function Landing() {
     setName('');
   };
 
-  // Show password input if name matched
-  if (matchedDisplayName) {
-    return (
-      <div className="landing-container">
-        <div className="landing-content">
-          <h1>Welcome</h1>
-          <p className="subtitle">Please enter your password</p>
-          <p className="user-name">{matchedDisplayName}</p>
-          
-          <form onSubmit={handlePasswordSubmit} className="sign-in-form">
-            <div className="form-group">
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                className="name-input"
-                disabled={loading}
-                autoFocus
-              />
-            </div>
-            
-            {error && <div className="error-message">{error}</div>}
-            
-            <div className="form-actions">
-              <button
-                type="button"
-                onClick={handleBack}
-                className="back-button"
-                disabled={loading}
-              >
-                Back
-              </button>
-              <button 
-                type="submit" 
-                className="submit-button"
-                disabled={loading}
-              >
-                {loading ? 'Signing in...' : 'Sign In'}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
-  // Show name input
   return (
-    <div className="landing-container">
-      <div className="landing-content">
-        <h1>Welcome</h1>
-        <p className="subtitle">Please enter your name to continue</p>
-        
-        <form onSubmit={handleNameSubmit} className="sign-in-form">
-          <div className="form-group">
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your full name"
-              className="name-input"
-              disabled={loading}
-              autoFocus
-            />
-          </div>
-          
-          {error && <div className="error-message">{error}</div>}
-          
-          <button 
-            type="submit" 
-            className="submit-button"
-            disabled={loading}
+    <div className="landing-hero">
+      <div className="landing-cover-image" aria-hidden="true" />
+      <div className="landing-cover-gradient" aria-hidden="true" />
+
+      <div className="landing-center-content">
+        <div className="landing-transition-shell">
+          <section
+            className={`landing-panel landing-panel-hero${isAuthVisible ? ' landing-panel-hidden' : ' landing-panel-visible'}`}
+            aria-hidden={isAuthVisible}
           >
-            {loading ? 'Searching...' : 'Continue'}
-          </button>
-        </form>
+            <h1 className="landing-names">Emily &amp; Arden</h1>
+            <p className="landing-year">2027</p>
+            <Button
+              variant="outlineSerif"
+              onClick={() => setIsAuthVisible(true)}
+              aria-label="Enter wedding site"
+            >
+              Enter
+            </Button>
+          </section>
+
+          <section
+            className={`landing-panel landing-panel-auth${isAuthVisible ? ' landing-panel-visible' : ' landing-panel-hidden'}`}
+            aria-hidden={!isAuthVisible}
+          >
+            {!matchedDisplayName ? (
+              <>
+                <p className="landing-auth-title">Find your invitation</p>
+                <p className="landing-auth-subtitle">Type your full name to continue</p>
+                <form onSubmit={handleNameSubmit} className="sign-in-form">
+                  <div className="form-group">
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Search guest name"
+                      className="name-input name-input--plain"
+                      disabled={loading}
+                      autoFocus={isAuthVisible}
+                    />
+                  </div>
+
+                  {error && <div className="error-message">{error}</div>}
+
+                  <Button type="submit" variant="text" disabled={loading}>
+                    {loading ? 'Searching...' : 'Search'}
+                  </Button>
+                </form>
+              </>
+            ) : (
+              <>
+                <p className="landing-auth-title">Welcome, {matchedDisplayName}</p>
+                <p className="landing-auth-subtitle">Enter your password</p>
+
+                <form onSubmit={handlePasswordSubmit} className="sign-in-form">
+                  <div className="form-group">
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Password"
+                      className="name-input name-input--plain"
+                      disabled={loading}
+                      autoFocus={isAuthVisible}
+                    />
+                  </div>
+
+                  {error && <div className="error-message">{error}</div>}
+
+                  <div className="form-actions form-actions--inline">
+                    <Button
+                      type="button"
+                      variant="text"
+                      onClick={handleBack}
+                      disabled={loading}
+                    >
+                      Back
+                    </Button>
+                    <Button type="submit" variant="text" disabled={loading}>
+                      {loading ? 'Signing in...' : 'Sign In'}
+                    </Button>
+                  </div>
+                </form>
+              </>
+            )}
+          </section>
+        </div>
       </div>
     </div>
   );
