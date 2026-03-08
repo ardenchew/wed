@@ -7,9 +7,9 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
-import { validatePassword } from '../services/redis';
-import { getAllDisplayNames, getRedisKeyForDisplayName } from '../config/users';
 import { GUESTS } from '../config/guests';
+import { getAllDisplayNames, getGuestSlugForDisplayName } from '../config/users';
+import { validatePassword } from '../services/store';
 import { searchDisplayName } from '../utils/search';
 import '../styles/index.css';
 
@@ -75,18 +75,17 @@ export default function Landing() {
     }
 
     try {
-      const redisKey = getRedisKeyForDisplayName(matchedDisplayName);
-      if (!redisKey) {
+      const guestSlug = getGuestSlugForDisplayName(matchedDisplayName);
+      if (!guestSlug) {
         setError('Invalid user configuration');
         setLoading(false);
         return;
       }
 
-      const isValid = await validatePassword(redisKey, password.trim());
+      const isValid = await validatePassword(guestSlug, password.trim());
       
       if (isValid) {
-        // Get guest from config using the user_key
-        const guest = GUESTS[redisKey];
+        const guest = GUESTS[guestSlug];
         if (guest) {
           signIn(guest);
           navigate('/home');

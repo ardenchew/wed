@@ -1,7 +1,7 @@
 /**
  * User Mapping Configuration
  * 
- * Maps display names to Redis keys for user lookup
+ * Maps display names to guest slugs for user lookup
  */
 
 export const USER_MAPPING: Record<string, string> = {
@@ -17,8 +17,8 @@ export function getAllDisplayNames(): string[] {
 }
 
 /**
- * Get Redis key for a display name
+ * Get guest slug for a display name
  */
-export function getRedisKeyForDisplayName(displayName: string): string | undefined {
+export function getGuestSlugForDisplayName(displayName: string): string | undefined {
   return USER_MAPPING[displayName];
 }
