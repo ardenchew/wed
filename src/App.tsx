@@ -30,7 +30,7 @@ function AppRoutes() {
         element={user ? <Navigate to="/home" replace /> : <Landing />}
       />
       <Route
-        path="/home"
+        path="/home/*"
         element={
           <ProtectedRoute>
             <Home />

@@ -366,86 +366,173 @@ body {
 }
 
 /* Home Page Styles */
-.home-container {
+.home-page {
+  position: relative;
   min-height: 100vh;
+  overflow: hidden;
+}
+
+.home-page__background,
+.home-page__overlay {
+  position: absolute;
+  inset: 0;
+}
+
+.home-page__background {
+  background-image: url('/emily_arden_stony_hill.png');
+  background-size: cover;
+  background-position: center;
+}
+
+.home-page__overlay {
+  background: linear-gradient(rgba(10, 18, 14, 0.42), rgba(10, 18, 14, 0.42));
+  backdrop-filter: grayscale(0.95);
+  -webkit-backdrop-filter: grayscale(0.95);
+}
+
+.home-topbar {
+  position: relative;
+  z-index: 2;
+  min-height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
-  background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+  background: #4f7c5f;
+  padding: 0 1rem;
 }
 
-.home-content {
+.home-nav {
   width: 100%;
-  max-width: 600px;
+  max-width: 720px;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
-.home-header {
-  background: var(--white);
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: var(--shadow);
-  margin-bottom: 2rem;
+.home-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.home-nav__list {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
+  justify-content: center;
+  gap: clamp(1rem, 3vw, 2.5rem);
+  list-style: none;
 }
 
-.home-header h1 {
-  font-size: 1.75rem;
-  color: var(--secondary-color);
-  font-weight: 300;
-  letter-spacing: 0.5px;
-}
-
-.sign-out-button {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  color: var(--text-light);
+.home-nav__link {
+  border: 0;
   background: transparent;
-  border: 1px solid var(--border-color);
+  color: #fff;
+  cursor: pointer;
+  font-family: 'Bacasime Antique', Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.15rem, 2vw, 1.75rem);
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+  padding: 0.2rem 0;
+  text-transform: uppercase;
+  border-bottom: 2px solid transparent;
+}
+
+.home-nav__link--active {
+  border-bottom-color: rgba(255, 255, 255, 0.9);
+}
+
+.home-nav__link:focus-visible,
+.home-menu__trigger:focus-visible,
+.home-menu__action:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.95);
+  outline-offset: 3px;
+}
+
+.home-menu {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 3;
+}
+
+.home-menu__trigger {
+  width: 32px;
+  height: 32px;
+  border: 0;
   border-radius: 6px;
+  background: transparent;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 3px;
 }
 
-.sign-out-button:hover {
-  color: var(--text-color);
-  border-color: var(--text-light);
+.home-menu__line {
+  width: 16px;
+  height: 2px;
+  border-radius: 999px;
+  background: #fff;
 }
 
-.action-buttons {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
+.home-menu__panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 140px;
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(18, 28, 22, 0.9);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
 }
 
-.action-button {
+.home-menu__action {
   width: 100%;
-  padding: 1.5rem 2rem;
-  font-size: 1.125rem;
-  font-weight: 500;
-  color: var(--white);
-  background-color: var(--primary-color);
-  border: none;
-  border-radius: 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #fff;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: inherit;
-  box-shadow: var(--shadow);
+  font-size: 0.95rem;
+  padding: 0.45rem 0.7rem;
+  text-align: left;
 }
 
-.action-button:hover {
-  background-color: var(--secondary-color);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-hover);
+.home-menu__action:hover {
+  background: rgba(255, 255, 255, 0.12);
 }
 
-.action-button:active {
-  transform: translateY(0);
+.home-menu__action--active {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.home-menu__section {
+  display: none;
+}
+
+.home-menu__divider {
+  display: none;
+}
+
+.home-page__content {
+  position: relative;
+  z-index: 2;
+  min-height: calc(100vh - 60px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+}
+
+.home-placeholder {
+  color: #fff;
+  font-family: 'Bacasime Antique', Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.65rem 1rem;
 }
 
 /* Responsive Design - Desktop */
@@ -458,26 +545,79 @@ body {
     min-height: 430px;
   }
 
-  .home-header h1 {
-    font-size: 2rem;
-  }
-
-  .action-buttons {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .action-button {
-    font-size: 1.25rem;
-    padding: 2rem;
-  }
 }
 
 @media (min-width: 1024px) {
   .landing-center-content {
     width: 100%;
   }
+}
 
-  .home-content {
-    max-width: 800px;
+@media (max-width: 900px) {
+  .home-topbar {
+    padding-right: 3rem;
+  }
+}
+
+@media (max-width: 720px) {
+  .home-topbar {
+    display: none;
+  }
+
+  .home-page__content {
+    min-height: 100vh;
+  }
+
+  .home-menu {
+    top: 14px;
+    right: 14px;
+  }
+
+  .home-menu__trigger {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    background: transparent;
+    box-shadow: none;
+    border: 0;
+    gap: 4px;
+  }
+
+  .home-menu__line {
+    width: 18px;
+  }
+
+  .home-menu__panel {
+    min-width: 176px;
+    top: calc(100% + 10px);
+  }
+
+  .home-menu__section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .home-menu__divider {
+    display: block;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.26);
+    margin: 0.45rem 0;
+  }
+}
+
+@media (max-width: 430px) {
+  .home-menu {
+    top: 12px;
+    right: 12px;
+  }
+
+  .home-menu__trigger {
+    width: 44px;
+    height: 44px;
+  }
+
+  .home-menu__panel {
+    min-width: 160px;
   }
 }

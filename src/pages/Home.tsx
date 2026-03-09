@@ -1,48 +1,155 @@
 /**
  * Home Page
- * 
- * Main page displayed after user signs in
+ *
+ * Figma-aligned authenticated homepage with a top navigation and user menu.
  */
 
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import '../styles/index.css';
 
-export default function Home() {
-  const { user, signOut } = useUser();
+type NavItem = {
+  label: string;
+  path: string;
+};
 
-  const handleButtonClick = (page: string) => {
-    // Navigate to specific pages (to be implemented)
-    console.log(`Navigate to ${page}`);
-    // For now, just show alert
-    alert(`${page} page coming soon!`);
-  };
+const NAV_ITEMS: NavItem[] = [
+  { label: 'Home', path: '/home' },
+  { label: 'Schedule', path: '/home/schedule' },
+  { label: 'RSVP', path: '/home/rsvp' },
+  { label: 'Gift', path: '/home/gift' },
+];
+
+function normalizePath(pathname: string) {
+  if (pathname.length > 1 && pathname.endsWith('/')) {
+    return pathname.slice(0, -1);
+  }
+  return pathname;
+}
+
+export default function Home() {
+  const { signOut } = useUser();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const normalizedPath = normalizePath(location.pathname);
+  const validPaths = useMemo(() => new Set(NAV_ITEMS.map((item) => item.path)), []);
+
+  useEffect(() => {
+    if (!validPaths.has(normalizedPath)) {
+      navigate('/home', { replace: true });
+    }
+  }, [navigate, normalizedPath, validPaths]);
+
+  const activePath = validPaths.has(normalizedPath) ? normalizedPath : '/home';
+  const activeLabel = NAV_ITEMS.find((item) => item.path === activePath)?.label ?? 'Home';
+
+  useEffect(() => {
+    if (!isMenuOpen) {
+      return;
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMenuOpen(false);
+      }
+    };
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
 
   return (
-    <div className="home-container">
-      <div className="home-content">
-        <header className="home-header">
-          <h1>Welcome, {user ? (user.nickname || user.first) : 'Guest'}!</h1>
-          <button onClick={signOut} className="sign-out-button">
-            Sign Out
-          </button>
-        </header>
+    <main className="home-page">
+      <div className="home-page__background" aria-hidden="true" />
+      <div className="home-page__overlay" aria-hidden="true" />
 
-        <div className="action-buttons">
-          <button
-            onClick={() => handleButtonClick('Schedule')}
-            className="action-button"
-          >
-            Schedule
-          </button>
-          
-          <button
-            onClick={() => handleButtonClick('Gift')}
-            className="action-button"
-          >
-            Gift
-          </button>
-        </div>
+      <header className="home-topbar">
+        <nav className="home-nav" aria-label="Primary">
+          <ul className="home-nav__list">
+            {NAV_ITEMS.map((item) => {
+              const isActive = activePath === item.path;
+              return (
+                <li key={item.path} className="home-nav__item">
+                  <button
+                    type="button"
+                    className={`home-nav__link${isActive ? ' home-nav__link--active' : ''}`}
+                    aria-current={isActive ? 'page' : undefined}
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      navigate(item.path);
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      </header>
+
+      <div className="home-menu" ref={menuRef}>
+        <button
+          type="button"
+          className="home-menu__trigger"
+          aria-label="Open menu"
+          aria-expanded={isMenuOpen}
+          aria-controls="home-menu-panel"
+          onClick={() => setIsMenuOpen((open) => !open)}
+        >
+          <span className="home-menu__line" />
+          <span className="home-menu__line" />
+          <span className="home-menu__line" />
+        </button>
+
+        {isMenuOpen ? (
+          <div id="home-menu-panel" className="home-menu__panel" role="menu" aria-label="User menu">
+            <div className="home-menu__section">
+              {NAV_ITEMS.map((item) => {
+                const isActive = activePath === item.path;
+                return (
+                  <button
+                    key={`menu-${item.path}`}
+                    type="button"
+                    className={`home-menu__action${isActive ? ' home-menu__action--active' : ''}`}
+                    role="menuitem"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      navigate(item.path);
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="home-menu__divider" aria-hidden="true" />
+
+            <button type="button" className="home-menu__action" role="menuitem" onClick={signOut}>
+              Sign Out
+            </button>
+          </div>
+        ) : null}
       </div>
-    </div>
+
+      <section className="home-page__content" aria-live="polite">
+        <p className="home-placeholder">Placeholder: {activeLabel}</p>
+      </section>
+    </main>
   );
 }
