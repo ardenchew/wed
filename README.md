@@ -1,4 +1,4 @@
-# Wedding Website
+# Emily & Arden
 
 A lightweight React + TypeScript wedding website with a provider-agnostic data store.  
 Development data lives in TypeScript config files so backend storage can be swapped later without changing page code.

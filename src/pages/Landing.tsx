@@ -124,7 +124,7 @@ export default function Landing() {
   };
 
   return (
-    <div className="landing-hero">
+    <div className={`landing-hero${isAuthVisible ? ' landing-hero--auth' : ''}`}>
       <div className="landing-cover-image" aria-hidden="true" />
       <div className="landing-cover-gradient" aria-hidden="true" />
 
@@ -151,8 +151,6 @@ export default function Landing() {
           >
             {!matchedDisplayName ? (
               <>
-                <p className="landing-auth-title">Find your invitation</p>
-                <p className="landing-auth-subtitle">Type your full name to continue</p>
                 <form onSubmit={handleNameSubmit} className="sign-in-form">
                   <div className="form-group">
                     <input
@@ -168,7 +166,7 @@ export default function Landing() {
 
                   {error && <div className="error-message">{error}</div>}
 
-                  <Button type="submit" variant="text" disabled={loading}>
+                  <Button type="submit" variant="text" disabled={loading || !name.trim()}>
                     {loading ? 'Searching...' : 'Search'}
                   </Button>
                 </form>
@@ -176,7 +174,6 @@ export default function Landing() {
             ) : (
               <>
                 <p className="landing-auth-title">Welcome, {matchedDisplayName}</p>
-                <p className="landing-auth-subtitle">Enter your password</p>
 
                 <form onSubmit={handlePasswordSubmit} className="sign-in-form">
                   <div className="form-group">
