@@ -19,11 +19,19 @@ export interface Event {
   attire?: string;
 }
 
+export interface GuestPolaroid {
+  imagePath: string;
+  dateText: string;
+}
+
 export interface Guest {
   slug: string;
   first: string;
   last: string;
   nickname?: string;
+  welcomeText?: string;
+  polaroid2?: GuestPolaroid;
+  polaroid3?: GuestPolaroid;
   party?: string[]; // optional: a list of guest slugs in the party
   events: string[]; // a list of event slugs
 }

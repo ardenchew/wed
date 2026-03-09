@@ -7,6 +7,7 @@
 export const USER_MAPPING: Record<string, string> = {
   'Emily Kwan': 'emily_kwan',
   'Arden Chew': 'arden_chew',
+  'Debbie Kwan': 'debbie_kwan',
 };
 
 /**

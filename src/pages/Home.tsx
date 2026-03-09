@@ -1,12 +1,7 @@
-/**
- * Home Page
- *
- * Figma-aligned authenticated homepage with a top navigation and user menu.
- */
-
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Polaroid } from '../components/Polaroid';
+import { GUESTS } from '../config/guests';
 import { useUser } from '../context/UserContext';
 import '../styles/index.css';
 
@@ -29,8 +24,11 @@ function normalizePath(pathname: string) {
   return pathname;
 }
 
+const resolveAsset = (path: string) =>
+  `${import.meta.env.BASE_URL}${path.replace(/^\/+/, '')}`;
+
 export default function Home() {
-  const { signOut } = useUser();
+  const { user, signOut } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -46,90 +44,142 @@ export default function Home() {
 
   const activePath = validPaths.has(normalizedPath) ? normalizedPath : '/home';
   const activeLabel = NAV_ITEMS.find((item) => item.path === activePath)?.label ?? 'Home';
+  const guest = user?.slug ? GUESTS[user.slug] ?? user : user;
+  const displayName = guest?.nickname || guest?.first || 'Friend';
 
   useEffect(() => {
-    if (!isMenuOpen) {
-      return;
-    }
+    if (!isMenuOpen) return;
 
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsMenuOpen(false);
-      }
+      if (event.key === 'Escape') setIsMenuOpen(false);
     };
-
     const handleClickOutside = (event: MouseEvent) => {
-      if (!menuRef.current?.contains(event.target as Node)) {
-        setIsMenuOpen(false);
-      }
+      if (!menuRef.current?.contains(event.target as Node)) setIsMenuOpen(false);
     };
 
     document.addEventListener('keydown', handleEscape);
     document.addEventListener('mousedown', handleClickOutside);
-
     return () => {
       document.removeEventListener('keydown', handleEscape);
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isMenuOpen]);
 
+  const handleLogoClick = () => {
+    navigate('/home');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <main className="home-page">
-      <div className="home-page__background" aria-hidden="true" />
-      <div className="home-page__overlay" aria-hidden="true" />
-
-      <div className="home-menu" ref={menuRef}>
-        <button
-          type="button"
-          className="home-menu__trigger"
-          aria-label="Open menu"
-          aria-expanded={isMenuOpen}
-          aria-controls="home-menu-panel"
-          onClick={() => setIsMenuOpen((open) => !open)}
-        >
-          <span className="home-menu__line" />
-          <span className="home-menu__line" />
-          <span className="home-menu__line" />
+      <header className="home-header">
+        <button type="button" className="home-logo" onClick={handleLogoClick} aria-label="Go home">
+          <img src={resolveAsset('e_a_logo.png')} alt="E & A" className="home-logo__img" />
         </button>
 
-        {isMenuOpen ? (
-          <div id="home-menu-panel" className="home-menu__panel" role="menu" aria-label="User menu">
-            <div className="home-menu__section">
-              {NAV_ITEMS.map((item) => {
-                const isActive = activePath === item.path;
-                return (
-                  <button
-                    key={`menu-${item.path}`}
-                    type="button"
-                    className={`home-menu__action${isActive ? ' home-menu__action--active' : ''}`}
-                    role="menuitem"
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      navigate(item.path);
-                    }}
-                  >
-                    {item.label}
-                  </button>
-                );
-              })}
+        <div className="home-menu" ref={menuRef}>
+          <button
+            type="button"
+            className="home-menu__trigger"
+            aria-label="Open menu"
+            aria-expanded={isMenuOpen}
+            aria-controls="home-menu-panel"
+            onClick={() => setIsMenuOpen((o) => !o)}
+          >
+            <span className="home-menu__line" />
+            <span className="home-menu__line" />
+            <span className="home-menu__line" />
+          </button>
+
+          {isMenuOpen && (
+            <div id="home-menu-panel" className="home-menu__panel" role="menu" aria-label="User menu">
+              <div className="home-menu__section">
+                {NAV_ITEMS.map((item) => {
+                  const isActive = activePath === item.path;
+                  return (
+                    <button
+                      key={`menu-${item.path}`}
+                      type="button"
+                      className={`home-menu__action${isActive ? ' home-menu__action--active' : ''}`}
+                      role="menuitem"
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        navigate(item.path);
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="home-menu__divider" aria-hidden="true" />
+              <button type="button" className="home-menu__action" role="menuitem" onClick={signOut}>
+                Sign Out
+              </button>
             </div>
+          )}
+        </div>
+      </header>
 
-            <div className="home-menu__divider" aria-hidden="true" />
-
-            <button type="button" className="home-menu__action" role="menuitem" onClick={signOut}>
-              Sign Out
-            </button>
+      {activePath === '/home' ? (
+        <div className="home-scroll">
+          <div className="home-greeting">
+            <span className="home-greeting__hi">Hi</span>
+            <span className="home-greeting__name">{displayName}</span>
           </div>
-        ) : null}
-      </div>
 
-      <section className="home-page__content" aria-live="polite">
-        {activePath === '/home' ? (
-          <Polaroid dateText="9 17 2025" imagePath="/emily_arden_stony_hill.png" alt="Emily and Arden" />
-        ) : (
+          <div className="home-collage">
+            <div className="home-collage__polaroid home-collage__polaroid--left">
+              <Polaroid dateText="9 17 2025" imagePath="/emily_arden_stony_hill.png" alt="Emily and Arden" />
+            </div>
+            <img
+              className="home-collage__deco home-collage__deco--bridge"
+              src={resolveAsset('golden_gate.png')}
+              alt=""
+              aria-hidden="true"
+            />
+            <img
+              className="home-collage__deco home-collage__deco--bottle"
+              src={resolveAsset('stony_hill_clipart.png')}
+              alt=""
+              aria-hidden="true"
+            />
+            <div className="home-collage__polaroid home-collage__polaroid--right">
+              <Polaroid
+                dateText={guest?.polaroid2?.dateText ?? '1 29 2022'}
+                imagePath={guest?.polaroid2?.imagePath ?? '/crater_lake.png'}
+              />
+            </div>
+          </div>
+
+          {guest?.welcomeText && (
+            <div className="home-welcome">
+              <p className="home-welcome__text">{guest.welcomeText}</p>
+              <p className="home-welcome__signoff">Much love,</p>
+              <p className="home-welcome__signoff">Emily and Arden</p>
+            </div>
+          )}
+
+          <div className="home-bottom">
+            <img
+              className="home-bottom__deco home-bottom__deco--clipart"
+              src={resolveAsset('central_park_clipart.png')}
+              alt=""
+              aria-hidden="true"
+            />
+            <div className="home-bottom__polaroid">
+              <Polaroid
+                dateText={guest?.polaroid3?.dateText ?? ''}
+                imagePath={guest?.polaroid3?.imagePath ?? '/crater_lake_sketch.png'}
+              />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <section className="home-page__subpage" aria-live="polite">
           <p className="home-placeholder">Placeholder: {activeLabel}</p>
-        )}
-      </section>
+        </section>
+      )}
     </main>
   );
 }
