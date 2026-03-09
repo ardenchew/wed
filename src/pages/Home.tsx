@@ -78,31 +78,6 @@ export default function Home() {
       <div className="home-page__background" aria-hidden="true" />
       <div className="home-page__overlay" aria-hidden="true" />
 
-      <header className="home-topbar">
-        <nav className="home-nav" aria-label="Primary">
-          <ul className="home-nav__list">
-            {NAV_ITEMS.map((item) => {
-              const isActive = activePath === item.path;
-              return (
-                <li key={item.path} className="home-nav__item">
-                  <button
-                    type="button"
-                    className={`home-nav__link${isActive ? ' home-nav__link--active' : ''}`}
-                    aria-current={isActive ? 'page' : undefined}
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      navigate(item.path);
-                    }}
-                  >
-                    {item.label}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-      </header>
-
       <div className="home-menu" ref={menuRef}>
         <button
           type="button"
