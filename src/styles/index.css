@@ -523,6 +523,46 @@ body {
   padding: 1.25rem;
 }
 
+.polaroid {
+  width: min(350px, calc(100vw - 2.5rem));
+  aspect-ratio: 5 / 6;
+  background: #f5f3f3;
+  border-radius: 1px;
+  padding: 84px 19px 25px;
+  overflow: hidden;
+}
+
+.polaroid__imageWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: #d9d5d5;
+}
+
+.polaroid__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  filter: brightness(1.1) contrast(1.2) saturate(0.8) sepia(0.2) hue-rotate(-8deg);
+}
+
+.polaroid__date {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  margin: 0;
+  color: #fe681d;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
 .home-placeholder {
   color: #fff;
   font-family: 'Bacasime Antique', Georgia, 'Times New Roman', serif;

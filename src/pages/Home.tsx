@@ -6,6 +6,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { Polaroid } from '../components/Polaroid';
 import { useUser } from '../context/UserContext';
 import '../styles/index.css';
 
@@ -148,7 +149,11 @@ export default function Home() {
       </div>
 
       <section className="home-page__content" aria-live="polite">
-        <p className="home-placeholder">Placeholder: {activeLabel}</p>
+        {activePath === '/home' ? (
+          <Polaroid dateText="9 17 2025" imagePath="/emily_arden_stony_hill.png" alt="Emily and Arden" />
+        ) : (
+          <p className="home-placeholder">Placeholder: {activeLabel}</p>
+        )}
       </section>
     </main>
   );
