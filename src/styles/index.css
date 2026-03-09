@@ -579,23 +579,26 @@ body {
 .home-collage__polaroid {
   position: absolute;
   z-index: 1;
+  will-change: transform;
 }
 
 .home-collage__polaroid--left {
   left: 5%;
   top: 0;
-  transform: rotate(-12deg);
+  transform: rotate(-12deg) translateX(var(--drift-x, 0px));
 }
 
 .home-collage__polaroid--right {
   right: 5%;
   top: 12%;
-  transform: rotate(8deg);
+  transform: rotate(8deg) translateX(var(--drift-x, 0px));
 }
 
 .home-collage__deco {
   position: absolute;
   pointer-events: none;
+  will-change: transform;
+  transform: translateX(var(--drift-x, 0px));
 }
 
 .home-collage__deco--bridge {
@@ -652,6 +655,8 @@ body {
 .home-bottom__deco {
   position: absolute;
   pointer-events: none;
+  will-change: transform;
+  transform: translateX(var(--drift-x, 0px));
 }
 
 .home-bottom__deco--clipart {
@@ -665,8 +670,9 @@ body {
   position: absolute;
   left: 45%;
   top: 16%;
-  transform: rotate(3deg);
+  transform: rotate(3deg) translateX(var(--drift-x, 0px));
   z-index: 1;
+  will-change: transform;
 }
 
 /* Sub-page Content */

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Polaroid } from '../components/Polaroid';
 import { GUESTS } from '../config/guests';
@@ -70,6 +70,34 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const updateDrift = useCallback(() => {
+    const els = document.querySelectorAll<HTMLElement>('[data-drift]');
+    if (!els.length) return;
+    const vh = window.innerHeight;
+    const center = vh / 2;
+    els.forEach((el) => {
+      const rect = el.getBoundingClientRect();
+      const elCenter = rect.top + rect.height / 2;
+      const progress = Math.max(-1, Math.min(1, (elCenter - center) / vh));
+      const dir = el.dataset.drift === 'left' ? -1 : 1;
+      el.style.setProperty('--drift-x', `${progress * dir * 40}px`);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (activePath !== '/home') return;
+    let ticking = false;
+    const onScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => { updateDrift(); ticking = false; });
+        ticking = true;
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    updateDrift();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [activePath, updateDrift]);
+
   return (
     <main className="home-page">
       <header className="home-header">
@@ -129,7 +157,7 @@ export default function Home() {
           </div>
 
           <div className="home-collage">
-            <div className="home-collage__polaroid home-collage__polaroid--left">
+            <div className="home-collage__polaroid home-collage__polaroid--left" data-drift="left">
               <Polaroid dateText="9 17 2025" imagePath="/emily_arden_stony_hill.png" alt="Emily and Arden" />
             </div>
             <img
@@ -137,14 +165,16 @@ export default function Home() {
               src={resolveAsset('golden_gate.png')}
               alt=""
               aria-hidden="true"
+              data-drift="right"
             />
             <img
               className="home-collage__deco home-collage__deco--bottle"
               src={resolveAsset('stony_hill_clipart.png')}
               alt=""
               aria-hidden="true"
+              data-drift="left"
             />
-            <div className="home-collage__polaroid home-collage__polaroid--right">
+            <div className="home-collage__polaroid home-collage__polaroid--right" data-drift="right">
               <Polaroid
                 dateText={guest?.polaroid2?.dateText ?? '1 29 2022'}
                 imagePath={guest?.polaroid2?.imagePath ?? '/crater_lake.png'}
@@ -166,8 +196,9 @@ export default function Home() {
               src={resolveAsset('central_park_clipart.png')}
               alt=""
               aria-hidden="true"
+              data-drift="left"
             />
-            <div className="home-bottom__polaroid">
+            <div className="home-bottom__polaroid" data-drift="right">
               <Polaroid
                 dateText={guest?.polaroid3?.dateText ?? ''}
                 imagePath={guest?.polaroid3?.imagePath ?? '/crater_lake_sketch.png'}
