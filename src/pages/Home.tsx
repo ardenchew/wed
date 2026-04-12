@@ -103,7 +103,7 @@ export default function Home() {
     <main className={`home-page${activePath === '/home/schedule' ? ' home-page--schedule' : ''}`}>
       <header className="home-header">
         <button type="button" className="home-logo" onClick={handleLogoClick} aria-label="Go home">
-          <img src={resolveAsset('e_a_logo.png')} alt="E & A" className="home-logo__img" />
+          <img src={resolveAsset('logo.svg')} alt="E & A" className="home-logo__img" />
         </button>
 
         <div className="home-menu" ref={menuRef}>
