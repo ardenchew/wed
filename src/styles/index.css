@@ -196,6 +196,108 @@ body.splash-active {
   justify-content: center;
 }
 
+.landing-transition-shell--compact {
+  min-height: auto;
+}
+
+.landing-entry-morph {
+  width: min(100%, 520px);
+  margin: 0 auto;
+}
+
+.landing-entry-morph__stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.landing-entry-morph__stack--expanded {
+  align-items: stretch;
+}
+
+/* Fixed-height slot so the rule never shifts; children fill it with one shared line-height = height. */
+.landing-entry-morph__text-slot {
+  --morph-text-h: calc(1.2rem * 1.5 + 0.55rem * 2);
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  box-sizing: border-box;
+  height: var(--morph-text-h);
+  flex-shrink: 0;
+  align-self: center;
+  width: auto;
+  max-width: 100%;
+}
+
+.landing-entry-morph__text-slot--expanded {
+  align-self: stretch;
+  width: 100%;
+}
+
+.landing-entry-morph__trigger,
+.landing-entry-morph__input {
+  box-sizing: border-box;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 1.2rem;
+  font-weight: 400;
+  height: 100%;
+  line-height: var(--morph-text-h);
+  text-align: center;
+  padding: 0 0.25rem;
+  color: #111111;
+}
+
+.landing-entry-morph__trigger {
+  appearance: none;
+  -webkit-appearance: none;
+  width: auto;
+  max-width: 100%;
+  cursor: pointer;
+  box-shadow: none;
+  color: rgba(17, 17, 17, 0.45);
+  display: block;
+}
+
+.landing-entry-morph__trigger:hover {
+  color: #111111;
+}
+
+.landing-entry-morph__input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.landing-entry-morph__input::placeholder {
+  color: rgba(17, 17, 17, 0.45);
+}
+
+.landing-entry-morph__input:focus {
+  outline: none;
+}
+
+.landing-entry-morph__rule {
+  flex-shrink: 0;
+  width: 100%;
+  height: 1.5px;
+  background: rgba(17, 17, 17, 0.65);
+  transform-origin: center center;
+  transition: transform 400ms cubic-bezier(0.33, 1, 0.68, 1);
+  align-self: stretch;
+}
+
+.landing-panel-auth-inner {
+  width: min(100%, 520px);
+  margin: 0 auto;
+}
+
 .landing-panel {
   position: absolute;
   left: 50%;
@@ -261,6 +363,12 @@ body.splash-active {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+/* Search row stays in layout when name step is collapsed so the morph does not jump vertically. */
+.landing-search-submit--concealed {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .form-group {
@@ -984,7 +1092,7 @@ body:has(.home-page--schedule) {
     padding: 2rem;
   }
 
-  .landing-transition-shell {
+  .landing-transition-shell:not(.landing-transition-shell--compact) {
     min-height: 430px;
   }
 }

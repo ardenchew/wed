@@ -4,7 +4,7 @@
  * Name input and password authentication page
  */
 
-import { useEffect, useState, FormEvent } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { GUESTS } from '../config/guests';
@@ -23,6 +23,37 @@ export default function Landing() {
   const [loading, setLoading] = useState(false);
   const { signIn } = useUser();
   const navigate = useNavigate();
+  const enterTriggerRef = useRef<HTMLButtonElement>(null);
+  const morphRef = useRef<HTMLDivElement>(null);
+  const [enterRulePx, setEnterRulePx] = useState(0);
+  const [morphWidthPx, setMorphWidthPx] = useState(0);
+
+  const measureEnterRule = useCallback(() => {
+    const el = enterTriggerRef.current;
+    if (el) setEnterRulePx(el.offsetWidth);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (matchedDisplayName) return;
+    const node = morphRef.current;
+    if (!node) return;
+    const syncMorphWidth = () => setMorphWidthPx(node.getBoundingClientRect().width);
+    const ro = new ResizeObserver(syncMorphWidth);
+    ro.observe(node);
+    syncMorphWidth();
+    return () => ro.disconnect();
+  }, [matchedDisplayName, isAuthVisible]);
+
+  useLayoutEffect(() => {
+    if (isAuthVisible || matchedDisplayName) return;
+    measureEnterRule();
+  }, [isAuthVisible, matchedDisplayName, measureEnterRule]);
+
+  useEffect(() => {
+    if (isAuthVisible || matchedDisplayName) return;
+    window.addEventListener('resize', measureEnterRule);
+    return () => window.removeEventListener('resize', measureEnterRule);
+  }, [isAuthVisible, matchedDisplayName, measureEnterRule]);
 
   useEffect(() => {
     document.body.classList.add('landing-no-scroll');
@@ -129,48 +160,66 @@ export default function Landing() {
       <div className="landing-cover-gradient" aria-hidden="true" />
 
       <div className="landing-center-content">
-        <div className="landing-transition-shell">
-          <section
-            className={`landing-panel landing-panel-hero${isAuthVisible ? ' landing-panel-hidden' : ' landing-panel-visible'}`}
-            aria-hidden={isAuthVisible}
-          >
-            <h1 className="landing-names">Emily &amp; Arden</h1>
-            <p className="landing-year">2027</p>
-            <Button
-              variant="outlineSerif"
-              onClick={() => setIsAuthVisible(true)}
-              aria-label="Enter wedding site"
-            >
-              Enter
-            </Button>
-          </section>
-
-          <section
-            className={`landing-panel landing-panel-auth${isAuthVisible ? ' landing-panel-visible' : ' landing-panel-hidden'}`}
-            aria-hidden={!isAuthVisible}
-          >
+        <div className="landing-transition-shell landing-transition-shell--compact">
+          <section className="landing-panel-auth-inner" aria-label="Sign in">
             {!matchedDisplayName ? (
-              <>
-                <form onSubmit={handleNameSubmit} className="sign-in-form">
-                  <div className="form-group">
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Search guest name"
-                      className="name-input name-input--plain"
-                      disabled={loading}
-                      autoFocus={isAuthVisible}
+              <form onSubmit={handleNameSubmit} className="sign-in-form">
+                <div className="landing-entry-morph" ref={morphRef}>
+                  <div
+                    className={`landing-entry-morph__stack${isAuthVisible ? ' landing-entry-morph__stack--expanded' : ''}`}
+                  >
+                    <div
+                      className={`landing-entry-morph__text-slot${isAuthVisible ? ' landing-entry-morph__text-slot--expanded' : ''}`}
+                    >
+                      {!isAuthVisible ? (
+                        <button
+                          ref={enterTriggerRef}
+                          type="button"
+                          className="landing-entry-morph__trigger"
+                          onClick={() => setIsAuthVisible(true)}
+                          aria-label="Enter wedding site"
+                        >
+                          Enter
+                        </button>
+                      ) : (
+                        <input
+                          type="text"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          placeholder="Enter guest name"
+                          className="landing-entry-morph__input"
+                          disabled={loading}
+                          autoFocus
+                        />
+                      )}
+                    </div>
+                    <div
+                      className="landing-entry-morph__rule"
+                      style={{
+                        transform: isAuthVisible
+                          ? 'scaleX(1)'
+                          : `scaleX(${
+                              morphWidthPx > 0 && enterRulePx > 0
+                                ? Math.min(1, enterRulePx / morphWidthPx)
+                                : 0.12
+                            })`,
+                      }}
                     />
                   </div>
+                </div>
 
-                  {error && <div className="error-message">{error}</div>}
+                {error && <div className="error-message">{error}</div>}
 
-                  <Button type="submit" variant="text" disabled={loading || !name.trim()}>
-                    {loading ? 'Searching...' : 'Search'}
-                  </Button>
-                </form>
-              </>
+                <Button
+                  type="submit"
+                  variant="text"
+                  disabled={!isAuthVisible || loading || !name.trim()}
+                  className={!isAuthVisible ? 'landing-search-submit--concealed' : undefined}
+                  aria-hidden={!isAuthVisible}
+                >
+                  {loading ? 'Searching...' : 'Search'}
+                </Button>
+              </form>
             ) : (
               <>
                 <p className="landing-auth-title">Welcome, {matchedDisplayName}</p>
@@ -184,7 +233,7 @@ export default function Landing() {
                       placeholder="Password"
                       className="name-input name-input--plain"
                       disabled={loading}
-                      autoFocus={isAuthVisible}
+                      autoFocus
                     />
                   </div>
 
