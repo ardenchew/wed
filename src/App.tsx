@@ -10,6 +10,7 @@ import { FreshLoadSplash } from './components/FreshLoadSplash';
 import { UserProvider, useUser } from './context/UserContext';
 import Landing from './pages/Landing';
 import Home from './pages/Home';
+import HomeV2 from './pages/HomeV2';
 import SplashPreview from './pages/SplashPreview';
 import './styles/index.css';
 
@@ -30,13 +31,16 @@ function ProtectedRoute({ children }: { children: React.ReactElement }) {
 }
 
 function AppRoutes() {
-  const { user } = useUser();
-
   return (
     <Routes>
+      <Route path="/" element={<Landing />} />
       <Route
-        path="/"
-        element={user ? <Navigate to="/home" replace /> : <Landing />}
+        path="/home-v2"
+        element={
+          <ProtectedRoute>
+            <HomeV2 />
+          </ProtectedRoute>
+        }
       />
       <Route
         path="/home/*"

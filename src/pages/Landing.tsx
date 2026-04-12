@@ -6,6 +6,10 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+const LANDING_EXIT_TO_HOME_MS = 620;
+/** Keep in sync with `.landing-center-content` `top` transition in index.css */
+const LANDING_CENTER_TRANSITION_MS = 720;
 import { useUser } from '../context/UserContext';
 import { GUESTS } from '../config/guests';
 import { getAllDisplayNames, getGuestSlugForDisplayName } from '../config/users';
@@ -21,10 +25,14 @@ export default function Landing() {
   const [matchedDisplayName, setMatchedDisplayName] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn } = useUser();
+  const { user, signIn } = useUser();
   const navigate = useNavigate();
+  const deferAutoHomeNavRef = useRef(false);
+  const [exitToHome, setExitToHome] = useState(false);
+  const [nameStepReady, setNameStepReady] = useState(false);
   const enterTriggerRef = useRef<HTMLButtonElement>(null);
   const morphRef = useRef<HTMLDivElement>(null);
+  const nameStepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [enterRulePx, setEnterRulePx] = useState(0);
   const [morphWidthPx, setMorphWidthPx] = useState(0);
 
@@ -42,7 +50,7 @@ export default function Landing() {
     ro.observe(node);
     syncMorphWidth();
     return () => ro.disconnect();
-  }, [matchedDisplayName, isAuthVisible]);
+  }, [matchedDisplayName, isAuthVisible, nameStepReady]);
 
   useLayoutEffect(() => {
     if (isAuthVisible || matchedDisplayName) return;
@@ -64,6 +72,32 @@ export default function Landing() {
       document.documentElement.classList.remove('landing-no-scroll');
     };
   }, []);
+
+  useEffect(() => {
+    if (!user || deferAutoHomeNavRef.current) return;
+    navigate('/home-v2', { replace: true });
+  }, [user, navigate]);
+
+  useEffect(() => {
+    return () => {
+      if (nameStepTimerRef.current != null) {
+        window.clearTimeout(nameStepTimerRef.current);
+        nameStepTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!exitToHome) return;
+    const reduced =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const ms = reduced ? 40 : LANDING_EXIT_TO_HOME_MS;
+    const t = window.setTimeout(() => {
+      navigate('/home-v2', { replace: true });
+    }, ms);
+    return () => window.clearTimeout(t);
+  }, [exitToHome, navigate]);
 
   const handleNameSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -130,8 +164,9 @@ export default function Landing() {
       if (isValid) {
         const guest = GUESTS[guestSlug];
         if (guest) {
+          deferAutoHomeNavRef.current = true;
           signIn(guest);
-          navigate('/home');
+          setExitToHome(true);
         } else {
           setError('Failed to load guest data. Please try again.');
         }
@@ -154,8 +189,28 @@ export default function Landing() {
     setName('');
   };
 
+  const handleEnterClick = () => {
+    if (isAuthVisible) return;
+    setIsAuthVisible(true);
+    const reduced =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) {
+      setNameStepReady(true);
+      return;
+    }
+    nameStepTimerRef.current = window.setTimeout(() => {
+      setNameStepReady(true);
+      nameStepTimerRef.current = null;
+    }, LANDING_CENTER_TRANSITION_MS);
+  };
+
   return (
-    <div className={`landing-hero${isAuthVisible ? ' landing-hero--auth' : ''}`}>
+    <div
+      className={`landing-hero${isAuthVisible ? ' landing-hero--auth' : ''}${
+        exitToHome ? ' landing-hero--exit-to-home' : ''
+      }`}
+    >
       <div className="landing-cover-image" aria-hidden="true" />
       <div className="landing-cover-gradient" aria-hidden="true" />
 
@@ -166,17 +221,17 @@ export default function Landing() {
               <form onSubmit={handleNameSubmit} className="sign-in-form">
                 <div className="landing-entry-morph" ref={morphRef}>
                   <div
-                    className={`landing-entry-morph__stack${isAuthVisible ? ' landing-entry-morph__stack--expanded' : ''}`}
+                    className={`landing-entry-morph__stack${nameStepReady ? ' landing-entry-morph__stack--expanded' : ''}`}
                   >
                     <div
-                      className={`landing-entry-morph__text-slot${isAuthVisible ? ' landing-entry-morph__text-slot--expanded' : ''}`}
+                      className={`landing-entry-morph__text-slot${nameStepReady ? ' landing-entry-morph__text-slot--expanded' : ''}`}
                     >
-                      {!isAuthVisible ? (
+                      {!nameStepReady ? (
                         <button
                           ref={enterTriggerRef}
                           type="button"
                           className="landing-entry-morph__trigger"
-                          onClick={() => setIsAuthVisible(true)}
+                          onClick={handleEnterClick}
                           aria-label="Enter wedding site"
                         >
                           Enter
@@ -188,7 +243,7 @@ export default function Landing() {
                           onChange={(e) => setName(e.target.value)}
                           placeholder="Enter guest name"
                           className="landing-entry-morph__input"
-                          disabled={loading}
+                          disabled={loading || exitToHome}
                           autoFocus
                         />
                       )}
@@ -196,7 +251,7 @@ export default function Landing() {
                     <div
                       className="landing-entry-morph__rule"
                       style={{
-                        transform: isAuthVisible
+                        transform: nameStepReady
                           ? 'scaleX(1)'
                           : `scaleX(${
                               morphWidthPx > 0 && enterRulePx > 0
@@ -213,16 +268,16 @@ export default function Landing() {
                 <Button
                   type="submit"
                   variant="text"
-                  disabled={!isAuthVisible || loading || !name.trim()}
-                  className={!isAuthVisible ? 'landing-search-submit--concealed' : undefined}
-                  aria-hidden={!isAuthVisible}
+                  disabled={!nameStepReady || loading || exitToHome || !name.trim()}
+                  className={!nameStepReady ? 'landing-search-submit--concealed' : undefined}
+                  aria-hidden={!nameStepReady}
                 >
                   {loading ? 'Searching...' : 'Search'}
                 </Button>
               </form>
             ) : (
               <>
-                <p className="landing-auth-title">Welcome, {matchedDisplayName}</p>
+                <p className="landing-auth-title">{matchedDisplayName}</p>
 
                 <form onSubmit={handlePasswordSubmit} className="sign-in-form">
                   <div className="form-group">
@@ -232,7 +287,7 @@ export default function Landing() {
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Password"
                       className="name-input name-input--plain"
-                      disabled={loading}
+                      disabled={loading || exitToHome}
                       autoFocus
                     />
                   </div>
@@ -244,11 +299,11 @@ export default function Landing() {
                       type="button"
                       variant="text"
                       onClick={handleBack}
-                      disabled={loading}
+                      disabled={loading || exitToHome}
                     >
                       Back
                     </Button>
-                    <Button type="submit" variant="text" disabled={loading}>
+                    <Button type="submit" variant="text" disabled={loading || exitToHome}>
                       {loading ? 'Signing in...' : 'Sign In'}
                     </Button>
                   </div>

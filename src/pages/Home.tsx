@@ -46,7 +46,6 @@ export default function Home() {
   const activePath = validPaths.has(normalizedPath) ? normalizedPath : '/home';
   const activeLabel = NAV_ITEMS.find((item) => item.path === activePath)?.label ?? 'Home';
   const guest = user?.slug ? GUESTS[user.slug] ?? user : user;
-  const displayName = guest?.nickname || guest?.first || 'Friend';
 
   useEffect(() => {
     if (!isMenuOpen) return;
@@ -153,8 +152,8 @@ export default function Home() {
       {activePath === '/home' ? (
         <div className="home-scroll">
           <div className="home-greeting">
-            <span className="home-greeting__hi">Hi</span>
-            <span className="home-greeting__name">{displayName}</span>
+            <span className="home-greeting__name">Emily & Arden</span>
+            <span className="home-greeting__year">2027</span>
           </div>
 
           <div className="home-collage">

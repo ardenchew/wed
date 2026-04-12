@@ -4,7 +4,16 @@
  * Provides authentication state management for the application
  */
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  ReactNode,
+} from 'react';
+import { FreshLoadSplash } from '../components/FreshLoadSplash';
 import type { Guest, UserContextType } from '../types';
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -15,7 +24,23 @@ interface UserProviderProps {
   children: ReactNode;
 }
 
+function SignOutSplashLayer({
+  active,
+  splashKey,
+  onComplete,
+}: {
+  active: boolean;
+  splashKey: number;
+  onComplete: () => void;
+}) {
+  if (!active) return null;
+  return <FreshLoadSplash key={splashKey} onComplete={onComplete} />;
+}
+
 export function UserProvider({ children }: UserProviderProps) {
+  const signOutSplashKeyRef = useRef(0);
+  const [signOutSplashActive, setSignOutSplashActive] = useState(false);
+
   const [user, setUser] = useState<Guest | null>(() => {
     // Load user from localStorage on mount
     try {
@@ -47,8 +72,14 @@ export function UserProvider({ children }: UserProviderProps) {
   };
 
   const signOut = () => {
+    signOutSplashKeyRef.current += 1;
     setUser(null);
+    setSignOutSplashActive(true);
   };
+
+  const completeSignOutAfterSplash = useCallback(() => {
+    setSignOutSplashActive(false);
+  }, []);
 
   const value: UserContextType = {
     user,
@@ -56,7 +87,16 @@ export function UserProvider({ children }: UserProviderProps) {
     signOut,
   };
 
-  return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
+  return (
+    <UserContext.Provider value={value}>
+      <SignOutSplashLayer
+        active={signOutSplashActive}
+        splashKey={signOutSplashKeyRef.current}
+        onComplete={completeSignOutAfterSplash}
+      />
+      {children}
+    </UserContext.Provider>
+  );
 }
 
 export function useUser() {
