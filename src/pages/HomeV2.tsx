@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Polaroid } from '../components/Polaroid';
 import { GUESTS } from '../config/guests';
@@ -35,6 +35,9 @@ const MIN_SCALE_ABSOLUTE_FLOOR = 0.42;
 
 /** Matches :root --background when CSS cannot be read yet */
 const FALLBACK_PAGE_BG_RGB: [number, number, number] = [250, 250, 250];
+const DEFAULT_WEEKEND_POLAROID_IMAGE = '/emily_arden_stony_hill.png';
+const DEFAULT_WEEKEND_POLAROID_DATE = '9 5 2025';
+const HOME_GALLERY_IMAGE_PATHS = ['/home/home1.png', '/home/home2.png', '/home/home3.png'];
 
 function parseCssRgb(color: string): [number, number, number] | null {
   const m = color.trim().match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/);
@@ -90,9 +93,12 @@ export default function HomeV2() {
   const mainRef = useRef<HTMLElement>(null);
   const heroShellRef = useRef<HTMLDivElement>(null);
   const imageWrapRef = useRef<HTMLDivElement>(null);
+  const gallerySectionRef = useRef<HTMLElement>(null);
+  const galleryPinRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
   const metricsRef = useRef({ compress: 1, fade: 1, S: 2, minScale: MIN_SCALE_FALLBACK });
   const reducedMotionRef = useRef(false);
+  const bottomFadeProgressRef = useRef(0);
   /** Fade target: same resolved color as `.home-v2__scroll` so the docked hero matches weekend details. */
   const heroFadeTargetRgbRef = useRef<[number, number, number]>(FALLBACK_PAGE_BG_RGB);
 
@@ -103,8 +109,72 @@ export default function HomeV2() {
     guest?.welcomeBodyText ??
     'We are so happy to celebrate with you. More details for the weekend are coming soon.';
   const weekendSignature = guest?.welcomeSignatureText ?? 'Much love, Emily and Arden';
-  const weekendPolaroidPath = guest?.polaroid2?.imagePath ?? '/emily_arden_stony_hill.png';
-  const weekendPolaroidDate = guest?.polaroid2?.dateText ?? '9 17 2025';
+  const weekendPolaroidPath = guest?.polaroid2?.imagePath ?? DEFAULT_WEEKEND_POLAROID_IMAGE;
+  const weekendPolaroidDate = guest?.polaroid2?.dateText ?? DEFAULT_WEEKEND_POLAROID_DATE;
+  const hasGuestPolaroid2 = Boolean(guest?.polaroid2?.imagePath);
+
+  const guestGalleryImagePaths = useMemo(() => {
+    if (!guest) return [];
+    return Object.entries(guest).flatMap(([key, value]) => {
+      if (
+        !key.startsWith('polaroid') ||
+        key === 'polaroid2' ||
+        !value ||
+        typeof value !== 'object' ||
+        !('imagePath' in value)
+      ) {
+        return [];
+      }
+
+      const imagePath = value.imagePath;
+      return typeof imagePath === 'string' && imagePath.length > 0 ? [imagePath] : [];
+    });
+  }, [guest]);
+
+  const galleryImagePaths = useMemo(() => {
+    const ordered = [
+      ...(hasGuestPolaroid2 ? [DEFAULT_WEEKEND_POLAROID_IMAGE] : []),
+      ...HOME_GALLERY_IMAGE_PATHS,
+      ...guestGalleryImagePaths,
+    ];
+    const seen = new Set<string>();
+    return ordered.filter((path) => {
+      const normalized = path.startsWith('/') ? path : `/${path}`;
+      if (seen.has(normalized)) return false;
+      seen.add(normalized);
+      return true;
+    });
+  }, [guestGalleryImagePaths, hasGuestPolaroid2]);
+
+  const galleryLoopImagePaths = useMemo(
+    () => [...galleryImagePaths, ...galleryImagePaths],
+    [galleryImagePaths],
+  );
+
+  const applyBottomScene = useCallback(() => {
+    const main = mainRef.current;
+    const section = gallerySectionRef.current;
+    const pin = galleryPinRef.current;
+    if (!main || !section || !pin) return;
+
+    const vh = Math.max(1, window.innerHeight);
+    const rect = section.getBoundingClientRect();
+    const startY = vh * 0.9;
+    const endY = vh * 0.14;
+    const progressRaw = (startY - rect.top) / Math.max(1, startY - endY);
+    const progress = Math.max(0, Math.min(1, progressRaw));
+    const liftPx = Math.round(vh * 0.14 * progress);
+
+    const [baseR, baseG, baseB] = FALLBACK_PAGE_BG_RGB;
+    const r = Math.round(baseR * (1 - progress));
+    const g = Math.round(baseG * (1 - progress));
+    const b = Math.round(baseB * (1 - progress));
+    bottomFadeProgressRef.current = progress;
+
+    main.style.setProperty('--home-v2-page-bg', `rgb(${r}, ${g}, ${b})`);
+    main.style.setProperty('--home-v2-bottom-fade', progress.toFixed(3));
+    pin.style.setProperty('--home-v2-gallery-lift', `${liftPx}px`);
+  }, []);
 
   useEffect(() => {
     if (!isMenuOpen) return;
@@ -159,6 +229,8 @@ export default function HomeV2() {
     const wrap = imageWrapRef.current;
     if (!main || !shell || !wrap) return;
 
+    applyBottomScene();
+
     const { compress, fade, S, minScale } = metricsRef.current;
     const y = Math.max(0, window.scrollY);
     const reduced = reducedMotionRef.current;
@@ -202,8 +274,9 @@ export default function HomeV2() {
       shell.style.top = '';
     }
 
-    main.toggleAttribute('data-home-v2-header-dark', tFadeShell > 0.55 || released);
-  }, []);
+    const wantsDarkHeaderIcons = (tFadeShell > 0.55 || released) && bottomFadeProgressRef.current < 0.55;
+    main.toggleAttribute('data-home-v2-header-dark', wantsDarkHeaderIcons);
+  }, [applyBottomScene]);
 
   const onScrollOrResize = useCallback(() => {
     if (rafRef.current != null) return;
@@ -373,6 +446,30 @@ export default function HomeV2() {
                     alt="Emily and Arden"
                   />
                 </div>
+              </div>
+            </div>
+          </section>
+          <section ref={gallerySectionRef} className="home-v2__gallery" aria-label="Photo gallery">
+            <div ref={galleryPinRef} className="home-v2__gallery-pin">
+              <div className="home-v2__gallery-viewport">
+                <div className="home-v2__gallery-track">
+                  {galleryLoopImagePaths.map((imagePath, index) => (
+                    <figure key={`${imagePath}-${index}`} className="home-v2__gallery-item">
+                      <img
+                        className="home-v2__gallery-image"
+                        src={resolveAsset(imagePath)}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </figure>
+                  ))}
+                </div>
+              </div>
+              <div className="home-v2__rsvp-placeholder">
+                <button type="button" className="ui-button ui-button--text" disabled>
+                  RSVP
+                </button>
               </div>
             </div>
           </section>

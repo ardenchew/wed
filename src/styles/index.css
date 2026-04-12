@@ -1565,20 +1565,36 @@ body:has(.home-page--schedule) {
 
 .home-v2__gallery {
   margin-top: clamp(4.5rem, 12vw, 8rem);
-  min-height: clamp(128vh, 150vh, 180vh);
-  padding: 0 0 clamp(2.5rem, 8vw, 4.25rem);
+  min-height: 200vh;
+  padding: 0;
   background: var(--home-v2-page-bg, var(--background));
 }
 
 .home-v2__gallery-pin {
+  --home-v2-gallery-band-h: clamp(240px, 46vh, 520px);
+  --home-v2-gallery-start-offset: clamp(2.75rem, 10vh, 6.5rem);
   position: sticky;
-  top: 50vh;
-  transform: translateY(-50%);
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 .home-v2__gallery-viewport {
-  position: relative;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: var(--home-v2-gallery-band-h);
+  min-height: var(--home-v2-gallery-band-h);
   overflow: hidden;
+  transform: translate3d(
+    0,
+    calc(-50% + var(--home-v2-gallery-start-offset) - var(--home-v2-gallery-lift, 0px)),
+    0
+  );
+  transition: transform 120ms linear;
+  will-change: transform;
 }
 
 .home-v2__gallery-track {
@@ -1606,13 +1622,22 @@ body:has(.home-page--schedule) {
 }
 
 .home-v2__rsvp-placeholder {
-  margin-top: clamp(1.5rem, 4vw, 2.8rem);
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(75vh + var(--home-v2-gallery-band-h) / 4);
+  top: calc(75dvh + var(--home-v2-gallery-band-h) / 4);
+  margin: 0;
+  padding-bottom: 0;
   display: flex;
+  align-items: center;
   justify-content: center;
+  transform: translateY(-50%);
+  z-index: 2;
 }
 
 .home-v2__rsvp-placeholder .ui-button {
-  min-width: 130px;
+  min-width: 0;
   color: color-mix(in srgb, #141414 calc((1 - var(--home-v2-bottom-fade, 0)) * 100%), #fff);
   border-color: color-mix(in srgb, #141414 calc((1 - var(--home-v2-bottom-fade, 0)) * 100%), #fff);
 }
@@ -1644,12 +1669,36 @@ body:has(.home-page--schedule) {
 
   .home-v2__gallery {
     margin-top: clamp(3.5rem, 14vw, 5rem);
-    min-height: 120vh;
-    padding-bottom: 2.6rem;
+    min-height: 180vh;
+    padding-bottom: 0;
   }
 
   .home-v2__gallery-track {
     animation-duration: 24s;
+  }
+}
+
+@media (max-width: 640px) {
+  .home-v2__gallery-pin {
+    --home-v2-gallery-band-h: 60vh;
+    --home-v2-gallery-start-offset: clamp(1.5rem, 7vh, 3.25rem);
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  .home-v2__gallery-viewport {
+    min-height: 60dvh;
+  }
+
+  .home-v2__gallery-track {
+    height: 100%;
+    gap: 8px;
+  }
+
+  .home-v2__gallery-item {
+    width: min(68vw, 320px);
+    height: 100%;
+    aspect-ratio: auto;
   }
 }
 

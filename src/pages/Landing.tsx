@@ -234,7 +234,7 @@ export default function Landing() {
                           onClick={handleEnterClick}
                           aria-label="Enter wedding site"
                         >
-                          Enter
+                          ENTER
                         </button>
                       ) : (
                         <input
