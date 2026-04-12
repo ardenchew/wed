@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Polaroid } from '../components/Polaroid';
 import { GUESTS } from '../config/guests';
 import { useUser } from '../context/UserContext';
+import Schedule from './Schedule';
 import '../styles/index.css';
 
 type NavItem = {
@@ -99,7 +100,7 @@ export default function Home() {
   }, [activePath, updateDrift]);
 
   return (
-    <main className="home-page">
+    <main className={`home-page${activePath === '/home/schedule' ? ' home-page--schedule' : ''}`}>
       <header className="home-header">
         <button type="button" className="home-logo" onClick={handleLogoClick} aria-label="Go home">
           <img src={resolveAsset('e_a_logo.png')} alt="E & A" className="home-logo__img" />
@@ -206,6 +207,8 @@ export default function Home() {
             </div>
           </div>
         </div>
+      ) : activePath === '/home/schedule' ? (
+        <Schedule />
       ) : (
         <section className="home-page__subpage" aria-live="polite">
           <p className="home-placeholder">Placeholder: {activeLabel}</p>

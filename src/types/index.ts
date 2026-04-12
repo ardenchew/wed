@@ -17,6 +17,7 @@ export interface Event {
   location: string;
   description: string;
   attire?: string;
+  image?: string;
 }
 
 export interface GuestPolaroid {

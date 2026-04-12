@@ -25,6 +25,7 @@
   --border-color: #e0e0e0;
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --green: #467355;
 }
 
 body {
@@ -415,6 +416,14 @@ body {
   overflow-x: hidden;
 }
 
+.home-page--schedule {
+  background: var(--green);
+}
+
+body:has(.home-page--schedule) {
+  background: var(--green);
+}
+
 /* Home Header */
 .home-header {
   position: sticky;
@@ -693,6 +702,218 @@ body {
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.2);
   padding: 0.65rem 1rem;
+}
+
+/* Schedule Page */
+.schedule {
+  position: relative;
+  min-height: 100vh;
+  background: var(--green);
+  color: #fff;
+  font-family: 'Bacasime Antique', Georgia, 'Times New Roman', serif;
+  padding: 0 0 80px;
+}
+
+.schedule__vine {
+  position: absolute;
+  top: -120px;
+  bottom: 0;
+  left: 25%;
+  width: 74px;
+  transform: translateX(-50%);
+  background: url('/vine.png') repeat-y center top;
+  background-size: 74px auto;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.schedule__title {
+  position: relative;
+  z-index: 2;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 400;
+  text-align: center;
+  line-height: 1.5;
+  margin-top: calc(-4px - clamp(60px, 7vw, 106px) / 2 - 0.75em);
+  padding: 0;
+}
+
+.schedule__content {
+  position: relative;
+  z-index: 2;
+  padding-top: 16px;
+}
+
+.schedule__date-group {
+  margin-bottom: 40px;
+}
+
+.schedule__date-header {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-left: 25%;
+  padding-left: 50px;
+  margin-bottom: 24px;
+}
+
+.schedule__date-line {
+  flex: 0 0 auto;
+  width: 80px;
+  height: 1px;
+  background: #fff;
+}
+
+.schedule__date-label {
+  flex: 0 0 auto;
+  padding: 8px 20px;
+  background: var(--green);
+  font-size: clamp(1.1rem, 2vw, 1.6rem);
+  font-weight: 400;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.schedule__event {
+  display: flex;
+  margin-bottom: 36px;
+}
+
+.schedule__event-left {
+  width: 25%;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 50px;
+}
+
+.schedule__event-image-wrap {
+  width: 190px;
+  max-width: 100%;
+  height: 140px;
+  overflow: hidden;
+}
+
+.schedule__event-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  opacity: 0.85;
+}
+
+.schedule__event-right {
+  flex: 1;
+  display: flex;
+  gap: 24px;
+  padding-left: 50px;
+  padding-right: 2rem;
+}
+
+.schedule__event-details {
+  flex: 0 0 auto;
+  min-width: 200px;
+}
+
+.schedule__event-name {
+  font-size: clamp(1.2rem, 2vw, 1.65rem);
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.schedule__event-meta {
+  font-size: clamp(0.9rem, 1.4vw, 1.1rem);
+  line-height: 1.5;
+  opacity: 0.92;
+}
+
+.schedule__event-description {
+  flex: 1;
+  font-size: clamp(0.9rem, 1.4vw, 1.1rem);
+  line-height: 1.6;
+  max-width: 610px;
+}
+
+/* Responsive - Schedule */
+@media (max-width: 900px) {
+  .schedule__vine {
+    left: 20%;
+    width: 50px;
+    background-size: 50px auto;
+  }
+
+  .schedule__event-left {
+    width: 20%;
+    padding: 0 30px 0 10px;
+  }
+
+  .schedule__event-right {
+    flex-direction: column;
+    gap: 8px;
+    padding-left: 30px;
+  }
+
+  .schedule__date-header {
+    margin-left: 20%;
+    padding-left: 30px;
+  }
+
+  .schedule__event-image-wrap {
+    width: 140px;
+    height: 100px;
+  }
+}
+
+@media (max-width: 560px) {
+  .schedule__vine {
+    display: none;
+  }
+
+  .schedule__event {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 0 1rem;
+  }
+
+  .schedule__event-left {
+    width: 100%;
+    justify-content: center;
+    padding: 0;
+    margin-bottom: 12px;
+  }
+
+  .schedule__event-right {
+    flex-direction: column;
+    align-items: center;
+    padding-left: 0;
+    padding-right: 0;
+    gap: 12px;
+  }
+
+  .schedule__event-details {
+    text-align: center;
+  }
+
+  .schedule__event-description {
+    text-align: center;
+  }
+
+  .schedule__date-header {
+    margin-left: 0;
+    padding-left: 0;
+    justify-content: center;
+  }
+
+  .schedule__date-line {
+    width: 40px;
+  }
+
+  .schedule__event-image-wrap {
+    width: 160px;
+    height: 120px;
+  }
 }
 
 /* Responsive - Landing */

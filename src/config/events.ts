@@ -14,6 +14,7 @@ export const EVENTS: Record<string, Event> = {
     location: 'San Francisco City Hall',
     description: 'Intimate ceremony for immediate family.',
     attire: 'formal',
+    image: '/placeholder_event.svg',
   },
   immediate_family_dinner: {
     slug: 'immediate_family_dinner',
@@ -22,5 +23,6 @@ export const EVENTS: Record<string, Event> = {
     location: 'Rich Table',
     description: "Small dinner at Em and Ard's San Francisco favorite Rich Table with the immediate family following the courthouse ceremony.",
     attire: 'semi-formal',
+    image: '/placeholder_event.svg',
   },
 };
