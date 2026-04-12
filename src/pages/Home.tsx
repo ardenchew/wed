@@ -182,11 +182,17 @@ export default function Home() {
             </div>
           </div>
 
-          {guest?.welcomeText && (
+          {(guest?.welcomeGreetingText || guest?.welcomeBodyText || guest?.welcomeSignatureText) && (
             <div className="home-welcome">
-              <p className="home-welcome__text">{guest.welcomeText}</p>
-              <p className="home-welcome__signoff">Much love,</p>
-              <p className="home-welcome__signoff">Emily and Arden</p>
+              {guest?.welcomeGreetingText && (
+                <p className="home-welcome__signoff">{guest.welcomeGreetingText}</p>
+              )}
+              {guest?.welcomeBodyText && (
+                <p className="home-welcome__text">{guest.welcomeBodyText}</p>
+              )}
+              {guest?.welcomeSignatureText && (
+                <p className="home-welcome__signoff">{guest.welcomeSignatureText}</p>
+              )}
             </div>
           )}
 

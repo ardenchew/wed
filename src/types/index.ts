@@ -30,7 +30,9 @@ export interface Guest {
   first: string;
   last: string;
   nickname?: string;
-  welcomeText?: string;
+  welcomeGreetingText?: string;
+  welcomeBodyText?: string;
+  welcomeSignatureText?: string;
   polaroid2?: GuestPolaroid;
   polaroid3?: GuestPolaroid;
   party?: string[]; // optional: a list of guest slugs in the party

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Polaroid } from '../components/Polaroid';
+import { GUESTS } from '../config/guests';
 import { useUser } from '../context/UserContext';
 import '../styles/index.css';
 
@@ -81,7 +83,7 @@ function computeHeroMinScaleForHeader(main: HTMLElement | null): number {
 }
 
 export default function HomeV2() {
-  const { signOut } = useUser();
+  const { user, signOut } = useUser();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -95,6 +97,14 @@ export default function HomeV2() {
   const heroFadeTargetRgbRef = useRef<[number, number, number]>(FALLBACK_PAGE_BG_RGB);
 
   const activePath = '/home-v2';
+  const guest = user?.slug ? GUESTS[user.slug] ?? user : user;
+  const weekendGreeting = guest?.welcomeGreetingText ?? 'Welcome!';
+  const weekendBody =
+    guest?.welcomeBodyText ??
+    'We are so happy to celebrate with you. More details for the weekend are coming soon.';
+  const weekendSignature = guest?.welcomeSignatureText ?? 'Much love, Emily and Arden';
+  const weekendPolaroidPath = guest?.polaroid2?.imagePath ?? '/emily_arden_stony_hill.png';
+  const weekendPolaroidDate = guest?.polaroid2?.dateText ?? '9 17 2025';
 
   useEffect(() => {
     if (!isMenuOpen) return;
@@ -241,6 +251,33 @@ export default function HomeV2() {
     return () => ro.disconnect();
   }, [syncMetrics, applyScroll]);
 
+  useEffect(() => {
+    const main = mainRef.current;
+    if (!main) return;
+    const revealElements = Array.from(main.querySelectorAll<HTMLElement>('.home-v2__reveal'));
+    if (!revealElements.length) return;
+
+    if (typeof IntersectionObserver === 'undefined') {
+      revealElements.forEach((el) => el.classList.add('is-visible'));
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          (entry.target as HTMLElement).classList.toggle('is-visible', entry.isIntersecting);
+        });
+      },
+      {
+        threshold: 0.24,
+        rootMargin: '0px 0px -10% 0px',
+      },
+    );
+
+    revealElements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <main ref={mainRef} className="home-page home-v2">
       <div className="home-v2__scroll-sink" aria-hidden="true" />
@@ -316,12 +353,27 @@ export default function HomeV2() {
         </div>
 
         <div className="home-v2__scroll-track">
-          <section className="home-v2__scroll" aria-labelledby="home-v2-scroll-heading">
+          <section className="home-v2__scroll" aria-label="Weekend details">
             <div className="home-v2__scroll-inner">
-              <h2 id="home-v2-scroll-heading" className="home-v2__scroll-heading">
-                Weekend details
-              </h2>
-              <p className="home-v2__scroll-lede">More to share soon.</p>
+              <div className="home-v2__weekend-content">
+                <div className="home-v2__weekend-text">
+                  <p className="home-v2__weekend-greeting home-v2__reveal">{weekendGreeting}</p>
+                  <p className="home-v2__weekend-body home-v2__reveal home-v2__reveal--step-1">
+                    {weekendBody}
+                  </p>
+                  <p className="home-v2__weekend-signature home-v2__reveal home-v2__reveal--step-2">
+                    {weekendSignature}
+                  </p>
+                </div>
+                <div className="home-v2__weekend-image-wrap home-v2__reveal home-v2__reveal--step-3">
+                  <Polaroid
+                    className="home-v2__weekend-polaroid"
+                    dateText={weekendPolaroidDate}
+                    imagePath={weekendPolaroidPath}
+                    alt="Emily and Arden"
+                  />
+                </div>
+              </div>
             </div>
           </section>
         </div>
