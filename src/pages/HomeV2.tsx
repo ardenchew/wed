@@ -1,24 +1,9 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { HomeHeader } from '../components/HomeHeader';
 import { Polaroid } from '../components/Polaroid';
-import { GUESTS } from '../config/guests';
-import { useUser } from '../context/UserContext';
+import { useGuest } from '../hooks/useGuest';
+import { resolveAsset } from '../utils/asset';
 import '../styles/index.css';
-
-type NavItem = {
-  label: string;
-  path: string;
-};
-
-const NAV_ITEMS: NavItem[] = [
-  { label: 'Home', path: '/home-v2' },
-  { label: 'Schedule', path: '/home/schedule' },
-  { label: 'RSVP', path: '/home/rsvp' },
-  { label: 'Gift', path: '/home/gift' },
-];
-
-const resolveAsset = (path: string) =>
-  `${import.meta.env.BASE_URL}${path.replace(/^\/+/, '')}`;
 
 /** Scroll distance (× viewport height) before hero docks into the document and scrolls normally */
 const COMPRESS_VH = 0.5;
@@ -86,10 +71,7 @@ function computeHeroMinScaleForHeader(main: HTMLElement | null): number {
 }
 
 export default function HomeV2() {
-  const { user, signOut } = useUser();
-  const navigate = useNavigate();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const guest = useGuest();
   const mainRef = useRef<HTMLElement>(null);
   const heroShellRef = useRef<HTMLDivElement>(null);
   const imageWrapRef = useRef<HTMLDivElement>(null);
@@ -102,8 +84,6 @@ export default function HomeV2() {
   /** Fade target: same resolved color as `.home-v2__scroll` so the docked hero matches weekend details. */
   const heroFadeTargetRgbRef = useRef<[number, number, number]>(FALLBACK_PAGE_BG_RGB);
 
-  const activePath = '/home-v2';
-  const guest = user?.slug ? GUESTS[user.slug] ?? user : user;
   const weekendGreeting = guest?.welcomeGreetingText ?? 'Welcome!';
   const weekendBody =
     guest?.welcomeBodyText ??
@@ -175,29 +155,6 @@ export default function HomeV2() {
     main.style.setProperty('--home-v2-bottom-fade', progress.toFixed(3));
     pin.style.setProperty('--home-v2-gallery-lift', `${liftPx}px`);
   }, []);
-
-  useEffect(() => {
-    if (!isMenuOpen) return;
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setIsMenuOpen(false);
-    };
-    const handleClickOutside = (event: MouseEvent) => {
-      if (!menuRef.current?.contains(event.target as Node)) setIsMenuOpen(false);
-    };
-
-    document.addEventListener('keydown', handleEscape);
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isMenuOpen]);
-
-  const handleLogoClick = () => {
-    navigate('/home-v2');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
 
   const syncMetrics = useCallback(() => {
     if (typeof window === 'undefined') return;
@@ -375,54 +332,7 @@ export default function HomeV2() {
 
       <div className="home-v2__mount-scope">
         <div className="home-v2__fixed-header-wrap">
-          <header className="home-header">
-            <button type="button" className="home-logo" onClick={handleLogoClick} aria-label="Go home">
-              <img src={resolveAsset('logo.svg')} alt="E & A" className="home-logo__img" />
-            </button>
-
-            <div className="home-menu" ref={menuRef}>
-              <button
-                type="button"
-                className="home-menu__trigger"
-                aria-label="Open menu"
-                aria-expanded={isMenuOpen}
-                aria-controls="home-v2-menu-panel"
-                onClick={() => setIsMenuOpen((o) => !o)}
-              >
-                <span className="home-menu__line" />
-                <span className="home-menu__line" />
-                <span className="home-menu__line" />
-              </button>
-
-              {isMenuOpen && (
-                <div id="home-v2-menu-panel" className="home-menu__panel" role="menu" aria-label="User menu">
-                  <div className="home-menu__section">
-                    {NAV_ITEMS.map((item) => {
-                      const isActive = activePath === item.path;
-                      return (
-                        <button
-                          key={`menu-${item.path}`}
-                          type="button"
-                          className={`home-menu__action${isActive ? ' home-menu__action--active' : ''}`}
-                          role="menuitem"
-                          onClick={() => {
-                            setIsMenuOpen(false);
-                            navigate(item.path);
-                          }}
-                        >
-                          {item.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <div className="home-menu__divider" aria-hidden="true" />
-                  <button type="button" className="home-menu__action" role="menuitem" onClick={signOut}>
-                    Sign Out
-                  </button>
-                </div>
-              )}
-            </div>
-          </header>
+          <HomeHeader activePath="/home-v2" />
         </div>
 
         <div className="home-v2__scroll-track">
