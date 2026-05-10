@@ -1,13 +1,8 @@
-/**
- * Main App Component
- * 
- * Sets up routing and provides user context
- */
-
 import { useCallback, useState } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { FreshLoadSplash } from './components/FreshLoadSplash';
-import { UserProvider, useUser } from './context/UserContext';
+import { UserProvider } from './context/UserProvider';
+import { useUser } from './hooks/useUser';
 import Landing from './pages/Landing';
 import Home from './pages/Home';
 import HomeV2 from './pages/HomeV2';

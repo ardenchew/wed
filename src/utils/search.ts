@@ -1,10 +1,4 @@
 /**
- * Search Utilities
- * 
- * Functions for searching user names with fuzzy matching
- */
-
-/**
  * Normalizes a string for search comparison
  * - Converts to lowercase
  * - Removes extra whitespace (replaces multiple spaces with single space)

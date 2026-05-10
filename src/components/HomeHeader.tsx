@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NAV_ITEMS } from '../config/nav';
-import { useUser } from '../context/UserContext';
+import { useUser } from '../hooks/useUser';
 import { resolveAsset } from '../utils/asset';
 
 const HOME_PATH = NAV_ITEMS[0].path;
@@ -10,6 +10,11 @@ type HomeHeaderProps = {
   activePath: string;
 };
 
+/**
+ * Header for /home-v2 and /home/*. The `.home-logo` and `.home-menu__trigger` class names
+ * are queried by useHomeV2HeroScene to compute the hero's minimum compressed scale — keep
+ * them stable.
+ */
 export function HomeHeader({ activePath }: HomeHeaderProps) {
   const navigate = useNavigate();
   const { signOut } = useUser();

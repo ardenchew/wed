@@ -1,9 +1,3 @@
-/**
- * Guest Configuration
- * 
- * Predefined guests for the wedding
- */
-
 import type { Guest } from '../types';
 
 export const GUESTS: Record<string, Guest> = {

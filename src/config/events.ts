@@ -1,9 +1,3 @@
-/**
- * Event Configuration
- * 
- * Predefined events for the wedding
- */
-
 import type { Event } from '../types';
 
 export const EVENTS: Record<string, Event> = {
