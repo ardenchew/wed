@@ -304,8 +304,8 @@ export default function HomeV2() {
         <div ref={imageWrapRef} className="home-v2__hero-image-wrap">
           <img
             className="home-v2__hero-img"
-            src={cloudinaryUrl(HERO_PUBLIC_ID, { w: 1800, c: 'limit' })}
-            srcSet={cloudinarySrcSet(HERO_PUBLIC_ID, [768, 1200, 1800, 2400])}
+            src={cloudinaryUrl(HERO_PUBLIC_ID, { w: 1800, c: 'limit', q: 95 })}
+            srcSet={cloudinarySrcSet(HERO_PUBLIC_ID, [768, 1200, 1800, 2400], 95)}
             sizes="100vw"
             alt=""
             decoding="async"

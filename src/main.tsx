@@ -7,7 +7,7 @@ import { cloudinaryUrl } from './utils/cloudinary'
 const root = document.documentElement
 root.style.setProperty(
   '--bg-crater-lake',
-  `url("${cloudinaryUrl('wed/home/hero_crater_lake', { w: 1600, c: 'limit' })}")`,
+  `url("${cloudinaryUrl('wed/home/hero_crater_lake', { w: 1600, c: 'limit', q: 95 })}")`,
 )
 root.style.setProperty(
   '--bg-vine',
