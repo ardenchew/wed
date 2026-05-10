@@ -14,14 +14,6 @@ function createStore(): DataStore {
 
 export const store = createStore();
 
-export async function getStoreValue<T>(key: string): Promise<T | null> {
-  return store.get<T>(key);
-}
-
-export async function setStoreValue<T>(key: string, value: T): Promise<void> {
-  await store.set<T>(key, value);
-}
-
 export async function validatePassword(guestSlug: string, password: string): Promise<boolean> {
   return store.validatePassword(guestSlug, password);
 }
