@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { HomeHeader } from '../components/HomeHeader';
 import { Polaroid } from '../components/Polaroid';
 import { useGuest } from '../hooks/useGuest';
-import { resolveAsset } from '../utils/asset';
+import { cloudinaryUrl, cloudinarySrcSet } from '../utils/cloudinary';
 import '../styles/index.css';
 
 /** Scroll distance (× viewport height) before hero docks into the document and scrolls normally */
@@ -20,9 +20,10 @@ const MIN_SCALE_ABSOLUTE_FLOOR = 0.42;
 
 /** Matches :root --background when CSS cannot be read yet */
 const FALLBACK_PAGE_BG_RGB: [number, number, number] = [250, 250, 250];
-const DEFAULT_WEEKEND_POLAROID_IMAGE = '/emily_arden_stony_hill.png';
+const DEFAULT_WEEKEND_POLAROID_PUBLIC_ID = 'wed/home/emily_arden_stony_hill';
 const DEFAULT_WEEKEND_POLAROID_DATE = '9 5 2025';
-const HOME_GALLERY_IMAGE_PATHS = ['/home/home1.png', '/home/home2.png', '/home/home3.png'];
+const HOME_GALLERY_PUBLIC_IDS = ['wed/home/home1', 'wed/home/home2', 'wed/home/home3'];
+const HERO_PUBLIC_ID = 'wed/home/hero_crater_lake';
 
 function parseCssRgb(color: string): [number, number, number] | null {
   const m = color.trim().match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/);
@@ -89,46 +90,34 @@ export default function HomeV2() {
     guest?.welcomeBodyText ??
     'We are so happy to celebrate with you. More details for the weekend are coming soon.';
   const weekendSignature = guest?.welcomeSignatureText ?? 'Much love, Emily and Arden';
-  const weekendPolaroidPath = guest?.polaroid2?.imagePath ?? DEFAULT_WEEKEND_POLAROID_IMAGE;
-  const weekendPolaroidDate = guest?.polaroid2?.dateText ?? DEFAULT_WEEKEND_POLAROID_DATE;
-  const hasGuestPolaroid2 = Boolean(guest?.polaroid2?.imagePath);
+  const guestWeekendPolaroid = guest?.polaroids?.[0];
+  const weekendPolaroidPublicId = guestWeekendPolaroid?.publicId ?? DEFAULT_WEEKEND_POLAROID_PUBLIC_ID;
+  const weekendPolaroidDate = guestWeekendPolaroid?.dateText ?? DEFAULT_WEEKEND_POLAROID_DATE;
+  const hasGuestWeekendPolaroid = Boolean(guestWeekendPolaroid);
 
-  const guestGalleryImagePaths = useMemo(() => {
-    if (!guest) return [];
-    return Object.entries(guest).flatMap(([key, value]) => {
-      if (
-        !key.startsWith('polaroid') ||
-        key === 'polaroid2' ||
-        !value ||
-        typeof value !== 'object' ||
-        !('imagePath' in value)
-      ) {
-        return [];
-      }
+  const guestGalleryPublicIds = useMemo(
+    () => guest?.polaroids?.slice(1).map((p) => p.publicId) ?? [],
+    [guest?.polaroids],
+  );
 
-      const imagePath = value.imagePath;
-      return typeof imagePath === 'string' && imagePath.length > 0 ? [imagePath] : [];
-    });
-  }, [guest]);
-
-  const galleryImagePaths = useMemo(() => {
+  const galleryPublicIds = useMemo(() => {
     const ordered = [
-      ...(hasGuestPolaroid2 ? [DEFAULT_WEEKEND_POLAROID_IMAGE] : []),
-      ...HOME_GALLERY_IMAGE_PATHS,
-      ...guestGalleryImagePaths,
+      // When the guest has their own weekend polaroid, also surface the default hero in the gallery.
+      ...(hasGuestWeekendPolaroid ? [DEFAULT_WEEKEND_POLAROID_PUBLIC_ID] : []),
+      ...HOME_GALLERY_PUBLIC_IDS,
+      ...guestGalleryPublicIds,
     ];
     const seen = new Set<string>();
-    return ordered.filter((path) => {
-      const normalized = path.startsWith('/') ? path : `/${path}`;
-      if (seen.has(normalized)) return false;
-      seen.add(normalized);
+    return ordered.filter((id) => {
+      if (seen.has(id)) return false;
+      seen.add(id);
       return true;
     });
-  }, [guestGalleryImagePaths, hasGuestPolaroid2]);
+  }, [guestGalleryPublicIds, hasGuestWeekendPolaroid]);
 
-  const galleryLoopImagePaths = useMemo(
-    () => [...galleryImagePaths, ...galleryImagePaths],
-    [galleryImagePaths],
+  const galleryLoopPublicIds = useMemo(
+    () => [...galleryPublicIds, ...galleryPublicIds],
+    [galleryPublicIds],
   );
 
   const applyBottomScene = useCallback(() => {
@@ -315,9 +304,13 @@ export default function HomeV2() {
         <div ref={imageWrapRef} className="home-v2__hero-image-wrap">
           <img
             className="home-v2__hero-img"
-            src={resolveAsset('crater_lake.png')}
+            src={cloudinaryUrl(HERO_PUBLIC_ID, { w: 1800, c: 'limit' })}
+            srcSet={cloudinarySrcSet(HERO_PUBLIC_ID, [768, 1200, 1800, 2400])}
+            sizes="100vw"
             alt=""
             decoding="async"
+            loading="eager"
+            fetchPriority="high"
           />
         </div>
         <div className="home-v2__hero-scroll-hint" aria-hidden="true" />
@@ -352,7 +345,7 @@ export default function HomeV2() {
                   <Polaroid
                     className="home-v2__weekend-polaroid"
                     dateText={weekendPolaroidDate}
-                    imagePath={weekendPolaroidPath}
+                    publicId={weekendPolaroidPublicId}
                     alt="Emily and Arden"
                   />
                 </div>
@@ -363,11 +356,13 @@ export default function HomeV2() {
             <div ref={galleryPinRef} className="home-v2__gallery-pin">
               <div className="home-v2__gallery-viewport">
                 <div className="home-v2__gallery-track">
-                  {galleryLoopImagePaths.map((imagePath, index) => (
-                    <figure key={`${imagePath}-${index}`} className="home-v2__gallery-item">
+                  {galleryLoopPublicIds.map((publicId, index) => (
+                    <figure key={`${publicId}-${index}`} className="home-v2__gallery-item">
                       <img
                         className="home-v2__gallery-image"
-                        src={resolveAsset(imagePath)}
+                        src={cloudinaryUrl(publicId, { w: 1200, c: 'limit' })}
+                        srcSet={cloudinarySrcSet(publicId, [600, 1200, 1800])}
+                        sizes="(max-width: 768px) 90vw, 60vw"
                         alt=""
                         loading="lazy"
                         decoding="async"
