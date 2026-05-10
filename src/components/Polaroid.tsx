@@ -1,3 +1,5 @@
+import { resolveAsset } from '../utils/asset';
+
 interface PolaroidProps {
   dateText: string;
   imagePath: string;
@@ -7,11 +9,7 @@ interface PolaroidProps {
 
 export function Polaroid({ dateText, imagePath, alt = '', className = '' }: PolaroidProps) {
   const classNames = ['polaroid', className].filter(Boolean).join(' ');
-  const isAbsoluteUrl = /^(?:https?:)?\/\//.test(imagePath) || imagePath.startsWith('data:');
-  const normalizedPath = imagePath.replace(/^\/+/, '');
-  const resolvedImagePath = isAbsoluteUrl
-    ? imagePath
-    : `${import.meta.env.BASE_URL}${normalizedPath}`;
+  const resolvedImagePath = resolveAsset(imagePath);
 
   return (
     <article className={classNames} aria-label="Photo memory card">

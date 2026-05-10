@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { resolveAsset } from '../utils/asset';
 
 type Props = {
   onComplete: () => void;
@@ -60,7 +61,7 @@ export function FreshLoadSplash({ onComplete, staticPreview = false }: Props) {
         <p className="fresh-load-splash__name">Emily</p>
         <img
           className="fresh-load-splash__logo"
-          src={`${import.meta.env.BASE_URL}logo.svg`}
+          src={resolveAsset('logo.svg')}
           alt=""
           width={89}
           height={90}

@@ -1,11 +1,8 @@
 import { useMemo } from 'react';
 import { EVENTS } from '../config/events';
-import { GUESTS } from '../config/guests';
-import { useUser } from '../context/UserContext';
+import { useGuest } from '../hooks/useGuest';
 import type { Event } from '../types';
-
-const resolveAsset = (path: string) =>
-  `${import.meta.env.BASE_URL}${path.replace(/^\/+/, '')}`;
+import { resolveAsset } from '../utils/asset';
 
 const PLACEHOLDER_IMAGE = '/placeholder_event.svg';
 
@@ -58,17 +55,15 @@ function groupEventsByDate(events: Event[]): DateGroup[] {
 }
 
 export default function Schedule() {
-  const { user } = useUser();
-  const guest = user?.slug ? GUESTS[user.slug] ?? user : user;
-  const guestEventSlugs = new Set(guest?.events ?? []);
+  const guest = useGuest();
 
   const dateGroups = useMemo(() => {
+    const guestEventSlugs = new Set(guest?.events ?? []);
     const accessible = Object.values(EVENTS).filter((e) =>
       guestEventSlugs.has(e.slug),
     );
     return groupEventsByDate(accessible);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.slug]);
+  }, [guest?.events]);
 
   return (
     <section className="schedule">
