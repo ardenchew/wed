@@ -15,7 +15,8 @@ export interface Event {
 }
 
 export interface GuestPolaroid {
-  imagePath: string;
+  /** Cloudinary public_id, e.g. `wed/guests/debbie_kwan/1`. */
+  publicId: string;
   dateText: string;
 }
 
@@ -27,8 +28,11 @@ export interface Guest {
   welcomeGreetingText?: string;
   welcomeBodyText?: string;
   welcomeSignatureText?: string;
-  polaroid2?: GuestPolaroid;
-  polaroid3?: GuestPolaroid;
+  /**
+   * Per-guest polaroids. `polaroids[0]` is the weekend hero polaroid;
+   * `polaroids[1+]` are appended to the gallery loop.
+   */
+  polaroids?: GuestPolaroid[];
   party?: string[]; // optional: a list of guest slugs in the party
   events: string[]; // a list of event slugs
 }

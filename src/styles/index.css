@@ -163,7 +163,7 @@ body.splash-active {
 .landing-cover-image {
   position: absolute;
   inset: 0;
-  background-image: url('/crater_lake.png');
+  background-image: var(--bg-crater-lake);
   background-size: cover;
   background-position: center;
 }
@@ -931,7 +931,7 @@ body:has(.home-page--schedule) {
   left: 25%;
   width: 74px;
   transform: translateX(-50%);
-  background: url('/vine.png') repeat-y center top;
+  background: var(--bg-vine) repeat-y center top;
   background-size: 74px auto;
   pointer-events: none;
   z-index: 1;

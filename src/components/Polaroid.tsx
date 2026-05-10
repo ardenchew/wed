@@ -1,32 +1,27 @@
-import { resolveAsset } from '../utils/asset';
+import { cloudinaryUrl, cloudinarySrcSet } from '../utils/cloudinary';
 
 interface PolaroidProps {
   dateText: string;
-  imagePath: string;
+  /** Cloudinary public_id, e.g. `wed/guests/debbie_kwan/1`. */
+  publicId: string;
   alt?: string;
   className?: string;
 }
 
-export function Polaroid({ dateText, imagePath, alt = '', className = '' }: PolaroidProps) {
+export function Polaroid({ dateText, publicId, alt = '', className = '' }: PolaroidProps) {
   const classNames = ['polaroid', className].filter(Boolean).join(' ');
-  const resolvedImagePath = resolveAsset(imagePath);
 
   return (
     <article className={classNames} aria-label="Photo memory card">
       <div className="polaroid__imageWrap">
         <img
           className="polaroid__image"
-          src={resolvedImagePath}
+          src={cloudinaryUrl(publicId, { w: 600, c: 'limit' })}
+          srcSet={cloudinarySrcSet(publicId, [400, 600, 900])}
+          sizes="(max-width: 768px) 80vw, 360px"
           alt={alt}
-          onError={(event) => {
-            // fallback for dev-server hits without /wed/ base
-            const target = event.currentTarget;
-            if (target.dataset.fallbackApplied === 'true') {
-              return;
-            }
-            target.dataset.fallbackApplied = 'true';
-            target.src = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
-          }}
+          loading="lazy"
+          decoding="async"
         />
         <p className="polaroid__date">{dateText}</p>
       </div>

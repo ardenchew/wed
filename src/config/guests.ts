@@ -31,8 +31,10 @@ export const GUESTS: Record<string, Guest> = {
     welcomeGreetingText: 'Hi Debbie!',
     welcomeBodyText: 'What up my glip glop. Debbie, you were born with a twin but now you get to have a brother as well. That seems pretty snazzy. You look like a cabbage and you smell like one too. Make sure to checkout Room 40 while you’re in sf.',
     welcomeSignatureText: 'Much love, Emily and Arden',
-    polaroid2: { imagePath: '/debbie/debbie_2.png', dateText: '1 29 2022' },
-    polaroid3: { imagePath: '/debbie/debbie_3.png', dateText: '2007' },
+    polaroids: [
+      { publicId: 'wed/guests/debbie_kwan/1', dateText: '1 29 2022' },
+      { publicId: 'wed/guests/debbie_kwan/2', dateText: '2007' },
+    ],
     party: [],
     events: ['courthouse', 'immediate_family_dinner'],
   },
