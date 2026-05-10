@@ -1,5 +1,5 @@
 import { GUESTS } from '../config/guests';
-import { useUser } from '../context/UserContext';
+import { useUser } from './useUser';
 import type { Guest } from '../types';
 
 /** Resolved guest record. Falls back to the user object if no GUESTS entry exists for the slug. */

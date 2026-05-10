@@ -19,6 +19,7 @@ export function Polaroid({ dateText, imagePath, alt = '', className = '' }: Pola
           src={resolvedImagePath}
           alt={alt}
           onError={(event) => {
+            // fallback for dev-server hits without /wed/ base
             const target = event.currentTarget;
             if (target.dataset.fallbackApplied === 'true') {
               return;

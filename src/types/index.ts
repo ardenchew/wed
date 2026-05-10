@@ -1,15 +1,9 @@
-/**
- * TypeScript type definitions
- */
-
-// User context types
 export interface UserContextType {
   user: Guest | null;
   signIn: (guest: Guest) => void;
   signOut: () => void;
 }
 
-// Data models
 export interface Event {
   slug: string;
   name: string;
