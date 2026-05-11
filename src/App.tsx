@@ -39,8 +39,15 @@ function AppRoutes() {
     }
 
     if (locationString !== previousLocationRef.current) {
+      const prevLocation = JSON.parse(previousLocationRef.current);
+      const isSignInToHome = prevLocation.pathname === '/' &&
+        (location.pathname === '/home-v2' || location.pathname.startsWith('/home'));
+
       previousLocationRef.current = locationString;
-      setNavigationSplashActive(true);
+
+      if (!isSignInToHome) {
+        setNavigationSplashActive(true);
+      }
     }
   }, [location]);
 
