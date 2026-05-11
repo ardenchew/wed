@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Sketch-style calendar/event placeholder -->
+  <rect x="80" y="40" width="240" height="170" rx="6" ry="6" stroke-dasharray="8 4" opacity="0.5"/>
+  <line x1="80" y1="80" x2="320" y2="80" opacity="0.4"/>
+  <circle cx="130" cy="60" r="6" opacity="0.35"/>
+  <circle cx="270" cy="60" r="6" opacity="0.35"/>
+  <!-- Simple decorative star -->
+  <path d="M200 105 L206 125 L228 125 L210 137 L217 157 L200 145 L183 157 L190 137 L172 125 L194 125 Z" stroke-width="2.5" opacity="0.4"/>
+  <!-- Placeholder lines suggesting text -->
+  <line x1="150" y1="180" x2="250" y2="180" stroke-width="2" opacity="0.25"/>
+  <line x1="165" y1="192" x2="235" y2="192" stroke-width="2" opacity="0.2"/>
+</svg>
