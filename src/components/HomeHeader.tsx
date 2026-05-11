@@ -22,6 +22,18 @@ export function HomeHeader({ activePath }: HomeHeaderProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMenuOpen]);
+
+  useEffect(() => {
     if (!isMenuOpen) return;
 
     const handleEscape = (event: KeyboardEvent) => {
