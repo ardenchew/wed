@@ -8,6 +8,8 @@ import '../styles/index.css';
 /** Scroll distance (× viewport height) before hero docks into the document and scrolls normally */
 const COMPRESS_VH = 0.5;
 const FADE_VH = 0.32;
+/** Scroll threshold to trigger snap-to-top (× viewport height) */
+const SNAP_THRESHOLD_VH = 0.7;
 /** When header metrics are missing, fall back to this end scale */
 const MIN_SCALE_FALLBACK = 0.8;
 /** Horizontal gap (px) between scaled hero edges and logo / menu hit targets */
@@ -71,14 +73,6 @@ function computeHeroMinScaleForHeader(main: HTMLElement | null): number {
   return s;
 }
 
-/** Calculate snap threshold based on the scroll hint element's bottom edge position. */
-function computeSnapThreshold(scrollHint: HTMLElement | null): number {
-  if (!scrollHint) return 0;
-  const rect = scrollHint.getBoundingClientRect();
-  const bottomInViewport = rect.bottom;
-  return Math.max(0, Math.round(bottomInViewport));
-}
-
 export default function HomeV2() {
   const guest = useGuest();
   const mainRef = useRef<HTMLElement>(null);
@@ -86,9 +80,8 @@ export default function HomeV2() {
   const imageWrapRef = useRef<HTMLDivElement>(null);
   const gallerySectionRef = useRef<HTMLElement>(null);
   const galleryPinRef = useRef<HTMLDivElement>(null);
-  const scrollHintRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
-  const metricsRef = useRef({ compress: 1, fade: 1, S: 2, minScale: MIN_SCALE_FALLBACK, snapThreshold: 0 });
+  const metricsRef = useRef({ compress: 1, fade: 1, S: 2, minScale: MIN_SCALE_FALLBACK });
   const reducedMotionRef = useRef(false);
   const bottomFadeProgressRef = useRef(0);
   const snapTimeoutRef = useRef<number | null>(null);
@@ -165,8 +158,7 @@ export default function HomeV2() {
     const fade = reduced ? 0 : Math.max(1, Math.round(vh * FADE_VH));
     const main = mainRef.current;
     const minScale = computeHeroMinScaleForHeader(main);
-    const snapThreshold = computeSnapThreshold(scrollHintRef.current);
-    metricsRef.current = { compress, fade, S: compress + fade, minScale, snapThreshold };
+    metricsRef.current = { compress, fade, S: compress + fade, minScale };
     const sink = main?.querySelector('.home-v2__scroll-sink') as HTMLElement | null;
     if (sink) sink.style.height = `${metricsRef.current.S}px`;
     if (main) {
@@ -246,7 +238,8 @@ export default function HomeV2() {
       rafRef.current = null;
       applyScroll();
 
-      const snapThreshold = metricsRef.current.snapThreshold;
+      const vh = window.innerHeight;
+      const snapThreshold = vh * SNAP_THRESHOLD_VH;
       const y = window.scrollY;
 
       if (y > 0 && y < snapThreshold) {
@@ -341,7 +334,7 @@ export default function HomeV2() {
             fetchPriority="high"
           />
         </div>
-        <div ref={scrollHintRef} className="home-v2__hero-scroll-hint" aria-hidden="true" />
+        <div className="home-v2__hero-scroll-hint" aria-hidden="true" />
         <div className="home-v2__hero-name">
           <div className="home-v2__hero-title-stack">
             <p className="landing-auth-title home-v2__guest-name">Emily & Arden</p>
