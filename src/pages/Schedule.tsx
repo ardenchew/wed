@@ -3,8 +3,9 @@ import { EVENTS } from '../config/events';
 import { useGuest } from '../hooks/useGuest';
 import type { Event } from '../types';
 import { resolveAsset } from '../utils/asset';
+import { cloudinaryUrl } from '../utils/cloudinary';
 
-const PLACEHOLDER_IMAGE = '/placeholder_event.svg';
+const HERO_PUBLIC_ID = 'wed/site/schedule_hero';
 
 function formatTime(date: Date): string {
   const hours = date.getHours();
@@ -65,50 +66,101 @@ export default function Schedule() {
     return groupEventsByDate(accessible);
   }, [guest?.events]);
 
+  const heroUrl = cloudinaryUrl(HERO_PUBLIC_ID, { w: 1200, c: 'limit' });
+
   return (
     <section className="schedule">
-      <div className="schedule__vine" aria-hidden="true" />
-
       <h1 className="schedule__title">Schedule</h1>
+
+      <div className="schedule__actions">
+        <button type="button" className="schedule__action">
+          RSVP
+        </button>
+        <span className="schedule__action-sep" aria-hidden="true">
+          •
+        </span>
+        <button type="button" className="schedule__action">
+          Export Calendar
+        </button>
+      </div>
+
+      <div className="schedule__hero">
+        <img className="schedule__hero-image" src={heroUrl} alt="" />
+      </div>
 
       <div className="schedule__content">
         {dateGroups.map((group) => (
-          <div key={group.label} className="schedule__date-group">
-            <div className="schedule__date-header">
-              <span className="schedule__date-line" aria-hidden="true" />
-              <span className="schedule__date-label">{group.label}</span>
-              <span className="schedule__date-line" aria-hidden="true" />
-            </div>
+          <div key={group.label} className="schedule__day">
+            <div className="schedule__day-header">{group.label}</div>
 
-            {group.events.map((event) => (
-              <div key={event.slug} className="schedule__event">
-                <div className="schedule__event-left">
-                  <div className="schedule__event-image-wrap">
-                    <img
-                      className="schedule__event-image"
-                      src={resolveAsset(event.image ?? PLACEHOLDER_IMAGE)}
-                      alt={event.name}
-                    />
-                  </div>
-                </div>
-                <div className="schedule__event-right">
-                  <div className="schedule__event-details">
-                    <p className="schedule__event-name">{event.name}</p>
-                    <p className="schedule__event-meta">
-                      {formatTime(event.start_time)}, {event.location}
+            <div className="schedule__day-card">
+              <span
+                className="schedule__day-card-vine schedule__day-card-vine--top"
+                aria-hidden="true"
+              >
+                <img src={resolveAsset('/vine.svg')} alt="" />
+              </span>
+              <span
+                className="schedule__day-card-vine schedule__day-card-vine--bottom"
+                aria-hidden="true"
+              >
+                <img src={resolveAsset('/vine.svg')} alt="" />
+              </span>
+              {group.events.map((event, i) => {
+                const sideClass = event.image
+                  ? i % 2 === 0
+                    ? 'schedule__event--image-left'
+                    : 'schedule__event--image-right'
+                  : 'schedule__event--no-image';
+                const isLast = i === group.events.length - 1;
+
+                return (
+                  <div
+                    key={event.slug}
+                    className={`schedule__event ${sideClass}`}
+                  >
+                    <div className="schedule__event-row">
+                      {event.image && (
+                        <div className="schedule__event-image-wrap">
+                          <img
+                            className="schedule__event-image"
+                            src={resolveAsset(event.image)}
+                            alt={event.name}
+                          />
+                        </div>
+                      )}
+                      <div className="schedule__event-text">
+                        <p className="schedule__event-name">{event.name}</p>
+                        <p className="schedule__event-meta">
+                          <span className="schedule__time-pill">
+                            {formatTime(event.start_time)}
+                          </span>
+                          <span className="schedule__event-location">
+                            {event.location}
+                          </span>
+                        </p>
+                        {event.attire && (
+                          <p className="schedule__event-attire">
+                            Attire: {event.attire}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="schedule__event-description">
+                      {event.description}
                     </p>
-                    {event.attire && (
-                      <p className="schedule__event-meta">
-                        Attire: {event.attire.charAt(0).toUpperCase() + event.attire.slice(1)}
-                      </p>
+
+                    {!isLast && (
+                      <span
+                        className="schedule__event-connector"
+                        aria-hidden="true"
+                      />
                     )}
                   </div>
-                  <p className="schedule__event-description">
-                    {event.description}
-                  </p>
-                </div>
-              </div>
-            ))}
+                );
+              })}
+            </div>
           </div>
         ))}
       </div>
