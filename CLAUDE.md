@@ -6,7 +6,7 @@ When working in a worktree, copy `.env.example` to `.env` in the worktree root:
 
 ```bash
 # From within the worktree directory
-cp .env.example .env
+cp ../.env.example .env
 ```
 
 Or create a symlink to the parent `.env`:
