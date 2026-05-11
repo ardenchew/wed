@@ -30,3 +30,6 @@ dist-ssr
 .env.development.local
 
 public/crater_lake_vid.mp4
+
+# Claude Code worktrees (temporary, user-specific)
+.claude/worktrees/
