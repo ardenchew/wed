@@ -657,6 +657,15 @@ body:has(.home-page--schedule) {
   cursor: pointer;
   padding: 0;
   line-height: 0;
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.home-logo:hover {
+  transform: scale(1.08);
+}
+
+.home-logo:active {
+  transform: scale(0.98);
 }
 
 .home-logo__img {
@@ -683,6 +692,16 @@ body:has(.home-page--schedule) {
   justify-content: center;
   flex-direction: column;
   gap: 4px;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.home-menu__trigger:hover {
+  transform: scale(1.1);
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.home-menu__trigger:active {
+  transform: scale(0.95);
 }
 
 .home-menu__trigger:focus-visible {
@@ -1413,6 +1432,10 @@ body:has(.home-page--schedule) {
   background: #fff;
 }
 
+.home-v2 .home-menu__trigger:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
 .home-v2 .home-menu__trigger:focus-visible {
   outline-color: rgba(255, 255, 255, 0.85);
 }
@@ -1460,6 +1483,10 @@ body:has(.home-page--schedule) {
 
 .home-v2[data-home-v2-header-dark] .home-menu__line {
   background: #141414;
+}
+
+.home-v2[data-home-v2-header-dark] .home-menu__trigger:hover {
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .home-v2[data-home-v2-header-dark] .home-menu__trigger:focus-visible {
