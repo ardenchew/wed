@@ -1,11 +1,12 @@
 import { useMemo } from 'react';
+import { Button } from '../components/Button';
 import { EVENTS } from '../config/events';
 import { useGuest } from '../hooks/useGuest';
 import type { Event } from '../types';
 import { resolveAsset } from '../utils/asset';
-import { cloudinaryUrl } from '../utils/cloudinary';
+import { cloudinaryUrl, isCloudinaryId } from '../utils/cloudinary';
 
-const HERO_PUBLIC_ID = 'wed/site/schedule_hero';
+const HERO_PUBLIC_ID = 'wed/schedule/hero';
 
 function formatTime(date: Date): string {
   const hours = date.getHours();
@@ -73,15 +74,15 @@ export default function Schedule() {
       <h1 className="schedule__title">Schedule</h1>
 
       <div className="schedule__actions">
-        <button type="button" className="schedule__action">
+        <Button variant="text" className="schedule__action">
           RSVP
-        </button>
+        </Button>
         <span className="schedule__action-sep" aria-hidden="true">
           •
         </span>
-        <button type="button" className="schedule__action">
+        <Button variant="text" className="schedule__action">
           Export Calendar
-        </button>
+        </Button>
       </div>
 
       <div className="schedule__hero">
@@ -91,15 +92,29 @@ export default function Schedule() {
       <div className="schedule__content">
         {dateGroups.map((group) => (
           <div key={group.label} className="schedule__day">
-            <div className="schedule__day-header">{group.label}</div>
-
-            <div className="schedule__day-card">
+            <div className="schedule__day-sticky">
+              <button
+                type="button"
+                className="schedule__day-header"
+                onClick={(e) =>
+                  e.currentTarget.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start',
+                  })
+                }
+                aria-label={`Scroll to ${group.label}`}
+              >
+                {group.label}
+              </button>
               <span
                 className="schedule__day-card-vine schedule__day-card-vine--top"
                 aria-hidden="true"
               >
                 <img src={resolveAsset('/vine.svg')} alt="" />
               </span>
+            </div>
+
+            <div className="schedule__day-card">
               <span
                 className="schedule__day-card-vine schedule__day-card-vine--bottom"
                 aria-hidden="true"
@@ -124,7 +139,11 @@ export default function Schedule() {
                         <div className="schedule__event-image-wrap">
                           <img
                             className="schedule__event-image"
-                            src={resolveAsset(event.image)}
+                            src={
+                              isCloudinaryId(event.image)
+                                ? cloudinaryUrl(event.image, { w: 600, c: 'limit' })
+                                : resolveAsset(event.image)
+                            }
                             alt={event.name}
                           />
                         </div>
@@ -138,6 +157,31 @@ export default function Schedule() {
                           <span className="schedule__event-location">
                             {event.location}
                           </span>
+                          {event.map_link && (
+                            <a
+                              className="schedule__event-map-link"
+                              href={event.map_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              aria-label={`Open ${event.location} in maps`}
+                            >
+                              <svg
+                                viewBox="0 0 24 24"
+                                width="14"
+                                height="14"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                aria-hidden="true"
+                              >
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                <polyline points="15 3 21 3 21 9" />
+                                <line x1="10" y1="14" x2="21" y2="3" />
+                              </svg>
+                            </a>
+                          )}
                         </p>
                         {event.attire && (
                           <p className="schedule__event-attire">

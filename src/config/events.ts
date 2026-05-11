@@ -9,7 +9,8 @@ export const EVENTS: Record<string, Event> = {
     description:
       'An intimate immediate family only gathering to formalize Emily and Arden’s marriage. Transportation will not be provided so please be sure to arrive on time. A photographer will be present.',
     attire: 'Formal',
-    image: '/placeholder_event.svg',
+    image: 'wed/schedule/courthouse',
+    map_link: 'https://maps.app.goo.gl/W71EYgZxP38jK76J9',
   },
   immediate_family_dinner: {
     slug: 'immediate_family_dinner',
@@ -19,7 +20,8 @@ export const EVENTS: Record<string, Event> = {
     description:
       'Dinner at an Emily and Arden favorite with immediate family and significant others. We’ll head here straight from the courthouse ceremony, no need to change.',
     attire: 'Formal',
-    image: '/placeholder_event.svg',
+    image: 'wed/schedule/rich-table',
+    map_link: 'https://maps.app.goo.gl/L9Zgzm99FJL5dAFU8',
   },
   bus_pick_up: {
     slug: 'bus_pick_up',
@@ -28,7 +30,7 @@ export const EVENTS: Record<string, Event> = {
     location: 'San Francisco',
     description: 'Don’t miss ur bus.',
     attire: 'Napa Summer Semi-Formal',
-    image: '/placeholder_event.svg',
+    image: 'wed/schedule/bus',
   },
   wine_tasting: {
     slug: 'wine_tasting',
@@ -37,7 +39,8 @@ export const EVENTS: Record<string, Event> = {
     location: 'Stony Hill Vineyard',
     description: 'Tasty napa chardonay and cabernet.',
     attire: 'Napa Summer Semi-Formal',
-    image: '/placeholder_event.svg',
+    image: 'wed/schedule/stony-hill',
+    map_link: 'https://maps.app.goo.gl/LDijnWx6u63XkbqZ9',
   },
   vineyard_dinner: {
     slug: 'vineyard_dinner',
@@ -46,6 +49,7 @@ export const EVENTS: Record<string, Event> = {
     location: 'Brix',
     description: 'Tasty napa chardonay and cabernet.',
     attire: 'Napa Summer Semi-Formal',
-    image: '/placeholder_event.svg',
+    image: 'wed/schedule/brix',
+    map_link: 'https://maps.app.goo.gl/TuDigVhhvdszTfif6',
   },
 };
