@@ -8,6 +8,8 @@ import '../styles/index.css';
 /** Scroll distance (× viewport height) before hero docks into the document and scrolls normally */
 const COMPRESS_VH = 0.5;
 const FADE_VH = 0.32;
+/** Scroll threshold to trigger snap-to-top (× viewport height) */
+const SNAP_THRESHOLD_VH = 0.7;
 /** When header metrics are missing, fall back to this end scale */
 const MIN_SCALE_FALLBACK = 0.8;
 /** Horizontal gap (px) between scaled hero edges and logo / menu hit targets */
@@ -82,6 +84,7 @@ export default function HomeV2() {
   const metricsRef = useRef({ compress: 1, fade: 1, S: 2, minScale: MIN_SCALE_FALLBACK });
   const reducedMotionRef = useRef(false);
   const bottomFadeProgressRef = useRef(0);
+  const snapTimeoutRef = useRef<number | null>(null);
   /** Fade target: same resolved color as `.home-v2__scroll` so the docked hero matches weekend details. */
   const heroFadeTargetRgbRef = useRef<[number, number, number]>(FALLBACK_PAGE_BG_RGB);
 
@@ -224,13 +227,30 @@ export default function HomeV2() {
     main.toggleAttribute('data-home-v2-header-dark', wantsDarkHeaderIcons);
   }, [applyBottomScene]);
 
+  const snapToTop = useCallback(() => {
+    if (snapTimeoutRef.current != null) window.clearTimeout(snapTimeoutRef.current);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   const onScrollOrResize = useCallback(() => {
     if (rafRef.current != null) return;
     rafRef.current = window.requestAnimationFrame(() => {
       rafRef.current = null;
       applyScroll();
+
+      const vh = window.innerHeight;
+      const snapThreshold = vh * SNAP_THRESHOLD_VH;
+      const y = window.scrollY;
+
+      if (y > 0 && y < snapThreshold) {
+        if (snapTimeoutRef.current != null) window.clearTimeout(snapTimeoutRef.current);
+        snapTimeoutRef.current = window.setTimeout(snapToTop, 300);
+      } else if (snapTimeoutRef.current != null) {
+        window.clearTimeout(snapTimeoutRef.current);
+        snapTimeoutRef.current = null;
+      }
     });
-  }, [applyScroll]);
+  }, [applyScroll, snapToTop]);
 
   useLayoutEffect(() => {
     syncMetrics();
@@ -255,6 +275,7 @@ export default function HomeV2() {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('scroll', onScrollOrResize);
       if (rafRef.current != null) window.cancelAnimationFrame(rafRef.current);
+      if (snapTimeoutRef.current != null) window.clearTimeout(snapTimeoutRef.current);
     };
   }, [syncMetrics, applyScroll, onScrollOrResize]);
 
