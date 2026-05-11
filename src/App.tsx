@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useCallback, useState, useEffect, useRef } from 'react';
+import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { FreshLoadSplash } from './components/FreshLoadSplash';
 import { UserProvider } from './context/UserProvider';
 import { useUser } from './hooks/useUser';
@@ -26,28 +26,55 @@ function ProtectedRoute({ children }: { children: React.ReactElement }) {
 }
 
 function AppRoutes() {
+  const [navigationSplashActive, setNavigationSplashActive] = useState(false);
+  const previousLocationRef = useRef<string>('');
+  const location = useLocation();
+
+  useEffect(() => {
+    const locationString = JSON.stringify(location);
+
+    if (previousLocationRef.current === '') {
+      previousLocationRef.current = locationString;
+      return;
+    }
+
+    if (locationString !== previousLocationRef.current) {
+      previousLocationRef.current = locationString;
+      setNavigationSplashActive(true);
+    }
+  }, [location]);
+
+  const handleNavigationSplashComplete = useCallback(() => {
+    setNavigationSplashActive(false);
+  }, []);
+
   return (
-    <Routes>
-      <Route path="/" element={<Landing />} />
-      <Route
-        path="/home-v2"
-        element={
-          <ProtectedRoute>
-            <HomeV2 />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/home/*"
-        element={
-          <ProtectedRoute>
-            <Home />
-          </ProtectedRoute>
-        }
-      />
-      <Route path="/splash" element={<SplashPreview />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <>
+      {navigationSplashActive && (
+        <FreshLoadSplash onComplete={handleNavigationSplashComplete} />
+      )}
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route
+          path="/home-v2"
+          element={
+            <ProtectedRoute>
+              <HomeV2 />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/home/*"
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/splash" element={<SplashPreview />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   );
 }
 
