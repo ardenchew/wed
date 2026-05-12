@@ -92,29 +92,15 @@ export default function Schedule() {
       <div className="schedule__content">
         {dateGroups.map((group) => (
           <div key={group.label} className="schedule__day">
-            <div className="schedule__day-sticky">
-              <button
-                type="button"
-                className="schedule__day-header"
-                onClick={(e) =>
-                  e.currentTarget.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start',
-                  })
-                }
-                aria-label={`Scroll to ${group.label}`}
-              >
-                {group.label}
-              </button>
+            <h2 className="schedule__day-header">{group.label}</h2>
+
+            <div className="schedule__day-card">
               <span
                 className="schedule__day-card-vine schedule__day-card-vine--top"
                 aria-hidden="true"
               >
                 <img src={resolveAsset('/vine.svg')} alt="" />
               </span>
-            </div>
-
-            <div className="schedule__day-card">
               <span
                 className="schedule__day-card-vine schedule__day-card-vine--bottom"
                 aria-hidden="true"
