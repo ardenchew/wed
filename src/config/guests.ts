@@ -10,7 +10,13 @@ export const GUESTS: Record<string, Guest> = {
     welcomeBodyText: 'ksaldjf;aklsdjf klsjdfkl sdjf lksdj fklsdj fkdlsj fklsdj fslkdj flksdj fklsj kfsdjklf jsdlkj fskdkf js',
     welcomeSignatureText: '-arden',
     party: ['emily_kwan'],
-    events: ['courthouse', 'immediate_family_dinner'],
+    events: [
+      'courthouse',
+      'immediate_family_dinner',
+      'bus_pick_up',
+      'wine_tasting',
+      'vineyard_dinner',
+    ],
   },
   emily_kwan: {
     slug: 'emily_kwan',
@@ -21,7 +27,13 @@ export const GUESTS: Record<string, Guest> = {
     welcomeBodyText: 'Mallo',
     welcomeSignatureText: 'Much love, Bapo',
     party: ['arden_chew'],
-    events: ['courthouse', 'immediate_family_dinner'],
+    events: [
+      'courthouse',
+      'immediate_family_dinner',
+      'bus_pick_up',
+      'wine_tasting',
+      'vineyard_dinner',
+    ],
   },
   debbie_kwan: {
     slug: 'debbie_kwan',
@@ -36,6 +48,12 @@ export const GUESTS: Record<string, Guest> = {
       { publicId: 'wed/guests/debbie_kwan/2', dateText: '2007' },
     ],
     party: [],
-    events: ['courthouse', 'immediate_family_dinner'],
+    events: [
+      'courthouse',
+      'immediate_family_dinner',
+      'bus_pick_up',
+      'wine_tasting',
+      'vineyard_dinner',
+    ],
   },
 };

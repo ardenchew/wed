@@ -12,6 +12,7 @@ export interface Event {
   description: string;
   attire?: string;
   image?: string;
+  map_link?: string;
 }
 
 export interface GuestPolaroid {
