@@ -1,11 +1,11 @@
 import { RefObject, useEffect } from 'react';
 
-/** Adds `is-visible` to `.home-v2__reveal` elements inside `containerRef` as they enter the viewport. */
+/** Adds `is-visible` to `.home__reveal` elements inside `containerRef` as they enter the viewport. */
 export function useRevealObserver(containerRef: RefObject<HTMLElement>) {
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    const revealElements = Array.from(container.querySelectorAll<HTMLElement>('.home-v2__reveal'));
+    const revealElements = Array.from(container.querySelectorAll<HTMLElement>('.home__reveal'));
     if (!revealElements.length) return;
 
     if (typeof IntersectionObserver === 'undefined') {

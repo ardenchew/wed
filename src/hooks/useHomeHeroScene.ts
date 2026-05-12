@@ -6,7 +6,7 @@ import {
   MIN_SCALE_FALLBACK,
   computeHeroMinScaleForHeader,
   readSolidBackgroundRgb,
-} from '../utils/homeV2Hero';
+} from '../utils/homeHero';
 
 type SceneRefs = {
   mainRef: RefObject<HTMLElement>;
@@ -28,11 +28,11 @@ const GALLERY_LIFT_MAX_VH = 0.14;
 const DOCKED_BOUNDARY_EPSILON_PX = 0.5;
 
 /**
- * Drives the HomeV2 hero compress/fade and bottom-of-page fade off a single rAF-throttled
+ * Drives the Home hero compress/fade and bottom-of-page fade off a single rAF-throttled
  * scroll loop. The dark-header icon toggle reads bottom-fade progress, which is why the two
  * effects share one orchestrator instead of being two independent hooks.
  */
-export function useHomeV2HeroScene({
+export function useHomeHeroScene({
   mainRef,
   heroShellRef,
   imageWrapRef,
@@ -44,7 +44,7 @@ export function useHomeV2HeroScene({
     let metrics = { compress: 1, fade: 1, S: 2, minScale: MIN_SCALE_FALLBACK };
     let reducedMotion = false;
     let bottomFadeProgress = 0;
-    // Fade target: same resolved color as `.home-v2__scroll` so the docked hero matches weekend details.
+    // Fade target: same resolved color as `.home__scroll` so the docked hero matches weekend details.
     let heroFadeTargetRgb: [number, number, number] = FALLBACK_PAGE_BG_RGB;
 
     const applyBottomScene = () => {
@@ -67,9 +67,9 @@ export function useHomeV2HeroScene({
       const b = Math.round(baseB * (1 - progress));
       bottomFadeProgress = progress;
 
-      main.style.setProperty('--home-v2-page-bg', `rgb(${r}, ${g}, ${b})`);
-      main.style.setProperty('--home-v2-bottom-fade', progress.toFixed(3));
-      pin.style.setProperty('--home-v2-gallery-lift', `${liftPx}px`);
+      main.style.setProperty('--home-page-bg', `rgb(${r}, ${g}, ${b})`);
+      main.style.setProperty('--home-bottom-fade', progress.toFixed(3));
+      pin.style.setProperty('--home-gallery-lift', `${liftPx}px`);
     };
 
     const syncMetrics = () => {
@@ -81,11 +81,11 @@ export function useHomeV2HeroScene({
       const main = mainRef.current;
       const minScale = computeHeroMinScaleForHeader(main);
       metrics = { compress, fade, S: compress + fade, minScale };
-      const sink = main?.querySelector('.home-v2__scroll-sink') as HTMLElement | null;
+      const sink = main?.querySelector('.home__scroll-sink') as HTMLElement | null;
       if (sink) sink.style.height = `${metrics.S}px`;
       if (!main) return;
-      main.classList.toggle('home-v2--reduced-motion', reducedMotion);
-      const scrollSection = main.querySelector('.home-v2__scroll') as HTMLElement | null;
+      main.classList.toggle('home--reduced-motion', reducedMotion);
+      const scrollSection = main.querySelector('.home__scroll') as HTMLElement | null;
       heroFadeTargetRgb =
         readSolidBackgroundRgb(scrollSection) ??
         readSolidBackgroundRgb(main) ??
@@ -102,27 +102,27 @@ export function useHomeV2HeroScene({
 
       const { compress, fade, S, minScale } = metrics;
       const y = Math.max(0, window.scrollY);
-      main.toggleAttribute('data-home-v2-scrolled', y > 1);
+      main.toggleAttribute('data-home-scrolled', y > 1);
 
       if (reducedMotion || S <= 0) {
-        shell.classList.remove('home-v2__hero-shell--fixed', 'home-v2__hero-shell--docked');
-        shell.classList.add('home-v2__hero-shell--flow');
+        shell.classList.remove('home__hero-shell--fixed', 'home__hero-shell--docked');
+        shell.classList.add('home__hero-shell--flow');
         shell.style.top = '';
         shell.style.backgroundColor = '';
-        shell.style.setProperty('--home-v2-name-fade', '1');
-        shell.style.setProperty('--home-v2-hero-scale', '1');
+        shell.style.setProperty('--home-name-fade', '1');
+        shell.style.setProperty('--home-hero-scale', '1');
         wrap.style.transform = '';
-        main.toggleAttribute('data-home-v2-header-dark', true);
+        main.toggleAttribute('data-home-header-dark', true);
         return;
       }
 
-      shell.classList.remove('home-v2__hero-shell--flow');
+      shell.classList.remove('home__hero-shell--flow');
 
       const tCompress = Math.min(1, y / compress);
       const scale = 1 - (1 - minScale) * tCompress;
       const tFade = y <= compress ? 0 : Math.min(1, (y - compress) / fade);
       const released = y >= S - DOCKED_BOUNDARY_EPSILON_PX;
-      // Docked slightly before y=S; snap shell fade to 1 so bg matches `.home-v2__scroll` exactly.
+      // Docked slightly before y=S; snap shell fade to 1 so bg matches `.home__scroll` exactly.
       const tFadeShell = released ? 1 : tFade;
       const [pr, pg, pb] = heroFadeTargetRgb;
       const r = Math.round(pr * tFadeShell);
@@ -130,19 +130,19 @@ export function useHomeV2HeroScene({
       const b = Math.round(pb * tFadeShell);
 
       wrap.style.transform = `scale(${scale})`;
-      shell.style.setProperty('--home-v2-name-fade', String(tFadeShell));
-      shell.style.setProperty('--home-v2-hero-scale', String(scale));
+      shell.style.setProperty('--home-name-fade', String(tFadeShell));
+      shell.style.setProperty('--home-hero-scale', String(scale));
 
       if (released) {
-        shell.classList.remove('home-v2__hero-shell--fixed');
-        shell.classList.add('home-v2__hero-shell--docked');
+        shell.classList.remove('home__hero-shell--fixed');
+        shell.classList.add('home__hero-shell--docked');
         shell.style.top = `${S}px`;
-        // Hand off to CSS so the docked shell tracks --home-v2-page-bg live — matches .home-v2__scroll
+        // Hand off to CSS so the docked shell tracks --home-page-bg live — matches .home__scroll
         // exactly, including during the bottom-fade when the page bg darkens.
         shell.style.backgroundColor = '';
       } else {
-        shell.classList.add('home-v2__hero-shell--fixed');
-        shell.classList.remove('home-v2__hero-shell--docked');
+        shell.classList.add('home__hero-shell--fixed');
+        shell.classList.remove('home__hero-shell--docked');
         shell.style.top = '';
         shell.style.backgroundColor = `rgb(${r},${g},${b})`;
       }
@@ -150,7 +150,7 @@ export function useHomeV2HeroScene({
       const wantsDarkHeaderIcons =
         (tFadeShell > HEADER_DARK_THRESHOLD || released) &&
         bottomFadeProgress < HEADER_DARK_THRESHOLD;
-      main.toggleAttribute('data-home-v2-header-dark', wantsDarkHeaderIcons);
+      main.toggleAttribute('data-home-header-dark', wantsDarkHeaderIcons);
     };
 
     const onScrollOrResize = () => {
@@ -175,7 +175,7 @@ export function useHomeV2HeroScene({
     window.addEventListener('scroll', onScrollOrResize, { passive: true });
 
     let headerWrapObserver: ResizeObserver | null = null;
-    const headerWrap = mainRef.current?.querySelector('.home-v2__fixed-header-wrap');
+    const headerWrap = mainRef.current?.querySelector('.home__fixed-header-wrap');
     if (headerWrap && typeof ResizeObserver !== 'undefined') {
       headerWrapObserver = new ResizeObserver(resync);
       headerWrapObserver.observe(headerWrap);

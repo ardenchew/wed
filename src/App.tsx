@@ -4,7 +4,7 @@ import { FreshLoadSplash } from './components/FreshLoadSplash';
 import { UserProvider } from './context/UserProvider';
 import { useUser } from './hooks/useUser';
 import Landing from './pages/Landing';
-import HomeV2 from './pages/HomeV2';
+import Home from './pages/Home';
 import Schedule from './pages/Schedule';
 import { RsvpPlaceholder, GiftPlaceholder } from './pages/PlaceholderPage';
 import SplashPreview from './pages/SplashPreview';
@@ -66,7 +66,7 @@ function AppRoutes() {
           path="/home"
           element={
             <ProtectedRoute>
-              <HomeV2 />
+              <Home />
             </ProtectedRoute>
           }
         />

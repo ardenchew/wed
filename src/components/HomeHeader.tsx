@@ -12,7 +12,7 @@ type HomeHeaderProps = {
 
 /**
  * Header for /home and sibling routes (/schedule, /rsvp, /gift). The `.home-logo` and
- * `.home-menu__trigger` class names are queried by useHomeV2HeroScene to compute the hero's
+ * `.home-menu__trigger` class names are queried by useHomeHeroScene to compute the hero's
  * minimum compressed scale — keep them stable.
  */
 export function HomeHeader({ activePath }: HomeHeaderProps) {

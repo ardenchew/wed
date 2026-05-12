@@ -12,14 +12,14 @@ export function HomeGallery({ sectionRef, pinRef, imagePaths }: HomeGalleryProps
   const loopedImagePaths = useMemo(() => [...imagePaths, ...imagePaths], [imagePaths]);
 
   return (
-    <section ref={sectionRef} className="home-v2__gallery" aria-label="Photo gallery">
-      <div ref={pinRef} className="home-v2__gallery-pin">
-        <div className="home-v2__gallery-viewport">
-          <div className="home-v2__gallery-track">
+    <section ref={sectionRef} className="home__gallery" aria-label="Photo gallery">
+      <div ref={pinRef} className="home__gallery-pin">
+        <div className="home__gallery-viewport">
+          <div className="home__gallery-track">
             {loopedImagePaths.map((imagePath, index) => (
-              <figure key={`${imagePath}-${index}`} className="home-v2__gallery-item">
+              <figure key={`${imagePath}-${index}`} className="home__gallery-item">
                 <img
-                  className="home-v2__gallery-image"
+                  className="home__gallery-image"
                   src={resolveAsset(imagePath)}
                   alt=""
                   loading="lazy"
@@ -29,7 +29,7 @@ export function HomeGallery({ sectionRef, pinRef, imagePaths }: HomeGalleryProps
             ))}
           </div>
         </div>
-        <div className="home-v2__rsvp-placeholder">
+        <div className="home__rsvp-placeholder">
           <button type="button" className="ui-button ui-button--text" disabled>
             RSVP
           </button>

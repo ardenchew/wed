@@ -73,7 +73,7 @@ function computeHeroMinScaleForHeader(main: HTMLElement | null): number {
   return s;
 }
 
-export default function HomeV2() {
+export default function Home() {
   const guest = useGuest();
   const mainRef = useRef<HTMLElement>(null);
   const heroShellRef = useRef<HTMLDivElement>(null);
@@ -85,7 +85,7 @@ export default function HomeV2() {
   const reducedMotionRef = useRef(false);
   const bottomFadeProgressRef = useRef(0);
   const snapTimeoutRef = useRef<number | null>(null);
-  /** Fade target: same resolved color as `.home-v2__scroll` so the docked hero matches weekend details. */
+  /** Fade target: same resolved color as `.home__scroll` so the docked hero matches weekend details. */
   const heroFadeTargetRgbRef = useRef<[number, number, number]>(FALLBACK_PAGE_BG_RGB);
 
   const weekendGreeting = guest?.welcomeGreetingText ?? 'Welcome!';
@@ -143,9 +143,9 @@ export default function HomeV2() {
     const b = Math.round(baseB * (1 - progress));
     bottomFadeProgressRef.current = progress;
 
-    main.style.setProperty('--home-v2-page-bg', `rgb(${r}, ${g}, ${b})`);
-    main.style.setProperty('--home-v2-bottom-fade', progress.toFixed(3));
-    pin.style.setProperty('--home-v2-gallery-lift', `${liftPx}px`);
+    main.style.setProperty('--home-page-bg', `rgb(${r}, ${g}, ${b})`);
+    main.style.setProperty('--home-bottom-fade', progress.toFixed(3));
+    pin.style.setProperty('--home-gallery-lift', `${liftPx}px`);
   }, []);
 
   const syncMetrics = useCallback(() => {
@@ -159,11 +159,11 @@ export default function HomeV2() {
     const main = mainRef.current;
     const minScale = computeHeroMinScaleForHeader(main);
     metricsRef.current = { compress, fade, S: compress + fade, minScale };
-    const sink = main?.querySelector('.home-v2__scroll-sink') as HTMLElement | null;
+    const sink = main?.querySelector('.home__scroll-sink') as HTMLElement | null;
     if (sink) sink.style.height = `${metricsRef.current.S}px`;
     if (main) {
-      main.classList.toggle('home-v2--reduced-motion', reduced);
-      const scrollSection = main.querySelector('.home-v2__scroll') as HTMLElement | null;
+      main.classList.toggle('home--reduced-motion', reduced);
+      const scrollSection = main.querySelector('.home__scroll') as HTMLElement | null;
       const fromScroll = readSolidBackgroundRgb(scrollSection);
       const fromMain = readSolidBackgroundRgb(main);
       if (fromScroll) heroFadeTargetRgbRef.current = fromScroll;
@@ -183,26 +183,26 @@ export default function HomeV2() {
     const { compress, fade, S, minScale } = metricsRef.current;
     const y = Math.max(0, window.scrollY);
     const reduced = reducedMotionRef.current;
-    main.toggleAttribute('data-home-v2-scrolled', y > 1);
+    main.toggleAttribute('data-home-scrolled', y > 1);
 
     if (reduced || S <= 0) {
-      shell.classList.remove('home-v2__hero-shell--fixed', 'home-v2__hero-shell--docked');
-      shell.classList.add('home-v2__hero-shell--flow');
+      shell.classList.remove('home__hero-shell--fixed', 'home__hero-shell--docked');
+      shell.classList.add('home__hero-shell--flow');
       shell.style.top = '';
       shell.style.backgroundColor = '';
-      shell.style.setProperty('--home-v2-name-fade', '1');
+      shell.style.setProperty('--home-name-fade', '1');
       wrap.style.transform = '';
-      main.toggleAttribute('data-home-v2-header-dark', true);
+      main.toggleAttribute('data-home-header-dark', true);
       return;
     }
 
-    shell.classList.remove('home-v2__hero-shell--flow');
+    shell.classList.remove('home__hero-shell--flow');
 
     const tCompress = Math.min(1, y / compress);
     const scale = 1 - (1 - minScale) * tCompress;
     const tFade = y <= compress ? 0 : Math.min(1, (y - compress) / fade);
     const released = y >= S - 0.5;
-    /** Docked slightly before y=S; snap shell fade to 1 so bg matches `.home-v2__scroll` exactly. */
+    /** Docked slightly before y=S; snap shell fade to 1 so bg matches `.home__scroll` exactly. */
     const tFadeShell = released ? 1 : tFade;
     const [pr, pg, pb] = heroFadeTargetRgbRef.current;
     const r = Math.round(pr * tFadeShell);
@@ -211,20 +211,20 @@ export default function HomeV2() {
 
     wrap.style.transform = `scale(${scale})`;
     shell.style.backgroundColor = `rgb(${r},${g},${b})`;
-    shell.style.setProperty('--home-v2-name-fade', String(tFadeShell));
+    shell.style.setProperty('--home-name-fade', String(tFadeShell));
 
     if (released) {
-      shell.classList.remove('home-v2__hero-shell--fixed');
-      shell.classList.add('home-v2__hero-shell--docked');
+      shell.classList.remove('home__hero-shell--fixed');
+      shell.classList.add('home__hero-shell--docked');
       shell.style.top = `${S}px`;
     } else {
-      shell.classList.add('home-v2__hero-shell--fixed');
-      shell.classList.remove('home-v2__hero-shell--docked');
+      shell.classList.add('home__hero-shell--fixed');
+      shell.classList.remove('home__hero-shell--docked');
       shell.style.top = '';
     }
 
     const wantsDarkHeaderIcons = (tFadeShell > 0.55 || released) && bottomFadeProgressRef.current < 0.55;
-    main.toggleAttribute('data-home-v2-header-dark', wantsDarkHeaderIcons);
+    main.toggleAttribute('data-home-header-dark', wantsDarkHeaderIcons);
   }, [applyBottomScene]);
 
   const snapToTop = useCallback(() => {
@@ -281,7 +281,7 @@ export default function HomeV2() {
 
   useEffect(() => {
     const main = mainRef.current;
-    const wrap = main?.querySelector('.home-v2__fixed-header-wrap');
+    const wrap = main?.querySelector('.home__fixed-header-wrap');
     if (!wrap || typeof ResizeObserver === 'undefined') return;
     const ro = new ResizeObserver(() => {
       syncMetrics();
@@ -294,7 +294,7 @@ export default function HomeV2() {
   useEffect(() => {
     const main = mainRef.current;
     if (!main) return;
-    const revealElements = Array.from(main.querySelectorAll<HTMLElement>('.home-v2__reveal'));
+    const revealElements = Array.from(main.querySelectorAll<HTMLElement>('.home__reveal'));
     if (!revealElements.length) return;
 
     if (typeof IntersectionObserver === 'undefined') {
@@ -319,12 +319,12 @@ export default function HomeV2() {
   }, []);
 
   return (
-    <main ref={mainRef} className="home-page home-v2">
-      <div className="home-v2__scroll-sink" aria-hidden="true" />
-      <div ref={heroShellRef} className="home-v2__hero-shell home-v2__hero-shell--fixed">
-        <div ref={imageWrapRef} className="home-v2__hero-image-wrap">
+    <main ref={mainRef} className="home-page home">
+      <div className="home__scroll-sink" aria-hidden="true" />
+      <div ref={heroShellRef} className="home__hero-shell home__hero-shell--fixed">
+        <div ref={imageWrapRef} className="home__hero-image-wrap">
           <img
-            className="home-v2__hero-img"
+            className="home__hero-img"
             src={cloudinaryUrl(HERO_PUBLIC_ID, { w: 1800, c: 'limit', q: 95 })}
             srcSet={cloudinarySrcSet(HERO_PUBLIC_ID, [768, 1200, 1800, 2400], 95)}
             sizes="100vw"
@@ -334,37 +334,37 @@ export default function HomeV2() {
             fetchPriority="high"
           />
         </div>
-        <div className="home-v2__hero-scroll-hint" aria-hidden="true" />
-        <div className="home-v2__hero-name">
-          <div className="home-v2__hero-title-stack">
-            <p className="landing-auth-title home-v2__guest-name">Emily & Arden</p>
-            <p className="home-v2__guest-year">2027</p>
+        <div className="home__hero-scroll-hint" aria-hidden="true" />
+        <div className="home__hero-name">
+          <div className="home__hero-title-stack">
+            <p className="landing-auth-title home__guest-name">Emily & Arden</p>
+            <p className="home__guest-year">2027</p>
           </div>
         </div>
       </div>
-      <div className="home-v2__hero-placeholder" aria-hidden="true" />
+      <div className="home__hero-placeholder" aria-hidden="true" />
 
-      <div className="home-v2__mount-scope">
-        <div className="home-v2__fixed-header-wrap">
+      <div className="home__mount-scope">
+        <div className="home__fixed-header-wrap">
           <HomeHeader activePath="/home" />
         </div>
 
-        <div className="home-v2__scroll-track">
-          <section className="home-v2__scroll" aria-label="Weekend details">
-            <div className="home-v2__scroll-inner">
-              <div className="home-v2__weekend-content">
-                <div className="home-v2__weekend-text">
-                  <p className="home-v2__weekend-greeting home-v2__reveal">{weekendGreeting}</p>
-                  <p className="home-v2__weekend-body home-v2__reveal home-v2__reveal--step-1">
+        <div className="home__scroll-track">
+          <section className="home__scroll" aria-label="Weekend details">
+            <div className="home__scroll-inner">
+              <div className="home__weekend-content">
+                <div className="home__weekend-text">
+                  <p className="home__weekend-greeting home__reveal">{weekendGreeting}</p>
+                  <p className="home__weekend-body home__reveal home__reveal--step-1">
                     {weekendBody}
                   </p>
-                  <p className="home-v2__weekend-signature home-v2__reveal home-v2__reveal--step-2">
+                  <p className="home__weekend-signature home__reveal home__reveal--step-2">
                     {weekendSignature}
                   </p>
                 </div>
-                <div className="home-v2__weekend-image-wrap home-v2__reveal home-v2__reveal--step-3">
+                <div className="home__weekend-image-wrap home__reveal home__reveal--step-3">
                   <Polaroid
-                    className="home-v2__weekend-polaroid"
+                    className="home__weekend-polaroid"
                     dateText={weekendPolaroidDate}
                     publicId={weekendPolaroidPublicId}
                     alt="Emily and Arden"
@@ -373,14 +373,14 @@ export default function HomeV2() {
               </div>
             </div>
           </section>
-          <section ref={gallerySectionRef} className="home-v2__gallery" aria-label="Photo gallery">
-            <div ref={galleryPinRef} className="home-v2__gallery-pin">
-              <div className="home-v2__gallery-viewport">
-                <div className="home-v2__gallery-track">
+          <section ref={gallerySectionRef} className="home__gallery" aria-label="Photo gallery">
+            <div ref={galleryPinRef} className="home__gallery-pin">
+              <div className="home__gallery-viewport">
+                <div className="home__gallery-track">
                   {galleryLoopPublicIds.map((publicId, index) => (
-                    <figure key={`${publicId}-${index}`} className="home-v2__gallery-item">
+                    <figure key={`${publicId}-${index}`} className="home__gallery-item">
                       <img
-                        className="home-v2__gallery-image"
+                        className="home__gallery-image"
                         src={cloudinaryUrl(publicId, { w: 1200, c: 'limit' })}
                         srcSet={cloudinarySrcSet(publicId, [600, 1200, 1800])}
                         sizes="(max-width: 768px) 90vw, 60vw"
@@ -392,7 +392,7 @@ export default function HomeV2() {
                   ))}
                 </div>
               </div>
-              <div className="home-v2__rsvp-placeholder">
+              <div className="home__rsvp-placeholder">
                 <button type="button" className="ui-button ui-button--text" disabled>
                   RSVP
                 </button>
