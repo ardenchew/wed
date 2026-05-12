@@ -11,9 +11,9 @@ type HomeHeaderProps = {
 };
 
 /**
- * Header for /home-v2 and /home/*. The `.home-logo` and `.home-menu__trigger` class names
- * are queried by useHomeV2HeroScene to compute the hero's minimum compressed scale — keep
- * them stable.
+ * Header for /home and sibling routes (/schedule, /rsvp, /gift). The `.home-logo` and
+ * `.home-menu__trigger` class names are queried by useHomeHeroScene to compute the hero's
+ * minimum compressed scale — keep them stable.
  */
 export function HomeHeader({ activePath }: HomeHeaderProps) {
   const navigate = useNavigate();
