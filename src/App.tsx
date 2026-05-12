@@ -4,8 +4,9 @@ import { FreshLoadSplash } from './components/FreshLoadSplash';
 import { UserProvider } from './context/UserProvider';
 import { useUser } from './hooks/useUser';
 import Landing from './pages/Landing';
-import Home from './pages/Home';
 import HomeV2 from './pages/HomeV2';
+import Schedule from './pages/Schedule';
+import { RsvpPlaceholder, GiftPlaceholder } from './pages/PlaceholderPage';
 import SplashPreview from './pages/SplashPreview';
 import './styles/index.css';
 
@@ -40,8 +41,7 @@ function AppRoutes() {
 
     if (locationString !== previousLocationRef.current) {
       const prevLocation = JSON.parse(previousLocationRef.current);
-      const isSignInToHome = prevLocation.pathname === '/' &&
-        (location.pathname === '/home-v2' || location.pathname.startsWith('/home'));
+      const isSignInToHome = prevLocation.pathname === '/' && location.pathname === '/home';
 
       previousLocationRef.current = locationString;
 
@@ -63,7 +63,7 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route
-          path="/home-v2"
+          path="/home"
           element={
             <ProtectedRoute>
               <HomeV2 />
@@ -71,10 +71,26 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/home/*"
+          path="/schedule"
           element={
             <ProtectedRoute>
-              <Home />
+              <Schedule />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/rsvp"
+          element={
+            <ProtectedRoute>
+              <RsvpPlaceholder />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/gift"
+          element={
+            <ProtectedRoute>
+              <GiftPlaceholder />
             </ProtectedRoute>
           }
         />

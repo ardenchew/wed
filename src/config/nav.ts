@@ -4,8 +4,8 @@ export type NavItem = {
 };
 
 export const NAV_ITEMS: NavItem[] = [
-  { label: 'Home', path: '/home-v2' },
-  { label: 'Schedule', path: '/home/schedule' },
-  { label: 'RSVP', path: '/home/rsvp' },
-  { label: 'Gift', path: '/home/gift' },
+  { label: 'Home', path: '/home' },
+  { label: 'Schedule', path: '/schedule' },
+  { label: 'RSVP', path: '/rsvp' },
+  { label: 'Gift', path: '/gift' },
 ];

@@ -69,7 +69,7 @@ export default function Landing() {
 
   useEffect(() => {
     if (!user || deferAutoHomeNavRef.current) return;
-    navigate('/home-v2', { replace: true });
+    navigate('/home', { replace: true });
   }, [user, navigate]);
 
   useEffect(() => {
@@ -88,7 +88,7 @@ export default function Landing() {
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const ms = reduced ? 40 : LANDING_EXIT_TO_HOME_MS;
     const t = window.setTimeout(() => {
-      navigate('/home-v2', { replace: true });
+      navigate('/home', { replace: true });
     }, ms);
     return () => window.clearTimeout(t);
   }, [exitToHome, navigate]);

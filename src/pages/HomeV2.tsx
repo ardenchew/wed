@@ -346,7 +346,7 @@ export default function HomeV2() {
 
       <div className="home-v2__mount-scope">
         <div className="home-v2__fixed-header-wrap">
-          <HomeHeader activePath="/home-v2" />
+          <HomeHeader activePath="/home" />
         </div>
 
         <div className="home-v2__scroll-track">

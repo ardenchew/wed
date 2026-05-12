@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { Button } from '../components/Button';
+import { HomeHeader } from '../components/HomeHeader';
 import { EVENTS } from '../config/events';
 import { useGuest } from '../hooks/useGuest';
 import type { Event } from '../types';
@@ -258,8 +259,10 @@ export default function Schedule() {
   }, []);
 
   return (
-    <section className="schedule">
-      <ScheduleTimeline
+    <main className="home-page home-page--schedule">
+      <HomeHeader activePath="/schedule" />
+      <section className="schedule">
+        <ScheduleTimeline
         groups={dateGroups}
         activeIndex={activeGroupIndex}
         dotProgress={dotProgress}
@@ -407,6 +410,7 @@ export default function Schedule() {
           </div>
         ))}
       </div>
-    </section>
+      </section>
+    </main>
   );
 }
