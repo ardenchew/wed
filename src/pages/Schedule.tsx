@@ -76,6 +76,8 @@ function ScheduleTimeline({
   onDragStart,
   onDragProgress,
   onDragEnd,
+  onHoverStart,
+  onHoverEnd,
 }: {
   groups: DateGroup[];
   activeIndex: number;
@@ -85,6 +87,8 @@ function ScheduleTimeline({
   onDragStart: () => void;
   onDragProgress: (progress: number) => void;
   onDragEnd: () => void;
+  onHoverStart: () => void;
+  onHoverEnd: () => void;
 }) {
   const SLOT_HEIGHT = 140;
   const totalHeight = Math.max((groups.length - 1) * SLOT_HEIGHT, 0);
@@ -132,6 +136,8 @@ function ScheduleTimeline({
         ref={trackRef}
         className="schedule-timeline__track"
         style={{ height: totalHeight }}
+        onMouseEnter={onHoverStart}
+        onMouseLeave={onHoverEnd}
       >
         <div className="schedule-timeline__line" aria-hidden="true" />
         <div
@@ -191,6 +197,7 @@ export default function Schedule() {
   const [pastFirstHeader, setPastFirstHeader] = useState(false);
   const [dotProgress, setDotProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
 
   useEffect(() => {
     const onScroll = () => {
@@ -245,6 +252,14 @@ export default function Schedule() {
     setIsDragging(false);
   }, []);
 
+  const handleHoverStart = useCallback(() => {
+    setIsHovering(true);
+  }, []);
+
+  const handleHoverEnd = useCallback(() => {
+    setIsHovering(false);
+  }, []);
+
   const handleDragProgress = useCallback((progress: number) => {
     const refs = dayHeaderRefs.current;
     if (refs.length < 2 || !refs[0] || !refs[refs.length - 1]) return;
@@ -263,11 +278,15 @@ export default function Schedule() {
         groups={dateGroups}
         activeIndex={activeGroupIndex}
         dotProgress={dotProgress}
-        isVisible={pastFirstHeader && (isScrolling || isDragging)}
+        isVisible={
+          isHovering || (pastFirstHeader && (isScrolling || isDragging))
+        }
         onLabelClick={scrollToDate}
         onDragStart={handleDragStart}
         onDragProgress={handleDragProgress}
         onDragEnd={handleDragEnd}
+        onHoverStart={handleHoverStart}
+        onHoverEnd={handleHoverEnd}
       />
 
       <h1 className="schedule__title">Schedule</h1>

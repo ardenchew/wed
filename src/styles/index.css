@@ -1283,6 +1283,7 @@ body:has(.home-page--schedule) {
 .schedule-timeline__track {
   position: relative;
   width: 80px;
+  pointer-events: auto;
 }
 
 .schedule-timeline__line {
