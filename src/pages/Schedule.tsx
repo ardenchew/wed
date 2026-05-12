@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { Button } from '../components/Button';
 import { EVENTS } from '../config/events';
 import { useGuest } from '../hooks/useGuest';
@@ -29,14 +29,21 @@ function formatDateHeading(date: Date): string {
   const day = parts.find((p) => p.type === 'day')?.value ?? '';
   const year = parts.find((p) => p.type === 'year')?.value ?? '';
   const weekday = parts.find((p) => p.type === 'weekday')?.value ?? '';
-  return `${month} ${day}, ${year} - ${weekday}`;
+  return `${month} ${day}, ${year} · ${weekday}`;
+}
+
+function formatDateShort(date: Date): string {
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'long',
+    day: 'numeric',
+  }).format(date);
 }
 
 function dateKey(date: Date): string {
   return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 }
 
-type DateGroup = { label: string; events: Event[] };
+type DateGroup = { label: string; shortLabel: string; events: Event[] };
 
 function groupEventsByDate(events: Event[]): DateGroup[] {
   const sorted = [...events].sort(
@@ -49,11 +56,118 @@ function groupEventsByDate(events: Event[]): DateGroup[] {
     const key = dateKey(event.start_time);
     if (key !== currentKey) {
       currentKey = key;
-      groups.push({ label: formatDateHeading(event.start_time), events: [] });
+      groups.push({
+        label: formatDateHeading(event.start_time),
+        shortLabel: formatDateShort(event.start_time),
+        events: [],
+      });
     }
     groups[groups.length - 1].events.push(event);
   }
   return groups;
+}
+
+function ScheduleTimeline({
+  groups,
+  activeIndex,
+  dotProgress,
+  isVisible,
+  onLabelClick,
+  onDragStart,
+  onDragProgress,
+  onDragEnd,
+}: {
+  groups: DateGroup[];
+  activeIndex: number;
+  dotProgress: number;
+  isVisible: boolean;
+  onLabelClick: (i: number) => void;
+  onDragStart: () => void;
+  onDragProgress: (progress: number) => void;
+  onDragEnd: () => void;
+}) {
+  const SLOT_HEIGHT = 140;
+  const totalHeight = Math.max((groups.length - 1) * SLOT_HEIGHT, 0);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    isDraggingRef.current = true;
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      /* fallback ok */
+    }
+    onDragStart();
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current || !trackRef.current) return;
+    const rect = trackRef.current.getBoundingClientRect();
+    if (rect.height === 0) return;
+    const progress = Math.max(
+      0,
+      Math.min(1, (e.clientY - rect.top) / rect.height),
+    );
+    onDragProgress(progress);
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      /* fallback ok */
+    }
+    onDragEnd();
+  };
+
+  return (
+    <div
+      className={`schedule-timeline${isVisible ? ' schedule-timeline--visible' : ''}`}
+    >
+      <div
+        ref={trackRef}
+        className="schedule-timeline__track"
+        style={{ height: totalHeight }}
+      >
+        <div className="schedule-timeline__line" aria-hidden="true" />
+        <div
+          className="schedule-timeline__dot"
+          style={{ top: `${dotProgress * 100}%` }}
+          role="slider"
+          aria-label="Timeline scroll position"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(dotProgress * 100)}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+        />
+        {groups.map((group, i) => (
+          <button
+            key={group.label}
+            type="button"
+            className={`schedule-timeline__label${
+              i === activeIndex ? ' schedule-timeline__label--active' : ''
+            }`}
+            style={{
+              top:
+                groups.length > 1
+                  ? `${(i / (groups.length - 1)) * 100}%`
+                  : '50%',
+            }}
+            onClick={() => onLabelClick(i)}
+          >
+            {group.shortLabel}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default function Schedule() {
@@ -69,8 +183,93 @@ export default function Schedule() {
 
   const heroUrl = cloudinaryUrl(HERO_PUBLIC_ID, { w: 1200, c: 'limit' });
 
+  const dayHeaderRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const scrollIdleTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  const [activeGroupIndex, setActiveGroupIndex] = useState(0);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const [pastFirstHeader, setPastFirstHeader] = useState(false);
+  const [dotProgress, setDotProgress] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setIsScrolling(true);
+      clearTimeout(scrollIdleTimer.current);
+      scrollIdleTimer.current = setTimeout(() => setIsScrolling(false), 1500);
+
+      const refs = dayHeaderRefs.current;
+
+      if (refs[0]) {
+        setPastFirstHeader(refs[0].getBoundingClientRect().top <= 0);
+      }
+
+      let active = 0;
+      for (let i = 0; i < refs.length; i++) {
+        if (refs[i] && refs[i]!.getBoundingClientRect().top <= 80) active = i;
+      }
+      setActiveGroupIndex(active);
+
+      if (refs.length >= 2 && refs[0] && refs[refs.length - 1]) {
+        const first =
+          refs[0]!.getBoundingClientRect().top + window.scrollY;
+        const last =
+          refs[refs.length - 1]!.getBoundingClientRect().top + window.scrollY;
+        const progress = Math.min(
+          1,
+          Math.max(0, (window.scrollY - first) / (last - first)),
+        );
+        setDotProgress(progress);
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      clearTimeout(scrollIdleTimer.current);
+    };
+  }, []);
+
+  const scrollToDate = useCallback((index: number) => {
+    const ref = dayHeaderRefs.current[index];
+    if (!ref) return;
+    const y = ref.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: y, behavior: 'smooth' });
+  }, []);
+
+  const handleDragStart = useCallback(() => {
+    setIsDragging(true);
+  }, []);
+
+  const handleDragEnd = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  const handleDragProgress = useCallback((progress: number) => {
+    const refs = dayHeaderRefs.current;
+    if (refs.length < 2 || !refs[0] || !refs[refs.length - 1]) return;
+    const firstY = refs[0]!.getBoundingClientRect().top + window.scrollY;
+    const lastY =
+      refs[refs.length - 1]!.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({
+      top: firstY + progress * (lastY - firstY),
+      behavior: 'auto',
+    });
+  }, []);
+
   return (
     <section className="schedule">
+      <ScheduleTimeline
+        groups={dateGroups}
+        activeIndex={activeGroupIndex}
+        dotProgress={dotProgress}
+        isVisible={pastFirstHeader && (isScrolling || isDragging)}
+        onLabelClick={scrollToDate}
+        onDragStart={handleDragStart}
+        onDragProgress={handleDragProgress}
+        onDragEnd={handleDragEnd}
+      />
+
       <h1 className="schedule__title">Schedule</h1>
 
       <div className="schedule__actions">
@@ -90,9 +289,23 @@ export default function Schedule() {
       </div>
 
       <div className="schedule__content">
-        {dateGroups.map((group) => (
-          <div key={group.label} className="schedule__day">
-            <h2 className="schedule__day-header">{group.label}</h2>
+        {dateGroups.map((group, i) => (
+          <div
+            key={group.label}
+            className="schedule__day"
+            ref={(el) => {
+              dayHeaderRefs.current[i] = el;
+            }}
+          >
+            <h2 className="schedule__day-header">
+              <button
+                type="button"
+                className="schedule__day-header-button"
+                onClick={() => scrollToDate(i)}
+              >
+                {group.label}
+              </button>
+            </h2>
 
             <div className="schedule__day-card">
               <span
@@ -107,13 +320,13 @@ export default function Schedule() {
               >
                 <img src={resolveAsset('/vine.svg')} alt="" />
               </span>
-              {group.events.map((event, i) => {
+              {group.events.map((event, j) => {
                 const sideClass = event.image
-                  ? i % 2 === 0
+                  ? j % 2 === 0
                     ? 'schedule__event--image-left'
                     : 'schedule__event--image-right'
                   : 'schedule__event--no-image';
-                const isLast = i === group.events.length - 1;
+                const isLast = j === group.events.length - 1;
 
                 return (
                   <div
