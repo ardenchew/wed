@@ -11,7 +11,7 @@ type HomeHeaderProps = {
 };
 
 /**
- * Header for /home and sibling routes (/schedule, /rsvp, /gift). The `.home-logo` and
+ * Header for /home and its sibling routes. The `.home-logo` and
  * `.home-menu__trigger` class names are queried by useHomeHeroScene to compute the hero's
  * minimum compressed scale — keep them stable.
  */
