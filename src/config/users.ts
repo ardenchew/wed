@@ -11,9 +11,3 @@ export function getAllDisplayNames(): string[] {
 export function getGuestSlugForDisplayName(displayName: string): string | undefined {
   return USER_MAPPING[displayName];
 }
-
-/** Canonical sign-in label (matches password step) for a guest slug */
-export function getDisplayNameForGuestSlug(guestSlug: string): string | undefined {
-  const entry = Object.entries(USER_MAPPING).find(([, slug]) => slug === guestSlug);
-  return entry?.[0];
-}
