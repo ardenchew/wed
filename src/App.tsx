@@ -28,28 +28,23 @@ function ProtectedRoute({ children }: { children: React.ReactElement }) {
 
 function AppRoutes() {
   const [navigationSplashActive, setNavigationSplashActive] = useState(false);
-  const previousLocationRef = useRef<string>('');
-  const location = useLocation();
+  /** `null` until the first route settles, so the initial render never plays the splash twice. */
+  const previousPathnameRef = useRef<string | null>(null);
+  const { pathname } = useLocation();
 
   useEffect(() => {
-    const locationString = JSON.stringify(location);
+    const previousPathname = previousPathnameRef.current;
+    previousPathnameRef.current = pathname;
 
-    if (previousLocationRef.current === '') {
-      previousLocationRef.current = locationString;
-      return;
-    }
+    // Compare pathnames rather than the location object: re-navigating to the route you are
+    // already on pushes a new history entry (and a new location key) without changing the page.
+    if (previousPathname === null || previousPathname === pathname) return;
 
-    if (locationString !== previousLocationRef.current) {
-      const prevLocation = JSON.parse(previousLocationRef.current);
-      const isSignInToHome = prevLocation.pathname === '/' && location.pathname === '/home';
+    // Sign-in already runs its own exit transition into Home; a splash there would double up.
+    if (previousPathname === '/' && pathname === '/home') return;
 
-      previousLocationRef.current = locationString;
-
-      if (!isSignInToHome) {
-        setNavigationSplashActive(true);
-      }
-    }
-  }, [location]);
+    setNavigationSplashActive(true);
+  }, [pathname]);
 
   const handleNavigationSplashComplete = useCallback(() => {
     setNavigationSplashActive(false);
