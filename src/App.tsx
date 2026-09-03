@@ -6,7 +6,6 @@ import { useUser } from './hooks/useUser';
 import Landing from './pages/Landing';
 import Home from './pages/Home';
 import Schedule from './pages/Schedule';
-import { RsvpPlaceholder, GiftPlaceholder } from './pages/PlaceholderPage';
 import SplashPreview from './pages/SplashPreview';
 import './styles/index.css';
 
@@ -70,22 +69,6 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Schedule />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/rsvp"
-          element={
-            <ProtectedRoute>
-              <RsvpPlaceholder />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/gift"
-          element={
-            <ProtectedRoute>
-              <GiftPlaceholder />
             </ProtectedRoute>
           }
         />
