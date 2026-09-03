@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { Button } from '../components/Button';
 import { HomeHeader } from '../components/HomeHeader';
-import { EVENTS } from '../config/events';
+import { EVENT_TIME_ZONE, EVENTS } from '../config/events';
 import { useGuest } from '../hooks/useGuest';
 import type { Event } from '../types';
 import { resolveAsset } from '../utils/asset';
@@ -9,23 +9,51 @@ import { cloudinaryUrl, isCloudinaryId } from '../utils/cloudinary';
 
 const HERO_PUBLIC_ID = 'wed/schedule/hero';
 
+/*
+ * Every formatter below pins `timeZone` to the venue: a guest reading the schedule from another
+ * country still sees the local start time, on the local day.
+ */
+
+const timeFormatter = new Intl.DateTimeFormat('en-US', {
+  hour: 'numeric',
+  minute: '2-digit',
+  hour12: true,
+  timeZone: EVENT_TIME_ZONE,
+});
+
+const dateHeadingFormatter = new Intl.DateTimeFormat('en-US', {
+  month: 'long',
+  day: 'numeric',
+  year: 'numeric',
+  weekday: 'long',
+  timeZone: EVENT_TIME_ZONE,
+});
+
+const dateShortFormatter = new Intl.DateTimeFormat('en-US', {
+  month: 'long',
+  day: 'numeric',
+  timeZone: EVENT_TIME_ZONE,
+});
+
+/** en-CA renders as `YYYY-MM-DD`, which is all this key needs to be. */
+const dateKeyFormatter = new Intl.DateTimeFormat('en-CA', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  timeZone: EVENT_TIME_ZONE,
+});
+
 function formatTime(date: Date): string {
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-  const period = hours >= 12 ? 'pm' : 'am';
-  const displayHour = hours % 12 || 12;
-  if (minutes === 0) return `${displayHour}${period}`;
-  return `${displayHour}:${minutes.toString().padStart(2, '0')}${period}`;
+  const parts = timeFormatter.formatToParts(date);
+  const hour = parts.find((p) => p.type === 'hour')?.value ?? '';
+  const minute = parts.find((p) => p.type === 'minute')?.value ?? '';
+  const period = (parts.find((p) => p.type === 'dayPeriod')?.value ?? '').toLowerCase();
+  if (minute === '00') return `${hour}${period}`;
+  return `${hour}:${minute}${period}`;
 }
 
 function formatDateHeading(date: Date): string {
-  const options: Intl.DateTimeFormatOptions = {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-    weekday: 'long',
-  };
-  const parts = new Intl.DateTimeFormat('en-US', options).formatToParts(date);
+  const parts = dateHeadingFormatter.formatToParts(date);
   const month = parts.find((p) => p.type === 'month')?.value ?? '';
   const day = parts.find((p) => p.type === 'day')?.value ?? '';
   const year = parts.find((p) => p.type === 'year')?.value ?? '';
@@ -34,14 +62,11 @@ function formatDateHeading(date: Date): string {
 }
 
 function formatDateShort(date: Date): string {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'long',
-    day: 'numeric',
-  }).format(date);
+  return dateShortFormatter.format(date);
 }
 
 function dateKey(date: Date): string {
-  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  return dateKeyFormatter.format(date);
 }
 
 type DateGroup = { label: string; shortLabel: string; events: Event[] };
