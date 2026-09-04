@@ -3,11 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { NAV_ITEMS } from '../config/nav';
 import { useUser } from '../hooks/useUser';
 import { resolveAsset } from '../utils/asset';
+import { scrollToId } from '../utils/scrollToId';
 
 const HOME_PATH = NAV_ITEMS[0].path;
 
 type HomeHeaderProps = {
   activePath: string;
+  /** Id of the in-page section currently scrolled to, if any (e.g. the homepage's welcome blurb). */
+  activeSectionId?: string;
 };
 
 /**
@@ -15,18 +18,23 @@ type HomeHeaderProps = {
  * `.home-menu__trigger` class names are queried by useHomeHeroScene to compute the hero's
  * minimum compressed scale — keep them stable.
  */
-export function HomeHeader({ activePath }: HomeHeaderProps) {
+export function HomeHeader({ activePath, activeSectionId }: HomeHeaderProps) {
   const navigate = useNavigate();
   const { signOut } = useUser();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const skipCloseScrollRef = useRef(false);
 
   useEffect(() => {
     if (isMenuOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (skipCloseScrollRef.current) {
+        skipCloseScrollRef.current = false;
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
     return () => {
       document.body.style.overflow = '';
@@ -80,16 +88,25 @@ export function HomeHeader({ activePath }: HomeHeaderProps) {
           <div id="home-menu-panel" className="home-menu__panel" role="menu" aria-label="User menu">
             <div className="home-menu__section">
               {NAV_ITEMS.map((item) => {
-                const isActive = activePath === item.path;
+                const isActive =
+                  activePath === item.path &&
+                  (item.scrollTargetId ? activeSectionId === item.scrollTargetId : !activeSectionId);
                 return (
                   <button
-                    key={`menu-${item.path}`}
+                    key={`menu-${item.label}`}
                     type="button"
                     className={`home-menu__action${isActive ? ' home-menu__action--active' : ''}`}
                     role="menuitem"
                     onClick={() => {
                       setIsMenuOpen(false);
-                      navigate(item.path);
+                      if (item.scrollTargetId && activePath === item.path) {
+                        skipCloseScrollRef.current = true;
+                        scrollToId(item.scrollTargetId);
+                      } else if (item.scrollTargetId) {
+                        navigate(item.path, { state: { scrollTargetId: item.scrollTargetId } });
+                      } else {
+                        navigate(item.path);
+                      }
                     }}
                   >
                     {item.label}

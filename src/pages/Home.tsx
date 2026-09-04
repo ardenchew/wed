@@ -1,15 +1,20 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { HomeHeader } from '../components/HomeHeader';
 import { Polaroid } from '../components/Polaroid';
+import { HOME_WELCOME_SECTION_ID } from '../config/nav';
 import { useGuest } from '../hooks/useGuest';
 import { useHomeHeroScene } from '../hooks/useHomeHeroScene';
 import { cloudinaryUrl, cloudinarySrcSet } from '../utils/cloudinary';
+import { scrollToId } from '../utils/scrollToId';
 import '../styles/index.css';
 
 /** Scroll positions below this (× viewport height) are close enough to the hero to snap back up */
 const SNAP_THRESHOLD_VH = 0.7;
 /** Idle time after the last scroll event before a stalled upward gesture is snapped to the top */
 const SNAP_IDLE_MS = 300;
+/** How long a visitor can sit on the hero before the "Scroll" cue fades in to nudge them. */
+const SCROLL_HINT_DELAY_MS = 5000;
 
 const DEFAULT_WEEKEND_POLAROID_PUBLIC_ID = 'wed/home/emily_arden_stony_hill';
 const DEFAULT_WEEKEND_POLAROID_DATE = '9 5 2025';
@@ -18,6 +23,10 @@ const HERO_PUBLIC_ID = 'wed/home/hero_crater_lake';
 
 export default function Home() {
   const guest = useGuest();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [scrollHintVisible, setScrollHintVisible] = useState(false);
+  const [activeSectionId, setActiveSectionId] = useState<string | undefined>(undefined);
   const mainRef = useRef<HTMLElement>(null);
   const heroShellRef = useRef<HTMLDivElement>(null);
   const imageWrapRef = useRef<HTMLDivElement>(null);
@@ -128,6 +137,46 @@ export default function Home() {
     };
   }, []);
 
+  /** Nudge visitors who haven't scrolled after a few seconds with a clickable "Scroll" cue. */
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (window.scrollY <= 1) setScrollHintVisible(true);
+    }, SCROLL_HINT_DELAY_MS);
+
+    const onScroll = () => {
+      if (window.scrollY > 1) window.clearTimeout(timer);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, []);
+
+  useEffect(() => {
+    const targetId = (location.state as { scrollTargetId?: string } | null)?.scrollTargetId;
+    if (!targetId) return;
+    scrollToId(targetId);
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.state, location.pathname, navigate]);
+
+  /**
+   * Mirrors the `data-home-scrolled` attribute (set by useHomeHeroScene) into React state so the
+   * menu can highlight "Welcome" instead of "Home" once the visitor has scrolled past the hero.
+   */
+  useEffect(() => {
+    const main = mainRef.current;
+    if (!main) return;
+    const sync = () => {
+      setActiveSectionId(main.hasAttribute('data-home-scrolled') ? HOME_WELCOME_SECTION_ID : undefined);
+    };
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(main, { attributes: true, attributeFilter: ['data-home-scrolled'] });
+    return () => observer.disconnect();
+  }, []);
+
   useEffect(() => {
     const main = mainRef.current;
     if (!main) return;
@@ -171,6 +220,15 @@ export default function Home() {
             fetchPriority="high"
           />
         </div>
+        <button
+          type="button"
+          className={`home__hero-scroll-label${scrollHintVisible ? ' home__hero-scroll-label--visible' : ''}`}
+          tabIndex={scrollHintVisible ? 0 : -1}
+          aria-hidden={!scrollHintVisible}
+          onClick={() => scrollToId(HOME_WELCOME_SECTION_ID)}
+        >
+          Scroll
+        </button>
         <div className="home__hero-scroll-hint" aria-hidden="true" />
         <div className="home__hero-name">
           <div className="home__hero-title-stack">
@@ -183,11 +241,11 @@ export default function Home() {
 
       <div className="home__mount-scope">
         <div className="home__fixed-header-wrap">
-          <HomeHeader activePath="/home" />
+          <HomeHeader activePath="/home" activeSectionId={activeSectionId} />
         </div>
 
         <div className="home__scroll-track">
-          <section className="home__scroll" aria-label="Weekend details">
+          <section id={HOME_WELCOME_SECTION_ID} className="home__scroll" aria-label="Weekend details">
             <div className="home__scroll-inner">
               <div className="home__weekend-content">
                 <div className="home__weekend-text">
