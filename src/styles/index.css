@@ -1616,6 +1616,46 @@ body:has(.home-page--schedule) {
   clip-path: none;
 }
 
+.home__hero-scroll-label {
+  position: absolute;
+  left: 50%;
+  top: calc(100% * 642 / 788 - 1.5rem);
+  transform: translateX(-50%);
+  z-index: 0;
+  pointer-events: none;
+  background: none;
+  border: none;
+  padding: 0.5rem 1rem;
+  margin: 0;
+  font: inherit;
+  color: #fff;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.32),
+    0 4px 28px rgba(0, 0, 0, 0.22);
+  mix-blend-mode: difference;
+  font-size: clamp(0.65rem, 2vw, 0.8rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.home__hero-scroll-label--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.home__hero-scroll-label:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+.home[data-home-scrolled] .home__hero-scroll-label {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .home__hero-name {
   position: absolute;
   inset: 0;
