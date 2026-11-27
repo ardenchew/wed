@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router';
 import { HomeHeader } from '../components/HomeHeader';
 import { Polaroid } from '../components/Polaroid';
 import { HOME_WELCOME_SECTION_ID } from '../config/nav';
