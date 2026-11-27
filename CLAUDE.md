@@ -1,25 +1,22 @@
-# Wed Project Setup
+# Wed Project Notes
 
-## Environment Variables
+## Working in a worktree
 
-When working in a worktree, copy `.env.example` to `.env` in the worktree root:
-
-```bash
-# From within the worktree directory
-cp ../.env.example .env
-```
-
-Or create a symlink to the parent `.env`:
+Run every command from the worktree directory, not the repo root. The dev server serves the files of
+the folder it starts in, and a worktree without its own `node_modules` silently falls back to the
+root's packages.
 
 ```bash
-ln -s ../../.env .env
+cp .env.example .env   # .env.example is tracked, so every worktree already has it
+npm install
+npm run dev            # http://localhost:5173/wed/
 ```
 
-This ensures Vite can load `VITE_CLOUDINARY_CLOUD_NAME` and other env vars needed for the dev server to build image URLs correctly.
+Without `.env`, `VITE_CLOUDINARY_CLOUD_NAME` is unset in dev and Cloudinary images won't load
+(`cloudinaryUrl` returns the bare public id). Production builds read it from the tracked
+`.env.production`.
 
-## Why This Matters
+## Secrets
 
-- The `.env` file is gitignored (contains config values)
-- Vite reads `.env` from the current working directory on startup
-- Each worktree is an isolated directory, so it needs its own `.env` symlink or copy
-- Without this, Cloudinary images won't load in dev mode
+Everything prefixed `VITE_` is inlined into the public JS bundle. Never put a secret in a `VITE_`
+variable, and never copy a real `.env` into `.env.example` — that file is committed to a public repo.

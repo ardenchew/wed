@@ -7,7 +7,6 @@ import { useGuest } from '../hooks/useGuest';
 import { useHomeHeroScene } from '../hooks/useHomeHeroScene';
 import { cloudinaryUrl, cloudinarySrcSet } from '../utils/cloudinary';
 import { scrollToId } from '../utils/scrollToId';
-import '../styles/index.css';
 
 /** Scroll positions below this (× viewport height) are close enough to the hero to snap back up */
 const SNAP_THRESHOLD_VH = 0.7;
