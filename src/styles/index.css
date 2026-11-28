@@ -1716,9 +1716,107 @@ body:has(.home-page--schedule) {
   padding: 0 0 clamp(3rem, 10vw, 5rem);
 }
 
-.home__scroll--envelope .home__weekend-image-wrap {
-  width: min(calc(100% - 2.5rem), 20rem);
-  margin: clamp(2.5rem, 8vw, 4rem) auto 0;
+.home__scroll--envelope {
+  /* Cards swinging out of the photo stack may pass the page edge; never let them scroll it. */
+  overflow-x: clip;
+}
+
+.home__photo-stack {
+  margin: clamp(3rem, 10vw, 4.5rem) auto 0;
+}
+
+.home__rsvp.home__rsvp--inline {
+  position: static;
+  transform: none;
+  /* Clears the tilted cards hanging below the stack's box. */
+  margin-top: clamp(4.5rem, 16vw, 6rem);
+}
+
+/* ── Photo stack: polaroids piled at angles; the one you point at swings to the top ─────────── */
+.photo-stack {
+  position: relative;
+  width: min(calc(100% - 5rem), 19rem);
+  aspect-ratio: 5 / 6;
+}
+
+.photo-stack__card {
+  position: absolute;
+  inset: 0;
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transform: translate(var(--x), var(--y)) rotate(var(--r));
+  /* The new stacking order lands mid-swing, while the card is out to the side. */
+  transition:
+    transform 560ms cubic-bezier(0.22, 0.75, 0.2, 1),
+    z-index 0s linear 240ms;
+}
+
+.photo-stack__card:focus-visible {
+  outline: 2px solid #6f7d62;
+  outline-offset: 6px;
+}
+
+.photo-stack__card[data-pull='a'] {
+  animation: photo-stack-pull-a 600ms cubic-bezier(0.3, 0.6, 0.3, 1);
+}
+
+.photo-stack__card[data-pull='b'] {
+  animation: photo-stack-pull-b 600ms cubic-bezier(0.3, 0.6, 0.3, 1);
+}
+
+/* Two identical keyframes so a second shuffle of the same card restarts the swing. */
+@keyframes photo-stack-pull-a {
+  0%,
+  100% {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+
+  40% {
+    translate: calc(var(--pull-dir) * 68%) -5%;
+    rotate: calc(var(--pull-dir) * 9deg);
+  }
+}
+
+@keyframes photo-stack-pull-b {
+  0%,
+  100% {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+
+  40% {
+    translate: calc(var(--pull-dir) * 68%) -5%;
+    rotate: calc(var(--pull-dir) * 9deg);
+  }
+}
+
+.photo-stack__polaroid {
+  display: block;
+  width: 100%;
+  padding: 26% 6% 8%;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.12),
+    0 12px 24px rgba(0, 0, 0, 0.26);
+}
+
+.photo-stack__polaroid .polaroid__imageWrap {
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-stack__card {
+    transition: none;
+  }
+
+  .photo-stack__card[data-pull] {
+    animation: none;
+  }
 }
 
 /* ── Home: welcome envelope ─────────────────────────────────────────────────

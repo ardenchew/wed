@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { HeroImage } from '../components/HeroImage';
 import { HomeHeader } from '../components/HomeHeader';
+import { PhotoStack, type StackPhoto } from '../components/PhotoStack';
 import { Polaroid } from '../components/Polaroid';
 import { RsvpStatusButton } from '../components/RsvpStatusButton';
 import { WelcomeEnvelope } from '../components/WelcomeEnvelope';
@@ -85,6 +86,17 @@ export default function Home({ welcome = 'fade' }: HomeProps) {
       return true;
     });
   }, [guestGalleryPublicIds, hasGuestWeekendPolaroid]);
+
+  /** Home V2 piles the weekend polaroid on top of the gallery photos instead of a marquee. */
+  const stackPhotos = useMemo<StackPhoto[]>(
+    () => [
+      { publicId: weekendPolaroidPublicId, dateText: weekendPolaroidDate, alt: 'Emily and Arden' },
+      ...galleryPublicIds
+        .filter((id) => id !== weekendPolaroidPublicId)
+        .map((publicId) => ({ publicId, alt: '' })),
+    ],
+    [galleryPublicIds, weekendPolaroidDate, weekendPolaroidPublicId],
+  );
 
   const galleryLoopPublicIds = useMemo(
     () => [...galleryPublicIds, ...galleryPublicIds],
@@ -265,13 +277,15 @@ export default function Home({ welcome = 'fade' }: HomeProps) {
                 body={weekendBody}
                 signature={weekendSignature}
               />
-              <div className="home__weekend-image-wrap home__reveal">
-                <Polaroid
-                  className="home__weekend-polaroid"
-                  dateText={weekendPolaroidDate}
-                  publicId={weekendPolaroidPublicId}
-                  alt="Emily and Arden"
+              <div className="home__reveal">
+                <PhotoStack
+                  key={stackPhotos.map((photo) => photo.publicId).join()}
+                  className="home__photo-stack"
+                  photos={stackPhotos}
                 />
+              </div>
+              <div className="home__rsvp home__rsvp--inline">
+                <RsvpStatusButton />
               </div>
             </section>
           ) : (
@@ -299,30 +313,32 @@ export default function Home({ welcome = 'fade' }: HomeProps) {
               </div>
             </section>
           )}
-          <section ref={gallerySectionRef} className="home__gallery" aria-label="Photo gallery">
-            <div ref={galleryPinRef} className="home__gallery-pin">
-              <div className="home__gallery-viewport">
-                <div className="home__gallery-track">
-                  {galleryLoopPublicIds.map((publicId, index) => (
-                    <figure key={`${publicId}-${index}`} className="home__gallery-item">
-                      <img
-                        className="home__gallery-image"
-                        src={cloudinaryUrl(publicId, { w: 1200, c: 'limit' })}
-                        srcSet={cloudinarySrcSet(publicId, [600, 900, 1200, 1800, 2400])}
-                        sizes={GALLERY_SIZES}
-                        alt=""
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    </figure>
-                  ))}
+          {welcome !== 'envelope' && (
+            <section ref={gallerySectionRef} className="home__gallery" aria-label="Photo gallery">
+              <div ref={galleryPinRef} className="home__gallery-pin">
+                <div className="home__gallery-viewport">
+                  <div className="home__gallery-track">
+                    {galleryLoopPublicIds.map((publicId, index) => (
+                      <figure key={`${publicId}-${index}`} className="home__gallery-item">
+                        <img
+                          className="home__gallery-image"
+                          src={cloudinaryUrl(publicId, { w: 1200, c: 'limit' })}
+                          srcSet={cloudinarySrcSet(publicId, [600, 900, 1200, 1800, 2400])}
+                          sizes={GALLERY_SIZES}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </figure>
+                    ))}
+                  </div>
+                </div>
+                <div className="home__rsvp">
+                  <RsvpStatusButton />
                 </div>
               </div>
-              <div className="home__rsvp">
-                <RsvpStatusButton />
-              </div>
-            </div>
-          </section>
+            </section>
+          )}
         </div>
       </div>
     </main>
