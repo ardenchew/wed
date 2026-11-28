@@ -361,6 +361,72 @@ body.splash-active {
   color: #141414;
 }
 
+/* "Which one are you?" — shown when a typed name matches several guests. */
+.landing-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+}
+
+.landing-picker__title {
+  margin: 0;
+  font-family: 'Bacasime Antique', Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.6rem, 3.6vw, 2.4rem);
+  font-weight: 400;
+  line-height: 1.25;
+  color: #141414;
+}
+
+.landing-picker__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: min(100%, 360px);
+  border-top: 1px solid rgba(17, 17, 17, 0.25);
+}
+
+.landing-picker__list li {
+  border-bottom: 1px solid rgba(17, 17, 17, 0.25);
+}
+
+.landing-picker__option {
+  display: block;
+  width: 100%;
+  padding: 0.8rem 0.5rem;
+  font-family: 'Bacasime Antique', Georgia, 'Times New Roman', serif;
+  font-size: 1.35rem;
+  line-height: 1.2;
+  color: #111111;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.landing-picker__option:hover,
+.landing-picker__option:focus-visible {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.landing-picker__option:focus-visible {
+  outline: 1.5px solid rgba(17, 17, 17, 0.65);
+  outline-offset: -2px;
+}
+
+/* "choose a different name" inside the wrong-password message */
+.error-message__link {
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
 .sign-in-form {
   display: flex;
   flex-direction: column;

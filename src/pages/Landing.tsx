@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, FormEvent } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, FormEvent, KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { useUser } from '../hooks/useUser';
 import { ApiError } from '../api/client';
-import { fetchGuestNames, fetchMe } from '../api/guests';
+import { fetchMe, lookupGuests } from '../api/guests';
 import type { GuestName } from '../guests/shared';
-import { searchDisplayName } from '../utils/search';
 import { Button } from '../components/Button';
 import { HeroImage } from '../components/HeroImage';
 
@@ -18,9 +17,13 @@ export default function Landing() {
   const [password, setPassword] = useState('');
   const [matchedGuest, setMatchedGuest] = useState<GuestName | null>(null);
   const matchedDisplayName = matchedGuest?.name ?? null;
-  /** Loaded from the API on the first name search, then reused. */
-  const guestNamesRef = useRef<GuestName[] | null>(null);
+  /** Set when the typed name matched several guests: the "Which one are you?" step. */
+  const [candidates, setCandidates] = useState<GuestName[] | null>(null);
+  /** True while the name form (ENTER / name input) is the step on screen. */
+  const onNameStep = !matchedGuest && !candidates;
   const [error, setError] = useState('');
+  const [wrongPassword, setWrongPassword] = useState(false);
+  const pickerRef = useRef<HTMLUListElement>(null);
   const [loading, setLoading] = useState(false);
   const { user, signIn } = useUser();
   const navigate = useNavigate();
@@ -39,7 +42,7 @@ export default function Landing() {
   }, []);
 
   useLayoutEffect(() => {
-    if (matchedDisplayName) return;
+    if (!onNameStep) return;
     const node = morphRef.current;
     if (!node) return;
     const syncMorphWidth = () => setMorphWidthPx(node.getBoundingClientRect().width);
@@ -47,18 +50,23 @@ export default function Landing() {
     ro.observe(node);
     syncMorphWidth();
     return () => ro.disconnect();
-  }, [matchedDisplayName, isAuthVisible, nameStepReady]);
+  }, [onNameStep, isAuthVisible, nameStepReady]);
 
   useLayoutEffect(() => {
-    if (isAuthVisible || matchedDisplayName) return;
+    if (isAuthVisible || !onNameStep) return;
     measureEnterRule();
-  }, [isAuthVisible, matchedDisplayName, measureEnterRule]);
+  }, [isAuthVisible, onNameStep, measureEnterRule]);
 
   useEffect(() => {
-    if (isAuthVisible || matchedDisplayName) return;
+    if (isAuthVisible || !onNameStep) return;
     window.addEventListener('resize', measureEnterRule);
     return () => window.removeEventListener('resize', measureEnterRule);
-  }, [isAuthVisible, matchedDisplayName, measureEnterRule]);
+  }, [isAuthVisible, onNameStep, measureEnterRule]);
+
+  // Move focus to the first name when the picker opens, so keyboard and screen-reader users land on it.
+  useEffect(() => {
+    if (candidates && !matchedGuest) pickerRef.current?.querySelector('button')?.focus();
+  }, [candidates, matchedGuest]);
 
   useEffect(() => {
     document.body.classList.add('landing-no-scroll');
@@ -108,19 +116,16 @@ export default function Landing() {
     }
 
     try {
-      guestNamesRef.current ??= await fetchGuestNames();
-      const guestNames = guestNamesRef.current;
-      const matches = searchDisplayName(
-        name.trim(),
-        guestNames.map((guest) => guest.name),
-      );
+      const matches = await lookupGuests(name.trim());
 
       if (matches.length === 0) {
-        setError('Name not found. Please check your spelling and try again.');
+        setError(
+          'We couldn’t find that name. Try your full first name, or your first and last name.',
+        );
+      } else if (matches.length === 1) {
+        chooseGuest(matches[0]);
       } else {
-        // TODO: show a selection UI when matches.length > 1
-        setMatchedGuest(guestNames.find((guest) => guest.name === matches[0]) ?? null);
-        setPassword('');
+        setCandidates(matches);
       }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'An error occurred. Please try again.');
@@ -147,6 +152,7 @@ export default function Landing() {
       return;
     }
 
+    setWrongPassword(false);
     try {
       const guest = await fetchMe({ slug: matchedGuest.slug, password: password.trim() });
       deferAutoHomeNavRef.current = true;
@@ -154,7 +160,7 @@ export default function Landing() {
       setExitToHome(true);
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
-        setError('Incorrect password. Please try again.');
+        setWrongPassword(true);
         setPassword('');
       } else {
         setError(err instanceof ApiError ? err.message : 'An error occurred. Please try again.');
@@ -165,11 +171,40 @@ export default function Landing() {
     }
   };
 
+  const chooseGuest = (guest: GuestName) => {
+    setMatchedGuest(guest);
+    setPassword('');
+    setError('');
+    setWrongPassword(false);
+  };
+
+  /** Back from the password step: to the list if there was one, else to the name (kept, to edit). */
   const handleBack = () => {
     setMatchedGuest(null);
     setPassword('');
     setError('');
-    setName('');
+    setWrongPassword(false);
+  };
+
+  /** Back to typing a name, from the list or from a wrong password. */
+  const handleSearchAgain = () => {
+    handleBack();
+    setCandidates(null);
+  };
+
+  /** Up/down arrows (and Home/End) move between the names in the list. */
+  const handlePickerKeyDown = (e: KeyboardEvent<HTMLUListElement>) => {
+    const buttons = Array.from(e.currentTarget.querySelectorAll('button'));
+    const current = buttons.indexOf(document.activeElement as HTMLButtonElement);
+    const next =
+      e.key === 'ArrowDown' ? current + 1
+      : e.key === 'ArrowUp' ? current - 1
+      : e.key === 'Home' ? 0
+      : e.key === 'End' ? buttons.length - 1
+      : null;
+    if (next === null) return;
+    e.preventDefault();
+    buttons[(next + buttons.length) % buttons.length]?.focus();
   };
 
   const handleEnterClick = () => {
@@ -200,7 +235,7 @@ export default function Landing() {
       <div className="landing-center-content">
         <div className="landing-transition-shell landing-transition-shell--compact">
           <section className="landing-panel-auth-inner" aria-label="Sign in">
-            {!matchedDisplayName ? (
+            {onNameStep ? (
               <form onSubmit={handleNameSubmit} className="sign-in-form">
                 <div className="landing-entry-morph" ref={morphRef}>
                   <div
@@ -246,7 +281,7 @@ export default function Landing() {
                   </div>
                 </div>
 
-                {error && <div className="error-message">{error}</div>}
+                {error && <div className="error-message" role="alert">{error}</div>}
 
                 <Button
                   type="submit"
@@ -258,6 +293,33 @@ export default function Landing() {
                   {loading ? 'Searching...' : 'Search'}
                 </Button>
               </form>
+            ) : !matchedGuest && candidates ? (
+              <div className="landing-picker">
+                <h2 id="landing-picker-title" className="landing-picker__title">
+                  Which one are you?
+                </h2>
+                <ul
+                  ref={pickerRef}
+                  className="landing-picker__list"
+                  aria-labelledby="landing-picker-title"
+                  onKeyDown={handlePickerKeyDown}
+                >
+                  {candidates.map((guest) => (
+                    <li key={guest.slug}>
+                      <button
+                        type="button"
+                        className="landing-picker__option"
+                        onClick={() => chooseGuest(guest)}
+                      >
+                        {guest.name}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                <Button type="button" variant="text" onClick={handleSearchAgain}>
+                  None of these
+                </Button>
+              </div>
             ) : (
               <>
                 <p className="landing-auth-title">{matchedDisplayName}</p>
@@ -275,7 +337,17 @@ export default function Landing() {
                     />
                   </div>
 
-                  {error && <div className="error-message">{error}</div>}
+                  {wrongPassword ? (
+                    <div className="error-message" role="alert">
+                      That password doesn’t match {matchedDisplayName}. Try again, or{' '}
+                      <button type="button" className="error-message__link" onClick={handleSearchAgain}>
+                        choose a different name
+                      </button>
+                      .
+                    </div>
+                  ) : (
+                    error && <div className="error-message" role="alert">{error}</div>
+                  )}
 
                   <div className="form-actions form-actions--inline">
                     <Button

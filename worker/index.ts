@@ -1,7 +1,9 @@
 /**
  * The site's API — a Cloudflare Worker backed by the `wed` D1 database.
  *
- *   GET    /guests/names        → everyone's display name, for the sign-in search (public)
+ *   POST   /guests/lookup       → the guests a typed name could mean, for sign-in (public)
+ *   GET    /guests/names        → everyone's display name (public; deprecated, remove once the
+ *                                  site using /guests/lookup is live)
  *   GET    /me                  → the signed-in guest's profile (also how sign-in checks a password)
  *   GET    /rsvp                → the guest's party, with each member's invitations and answers
  *   PUT    /rsvp                → save answers (plus phone and dietary restrictions) for that party
@@ -16,7 +18,7 @@
 import type { GuestInput } from '../src/guests/shared';
 import type { RsvpUpdateRequest } from '../src/rsvp/shared';
 import { createGuest, deleteGuest, listAdminGuests, requireAdmin, updateGuest } from './admin';
-import { authenticate, loadGuestNames, toProfile } from './guests';
+import { authenticate, loadGuestNames, lookupGuests, toProfile } from './guests';
 import { corsHeaders, errorResponse, HttpError, json, readJson, type Env } from './http';
 import { loadParty, saveParty } from './rsvp';
 
@@ -31,6 +33,7 @@ export default {
       const db = env.DB;
       const ok = (body: unknown, status = 200) => json(body, status, cors);
 
+      if (pathname === '/guests/lookup' && method === 'POST') return ok(await lookupGuests(db, await readJson(request)));
       if (pathname === '/guests/names' && method === 'GET') return ok(await loadGuestNames(db));
 
       const self = await authenticate(request, db);
