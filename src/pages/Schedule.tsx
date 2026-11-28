@@ -216,7 +216,7 @@ export default function Schedule() {
   const heroUrl = cloudinaryUrl(HERO_PUBLIC_ID, { w: 1200, c: 'limit' });
 
   const dayHeaderRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const scrollIdleTimer = useRef<ReturnType<typeof setTimeout>>();
+  const scrollIdleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const [activeGroupIndex, setActiveGroupIndex] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);

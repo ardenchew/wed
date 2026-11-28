@@ -1,5 +1,5 @@
 import { useCallback, useState, useEffect, useRef } from 'react';
-import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router';
 import { FreshLoadSplash } from './components/FreshLoadSplash';
 import { UserProvider } from './context/UserProvider';
 import { useUser } from './hooks/useUser';

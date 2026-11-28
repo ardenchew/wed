@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { NAV_ITEMS } from '../config/nav';
 import { useUser } from '../hooks/useUser';
 import { resolveAsset } from '../utils/asset';

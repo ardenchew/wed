@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useUser } from '../hooks/useUser';
 import { GUESTS } from '../config/guests';
 import { getAllDisplayNames, getGuestSlugForDisplayName } from '../config/users';

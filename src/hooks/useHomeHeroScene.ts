@@ -9,11 +9,11 @@ import {
 } from '../utils/homeHero';
 
 type SceneRefs = {
-  mainRef: RefObject<HTMLElement>;
-  heroShellRef: RefObject<HTMLDivElement>;
-  imageWrapRef: RefObject<HTMLDivElement>;
-  gallerySectionRef: RefObject<HTMLElement>;
-  galleryPinRef: RefObject<HTMLDivElement>;
+  mainRef: RefObject<HTMLElement | null>;
+  heroShellRef: RefObject<HTMLDivElement | null>;
+  imageWrapRef: RefObject<HTMLDivElement | null>;
+  gallerySectionRef: RefObject<HTMLElement | null>;
+  galleryPinRef: RefObject<HTMLDivElement | null>;
 };
 
 /** Hero-fade fraction at which the header icons swap to dark (and below which they swap back when the bottom-fade kicks in). */

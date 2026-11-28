@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, ReactNode } from 'react';
 import { FreshLoadSplash } from '../components/FreshLoadSplash';
 import { GUESTS } from '../config/guests';
 import type { Guest, UserContextType } from '../types';
@@ -23,7 +23,7 @@ interface UserProviderProps {
 }
 
 export function UserProvider({ children }: UserProviderProps) {
-  const signOutSplashKeyRef = useRef(0);
+  const [signOutSplashKey, setSignOutSplashKey] = useState(0);
   const [signOutSplashActive, setSignOutSplashActive] = useState(false);
   const [user, setUser] = useState<Guest | null>(loadInitialUser);
 
@@ -44,7 +44,7 @@ export function UserProvider({ children }: UserProviderProps) {
   }, []);
 
   const signOut = useCallback(() => {
-    signOutSplashKeyRef.current += 1;
+    setSignOutSplashKey((key) => key + 1);
     setUser(null);
     setSignOutSplashActive(true);
   }, []);
@@ -62,7 +62,7 @@ export function UserProvider({ children }: UserProviderProps) {
     <UserContext.Provider value={value}>
       {signOutSplashActive && (
         <FreshLoadSplash
-          key={signOutSplashKeyRef.current}
+          key={signOutSplashKey}
           onComplete={completeSignOutAfterSplash}
         />
       )}

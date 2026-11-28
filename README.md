@@ -1,6 +1,6 @@
 # Emily & Arden
 
-Wedding website for Emily & Arden. React 18 + TypeScript, built with Vite, images served from
+Wedding website for Emily & Arden. React 19 + TypeScript, built with Vite, images served from
 Cloudinary, hosted on GitHub Pages at https://ardenchew.github.io/wed/.
 
 ## Run locally
