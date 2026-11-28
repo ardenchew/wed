@@ -8,8 +8,6 @@ import { Button } from '../components/Button';
 import { HeroImage } from '../components/HeroImage';
 
 const LANDING_EXIT_TO_HOME_MS = 620;
-/** Keep in sync with `.landing-center-content` `top` transition in index.css */
-const LANDING_CENTER_TRANSITION_MS = 720;
 
 export default function Landing() {
   const [isAuthVisible, setIsAuthVisible] = useState(false);
@@ -29,10 +27,8 @@ export default function Landing() {
   const navigate = useNavigate();
   const deferAutoHomeNavRef = useRef(false);
   const [exitToHome, setExitToHome] = useState(false);
-  const [nameStepReady, setNameStepReady] = useState(false);
   const enterTriggerRef = useRef<HTMLButtonElement>(null);
   const morphRef = useRef<HTMLDivElement>(null);
-  const nameStepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [enterRulePx, setEnterRulePx] = useState(0);
   const [morphWidthPx, setMorphWidthPx] = useState(0);
 
@@ -50,7 +46,7 @@ export default function Landing() {
     ro.observe(node);
     syncMorphWidth();
     return () => ro.disconnect();
-  }, [onNameStep, isAuthVisible, nameStepReady]);
+  }, [onNameStep, isAuthVisible]);
 
   useLayoutEffect(() => {
     if (isAuthVisible || !onNameStep) return;
@@ -82,15 +78,6 @@ export default function Landing() {
     if (!user || deferAutoHomeNavRef.current) return;
     navigate('/home', { replace: true });
   }, [user, navigate]);
-
-  useEffect(() => {
-    return () => {
-      if (nameStepTimerRef.current != null) {
-        window.clearTimeout(nameStepTimerRef.current);
-        nameStepTimerRef.current = null;
-      }
-    };
-  }, []);
 
   useEffect(() => {
     if (!exitToHome) return;
@@ -207,20 +194,10 @@ export default function Landing() {
     buttons[(next + buttons.length) % buttons.length]?.focus();
   };
 
+  /** ENTER turns into the name field right where it is; its underline widens to full width. */
   const handleEnterClick = () => {
     if (isAuthVisible) return;
     setIsAuthVisible(true);
-    const reduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduced) {
-      setNameStepReady(true);
-      return;
-    }
-    nameStepTimerRef.current = window.setTimeout(() => {
-      setNameStepReady(true);
-      nameStepTimerRef.current = null;
-    }, LANDING_CENTER_TRANSITION_MS);
   };
 
   return (
@@ -239,12 +216,12 @@ export default function Landing() {
               <form onSubmit={handleNameSubmit} className="sign-in-form">
                 <div className="landing-entry-morph" ref={morphRef}>
                   <div
-                    className={`landing-entry-morph__stack${nameStepReady ? ' landing-entry-morph__stack--expanded' : ''}`}
+                    className={`landing-entry-morph__stack${isAuthVisible ? ' landing-entry-morph__stack--expanded' : ''}`}
                   >
                     <div
-                      className={`landing-entry-morph__text-slot${nameStepReady ? ' landing-entry-morph__text-slot--expanded' : ''}`}
+                      className={`landing-entry-morph__text-slot${isAuthVisible ? ' landing-entry-morph__text-slot--expanded' : ''}`}
                     >
-                      {!nameStepReady ? (
+                      {!isAuthVisible ? (
                         <button
                           ref={enterTriggerRef}
                           type="button"
@@ -269,7 +246,7 @@ export default function Landing() {
                     <div
                       className="landing-entry-morph__rule"
                       style={{
-                        transform: nameStepReady
+                        transform: isAuthVisible
                           ? 'scaleX(1)'
                           : `scaleX(${
                               morphWidthPx > 0 && enterRulePx > 0
@@ -286,9 +263,9 @@ export default function Landing() {
                 <Button
                   type="submit"
                   variant="text"
-                  disabled={!nameStepReady || loading || exitToHome || !name.trim()}
-                  className={!nameStepReady ? 'landing-search-submit--concealed' : undefined}
-                  aria-hidden={!nameStepReady}
+                  disabled={!isAuthVisible || loading || exitToHome || !name.trim()}
+                  className={!isAuthVisible ? 'landing-search-submit--concealed' : undefined}
+                  aria-hidden={!isAuthVisible}
                 >
                   {loading ? 'Searching...' : 'Search'}
                 </Button>
