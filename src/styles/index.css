@@ -1713,6 +1713,8 @@ body:has(.home-page--schedule) {
 /* ── Photo stack: polaroids piled at angles; the top one swings out and tucks in at the back ── */
 .photo-stack {
   position: relative;
+  /* Keeps the cards' z-indexes to themselves (the RSVP stamp sits above the whole pile). */
+  isolation: isolate;
   display: block;
   width: 100%;
   aspect-ratio: 5 / 6;
@@ -2372,6 +2374,94 @@ body:has(.home-page--schedule) {
   transform-origin: 50% 0;
 }
 
+/* RSVP postage stamp, stuck on the polaroid stack's corner until the guest has replied. */
+.rsvp-stamp {
+  position: absolute;
+  z-index: 4;
+  right: -14px;
+  bottom: -30px;
+  width: clamp(80px, 26%, 100px);
+  aspect-ratio: 92 / 112;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transform: rotate(7deg);
+  transition: transform 220ms ease;
+  filter: drop-shadow(0 4px 6px rgba(40, 32, 15, 0.24));
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rsvp-stamp:not([data-interactive]) {
+  pointer-events: none;
+}
+
+.rsvp-stamp:hover {
+  transform: rotate(3deg) translateY(-3px) scale(1.05);
+}
+
+.rsvp-stamp:focus-visible {
+  outline: 2px solid #6f7d62;
+  outline-offset: 5px;
+}
+
+/* Ivory paper with perforated edges: half-circle bites along each side around a solid middle. */
+.rsvp-stamp__paper {
+  position: absolute;
+  inset: 0;
+  background: #fbf8ef;
+  mask:
+    linear-gradient(#000 0 0) center / calc(100% - 14px) calc(100% - 14px) no-repeat,
+    radial-gradient(circle at 50% 0, transparent 3.2px, #000 3.7px) top / 10px 8px repeat-x,
+    radial-gradient(circle at 50% 100%, transparent 3.2px, #000 3.7px) bottom / 10px 8px repeat-x,
+    radial-gradient(circle at 0 50%, transparent 3.2px, #000 3.7px) left / 8px 10px repeat-y,
+    radial-gradient(circle at 100% 50%, transparent 3.2px, #000 3.7px) right / 8px 10px repeat-y;
+}
+
+.rsvp-stamp__face {
+  position: absolute;
+  inset: 9px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 1.5px solid #6f7d62;
+  background:
+    var(--paper-grain, none),
+    linear-gradient(#eef1e7, #e1e6d7);
+  color: #3f4a36;
+  text-align: center;
+}
+
+.rsvp-stamp__vine {
+  width: 72%;
+  aspect-ratio: 229 / 80;
+  background-color: #6f7d62;
+  mask: var(--vine-mask) center / contain no-repeat;
+}
+
+.rsvp-stamp__label {
+  font-family: 'Bacasime Antique', Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.1rem, 4.5vw, 1.35rem);
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.rsvp-stamp__note {
+  font-family: 'Reenie Beanie', cursive;
+  font-size: clamp(0.95rem, 3.6vw, 1.15rem);
+  white-space: nowrap;
+  line-height: 1;
+  color: #56644a;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rsvp-stamp {
+    transition: none;
+  }
+}
+
 @media (min-width: 900px) {
   .letter {
     width: min(36rem, 46vw);
@@ -2394,6 +2484,11 @@ body:has(.home-page--schedule) {
   .letter-envelope__photos {
     width: min(22rem, 28vw);
     margin: 0;
+  }
+
+  .rsvp-stamp {
+    right: -34px;
+    bottom: -34px;
   }
 }
 

@@ -2,6 +2,7 @@ import { useCallback, useImperativeHandle, useRef, useState, type CSSProperties,
 import { useLetterEnvelope, type EnvelopePhase } from '../hooks/useLetterEnvelope';
 import { resolveAsset } from '../utils/asset';
 import { PhotoStack, type StackPhoto } from './PhotoStack';
+import { RsvpStamp } from './RsvpStamp';
 
 const vineMask = { '--vine-mask': `url(${resolveAsset('/vine.svg')})` } as CSSProperties;
 
@@ -85,6 +86,7 @@ export function LetterEnvelope({ greeting, body, signature, photos, ref }: Lette
       <div ref={photosRef} className="letter-envelope__photos">
         <PhotoStack key={photos.map((photo) => photo.publicId).join()} photos={photos} />
         <div className="letter-envelope__photos-shade" aria-hidden="true" />
+        <RsvpStamp interactive={phase === 'open'} />
       </div>
 
       {phase === 'closed' && (
