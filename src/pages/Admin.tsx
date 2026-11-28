@@ -99,11 +99,25 @@ export default function Admin() {
           </div>
           <button
             type="button"
-            className="rsvp-button rsvp-button--primary"
+            className="admin__add"
+            aria-label="Add guest"
+            title="Add guest"
             onClick={() => setEditing({ mode: 'add' })}
             disabled={!guests}
           >
-            Add guest
+            <svg
+              viewBox="0 0 16 16"
+              width="16"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path d="M8 3v10M3 8h10" />
+            </svg>
           </button>
         </div>
 
