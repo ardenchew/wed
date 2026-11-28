@@ -1800,10 +1800,10 @@ body:has(.home-page--schedule) {
   }
 }
 
-/* ── Home V2 ─────────────────────────────────────────────────────────────────
+/* ── Home (envelope) ─────────────────────────────────────────────────────────
    A botanical green border fixed around the screen (thick enough to carry the logo and menu), and
    a sealed envelope in the middle holding the guest's letter and polaroids. */
-.home-v2 {
+.letter-home {
   /* Border thickness: top and bottom carry the header, the sides are slimmer on phones. */
   --band-y: 56px;
   --band-x: 28px;
@@ -1817,19 +1817,19 @@ body:has(.home-page--schedule) {
 }
 
 @media (min-width: 640px) {
-  .home-v2 {
+  .letter-home {
     --band-x: 56px;
   }
 }
 
 @media (min-width: 900px) {
-  .home-v2 {
+  .letter-home {
     --band-y: 68px;
     --band-x: 68px;
   }
 }
 
-.home-v2__frame {
+.letter-home__frame {
   position: fixed;
   inset: 0;
   z-index: 20;
@@ -1844,26 +1844,26 @@ body:has(.home-page--schedule) {
 }
 
 /* Double ivory hairline just inside the band's inner edge, like the Schedule card frame. */
-.home-v2__frame::before,
-.home-v2__frame::after {
+.letter-home__frame::before,
+.letter-home__frame::after {
   content: '';
   position: absolute;
   border-style: solid;
   border-width: 1px;
 }
 
-.home-v2__frame::before {
+.letter-home__frame::before {
   inset: -13px;
   border-color: color-mix(in srgb, var(--band-ink) 70%, transparent);
 }
 
-.home-v2__frame::after {
+.letter-home__frame::after {
   inset: -8px;
   border-color: color-mix(in srgb, var(--band-ink) 42%, transparent);
 }
 
 /* The site's vine, centred on each side of the band. */
-.home-v2__vine {
+.letter-home__vine {
   position: absolute;
   aspect-ratio: 229 / 80;
   background-color: var(--band-ink);
@@ -1871,39 +1871,39 @@ body:has(.home-page--schedule) {
   mask: var(--vine-mask) center / contain no-repeat;
 }
 
-.home-v2__vine--top,
-.home-v2__vine--bottom {
+.letter-home__vine--top,
+.letter-home__vine--bottom {
   left: 50%;
   width: calc(var(--band-y) * 2.1);
 }
 
-.home-v2__vine--top {
+.letter-home__vine--top {
   top: calc(var(--band-y) / -2);
   transform: translate(-50%, -50%);
 }
 
-.home-v2__vine--bottom {
+.letter-home__vine--bottom {
   bottom: calc(var(--band-y) / -2);
   transform: translate(-50%, 50%) rotate(180deg);
 }
 
-.home-v2__vine--left,
-.home-v2__vine--right {
+.letter-home__vine--left,
+.letter-home__vine--right {
   top: 50%;
   width: calc(var(--band-x) * 2.1);
 }
 
-.home-v2__vine--left {
+.letter-home__vine--left {
   left: calc(var(--band-x) / -2);
   transform: translate(-50%, -50%) rotate(-90deg);
 }
 
-.home-v2__vine--right {
+.letter-home__vine--right {
   right: calc(var(--band-x) / -2);
   transform: translate(50%, -50%) rotate(90deg);
 }
 
-.home-v2__header {
+.letter-home__header {
   position: fixed;
   top: 0;
   left: 0;
@@ -1911,19 +1911,19 @@ body:has(.home-page--schedule) {
   z-index: 30;
 }
 
-.home-v2 .home-logo__img {
+.letter-home .home-logo__img {
   filter: brightness(0) invert(1);
 }
 
-.home-v2 .home-menu__line {
+.letter-home .home-menu__line {
   background: var(--band-ink);
 }
 
-.home-v2 .home-menu__trigger:hover {
+.letter-home .home-menu__trigger:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-.home-v2 .home-menu__trigger:focus-visible {
+.letter-home .home-menu__trigger:focus-visible {
   outline-color: var(--band-ink);
 }
 

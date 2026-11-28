@@ -14,7 +14,7 @@ type HomeHeaderProps = {
   activePath: string;
   /** Id of the in-page section currently scrolled to, if any (e.g. the homepage's welcome blurb). */
   activeSectionId?: string;
-  /** Replaces the logo's usual "go to Home" (Home V2 uses it to reseal its envelope). */
+  /** Replaces the logo's usual "go to Home" (Home uses it to reseal its envelope). */
   onLogoClick?: () => void;
 };
 

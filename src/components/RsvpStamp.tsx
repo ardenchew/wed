@@ -8,7 +8,7 @@ interface RsvpStampProps {
 }
 
 /**
- * A postage stamp stuck on the corner of Home V2's polaroid stack, asking the guest to RSVP. It
+ * A postage stamp stuck on the corner of Home's polaroid stack, asking the guest to RSVP. It
  * only appears once their RSVP has loaded and they haven't answered yet; like the site's other
  * RSVP buttons, it opens the RSVP modal on the Schedule page.
  */
