@@ -506,18 +506,19 @@ export default function Schedule() {
                         </time>
                         <p className="schedule__event-name">{event.name}</p>
                         <p className="schedule__event-meta">
-                          <span className="schedule__event-location">
-                            {event.location}
-                          </span>
-                          {event.map_link && (
+                          {event.map_link ? (
                             <a
-                              className="schedule__event-map-link"
+                              className="schedule__event-location-link"
                               href={event.map_link}
                               target="_blank"
                               rel="noopener noreferrer"
-                              aria-label={`Open ${event.location} in maps`}
+                              aria-label={`${event.location} (opens map in a new tab)`}
                             >
+                              <span className="schedule__event-location">
+                                {event.location}
+                              </span>
                               <svg
+                                className="schedule__event-map-icon"
                                 viewBox="0 0 24 24"
                                 width="14"
                                 height="14"
@@ -533,6 +534,10 @@ export default function Schedule() {
                                 <line x1="10" y1="14" x2="21" y2="3" />
                               </svg>
                             </a>
+                          ) : (
+                            <span className="schedule__event-location">
+                              {event.location}
+                            </span>
                           )}
                         </p>
                         {event.attire && (

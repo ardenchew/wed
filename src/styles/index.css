@@ -1109,18 +1109,49 @@ body:has(.paper-bg)::before {
   line-height: 1.5;
 }
 
-.schedule__event-map-link {
+/*
+ * Location name + map icon as one link. At rest it reads like the plain text; the icon carries
+ * the accent. The padding (cancelled by the negative margin) grows the tap target to ~44px tall
+ * without moving anything.
+ */
+.schedule__event-location-link {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  margin-left: -4px;
+  gap: 6px;
+  padding: 10px 6px;
+  margin: -10px -6px;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 4px;
+}
+
+.schedule__event-location-link .schedule__event-location {
+  text-decoration: underline solid transparent;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+
+.schedule__event-location-link:hover .schedule__event-location,
+.schedule__event-location-link:focus-visible .schedule__event-location {
+  color: var(--accent-text);
+  text-decoration-color: currentColor;
+}
+
+.schedule__event-location-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -4px;
+}
+
+.schedule__event-map-icon {
+  flex: none;
   color: var(--accent);
   opacity: 0.8;
   transition: opacity 0.15s ease;
 }
 
-.schedule__event-map-link:hover,
-.schedule__event-map-link:focus-visible {
+.schedule__event-location-link:hover .schedule__event-map-icon,
+.schedule__event-location-link:focus-visible .schedule__event-map-icon {
   opacity: 1;
 }
 
