@@ -1,7 +1,6 @@
 import type { GuestName, GuestProfile } from '../src/guests/shared';
 import { displayName } from '../src/guests/shared';
 import { matchGuests, MATCH_QUERY_MAX } from '../src/guests/match';
-import { sortEventSlugs } from '../src/rsvp/shared';
 import type { GuestPolaroid } from '../src/types';
 import { HttpError, placeholders } from './http';
 
@@ -50,7 +49,15 @@ export async function loadGuests(db: D1Database, slugs?: string[]): Promise<Gues
          ORDER BY last COLLATE NOCASE, first COLLATE NOCASE`,
       )
       .bind(...binds),
-    db.prepare(`SELECT guest_slug, event_slug FROM guest_events ${filter}`).bind(...binds),
+    // Joined to events for schedule order (and so an invitation always names a real event).
+    db
+      .prepare(
+        `SELECT ge.guest_slug, ge.event_slug FROM guest_events ge
+         JOIN events e ON e.slug = ge.event_slug
+         ${slugs ? `WHERE ge.guest_slug IN (${placeholders(slugs.length)})` : ''}
+         ORDER BY e.start_time, e.slug`,
+      )
+      .bind(...binds),
     db
       .prepare(`SELECT guest_slug, public_id, date_text FROM guest_polaroids ${filter} ORDER BY position`)
       .bind(...binds),
@@ -70,7 +77,7 @@ export async function loadGuests(db: D1Database, slugs?: string[]): Promise<Gues
 
   return (guests.results as GuestRow[]).map((row) => ({
     row,
-    events: sortEventSlugs(eventsBySlug.get(row.slug) ?? []),
+    events: eventsBySlug.get(row.slug) ?? [],
     polaroids: polaroidsBySlug.get(row.slug) ?? [],
   }));
 }

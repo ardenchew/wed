@@ -1,4 +1,3 @@
-import { EVENTS } from '../src/config/events';
 import { displayName } from '../src/guests/shared';
 import {
   DIETARY_MAX_LENGTH,
@@ -7,6 +6,7 @@ import {
   type PartyRsvpResponse,
   type RsvpUpdateRequest,
 } from '../src/rsvp/shared';
+import { loadEvents } from './events';
 import { loadGuests, partyMembers, type GuestRecord } from './guests';
 import { HttpError, placeholders } from './http';
 
@@ -68,7 +68,10 @@ export async function loadParty(db: D1Database, self: GuestRecord): Promise<Part
   const ordered = slugs
     .map((slug) => records.find((record) => record.row.slug === slug))
     .filter((record): record is GuestRecord => Boolean(record));
-  return { self: self.row.slug, party: await loadRsvps(db, ordered) };
+  const party = await loadRsvps(db, ordered);
+  // Details of every event anyone in the party is invited to (and nothing else), for the modal.
+  const events = await loadEvents(db, [...new Set(party.flatMap((member) => member.events))]);
+  return { self: self.row.slug, party, events };
 }
 
 export async function saveParty(db: D1Database, self: GuestRecord, body: RsvpUpdateRequest): Promise<void> {
@@ -92,7 +95,8 @@ export async function saveParty(db: D1Database, self: GuestRecord, body: RsvpUpd
     const entries = Object.entries(update.responses ?? {});
     if (entries.length === 0) throw new HttpError(400, `Choose a response for ${name}.`, member.slug);
     for (const [event, attending] of entries) {
-      if (!member.events.includes(event) || !EVENTS[event] || typeof attending !== 'boolean') {
+      // member.events only ever holds events that exist (loadGuests joins them to the events table).
+      if (!member.events.includes(event) || typeof attending !== 'boolean') {
         throw new HttpError(400, `${name} isn't invited to that event.`, member.slug);
       }
     }

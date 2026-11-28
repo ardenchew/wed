@@ -8,10 +8,12 @@ export interface UserContextType {
   signOut: () => void;
 }
 
+/** An event as the pages use it (from `ApiEvent`, with the times parsed). */
 export interface Event {
   slug: string;
   name: string;
   start_time: Date;
+  end_time?: Date;
   location: string;
   description: string;
   attire?: string;

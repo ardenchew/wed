@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent, type MouseEvent } from 'react';
 import { ApiError } from '../api/client';
-import { EVENT_TIME_ZONE, EVENTS } from '../config/events';
+import { EVENT_TIME_ZONE } from '../config/events';
+import type { AdminEvent } from '../events/shared';
 import {
   displayName,
   GUEST_LIMITS,
@@ -10,19 +11,19 @@ import {
   type GuestInput,
 } from '../guests/shared';
 import { statusLabel } from '../rsvp/labels';
-import { formatPhone, rsvpStatus, sortEventSlugs } from '../rsvp/shared';
+import { formatPhone, rsvpStatus } from '../rsvp/shared';
 
 interface AdminGuestDialogProps {
   /** The guest being edited, or null to add a new one. */
   guest: AdminGuest | null;
   /** Everyone, for the party picker. */
   guests: AdminGuest[];
+  /** Every event in schedule order, for the invitations. */
+  events: AdminEvent[];
   onSave: (input: GuestInput) => Promise<unknown>;
   onDelete: () => Promise<void>;
   onClose: () => void;
 }
-
-const ALL_EVENTS = sortEventSlugs(Object.keys(EVENTS));
 
 const whenFormatter = new Intl.DateTimeFormat('en-US', {
   weekday: 'short',
@@ -64,13 +65,14 @@ function initialInput(guest: AdminGuest | null, guests: AdminGuest[]): GuestInpu
   };
 }
 
-export function AdminGuestDialog({ guest, guests, onSave, onDelete, onClose }: AdminGuestDialogProps) {
+export function AdminGuestDialog({ guest, guests, events, onSave, onDelete, onClose }: AdminGuestDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const id = useId();
   const [input, setInput] = useState<GuestInput>(() => initialInput(guest, guests));
   const [busy, setBusy] = useState<'save' | 'delete' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const candidates = useMemo(() => partyCandidates(guests, guest), [guests, guest]);
+  const eventsBySlug = useMemo(() => new Map(events.map((event) => [event.slug, event])), [events]);
   const name = guest ? displayName(guest) : 'New guest';
 
   useEffect(() => {
@@ -100,7 +102,7 @@ export function AdminGuestDialog({ guest, guests, onSave, onDelete, onClose }: A
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    const checked = validateGuestInput(input);
+    const checked = validateGuestInput(input, new Set(eventsBySlug.keys()));
     if ('error' in checked) {
       setError(checked.error);
       return;
@@ -267,16 +269,17 @@ export function AdminGuestDialog({ guest, guests, onSave, onDelete, onClose }: A
             <section className="admin-form__section">
               <h3 className="admin-form__heading">Invited to</h3>
               <div className="admin-events">
-                {ALL_EVENTS.map((slug) => (
-                  <label key={slug} className="admin-check">
+                {events.length === 0 && <p className="admin-form__note">No events yet — add them under Events.</p>}
+                {events.map((event) => (
+                  <label key={event.slug} className="admin-check">
                     <input
                       type="checkbox"
-                      checked={input.events.includes(slug)}
-                      onChange={(e) => toggleEvent(slug, e.target.checked)}
+                      checked={input.events.includes(event.slug)}
+                      onChange={(e) => toggleEvent(event.slug, e.target.checked)}
                     />
                     <span>
-                      {EVENTS[slug].name}
-                      <span className="admin-check__meta"> · {whenFormatter.format(EVENTS[slug].start_time)}</span>
+                      {event.name}
+                      <span className="admin-check__meta"> · {whenFormatter.format(new Date(event.start_time))}</span>
                     </span>
                   </label>
                 ))}
@@ -377,7 +380,7 @@ export function AdminGuestDialog({ guest, guests, onSave, onDelete, onClose }: A
                     <ul className="admin-rsvp">
                       {guest.events.map((slug) => (
                         <li key={slug}>
-                          <span>{EVENTS[slug].name}</span>
+                          <span>{eventsBySlug.get(slug)?.name ?? slug}</span>
                           <span className={`admin-rsvp__answer admin-rsvp__answer--${String(rsvp.responses[slug])}`}>
                             {rsvp.responses[slug] === true
                               ? 'Attending'

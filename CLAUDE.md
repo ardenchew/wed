@@ -23,11 +23,17 @@ variable, and never copy a real `.env` into `.env.example` — that file is comm
 
 ## API and database
 
-The API (sign-in, guest profiles, RSVPs, admin) is a Cloudflare Worker (`worker/`, config in
-`wrangler.jsonc`) using the `wed` D1 database, which holds guests, passwords and RSVPs. Run it with
+The API (sign-in, guest profiles, events, RSVPs, admin) is a Cloudflare Worker (`worker/`, config in
+`wrangler.jsonc`) using the `wed` D1 database, which holds guests, passwords, events and RSVPs.
+Events are no longer in the code: `src/config/events.ts` only holds the venue time zone, and pages
+get events from the API (guests only ever receive the ones they're invited to). Run it with
 the `wed-api` launch config (`npm run api:dev`), which applies `migrations/` to a local database
 under `.wrangler/` — no Cloudflare login needed. Sign-in doesn't work without it. Seeded test
 logins (local only) are in `migrations/0003_guests.sql`; Emily and Arden are admins.
 
 Never run `npm run api:migrate`, `npm run api:deploy`, or any `wrangler ... --remote` command
 without asking: they change the real database or the live API.
+
+When a change needs both a new API and a new site, they deploy in this order: `npm run api:migrate`,
+then `npm run api:deploy`, then `npm run deploy`. The live site calls the live API, so a site that
+goes out first breaks for guests until the API catches up.

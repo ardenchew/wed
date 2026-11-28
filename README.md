@@ -3,9 +3,9 @@
 Wedding website for Emily & Arden. React 19 + TypeScript, built with Vite, images served from
 Cloudinary, hosted on GitHub Pages at https://ardenchew.github.io/wed/.
 
-Guests, passwords and RSVPs live in a Cloudflare D1 database (`wed`) behind a small Cloudflare
-Worker (`wed-api`, at https://wed-api.ardenchew.workers.dev). Emily and Arden manage guests from
-the site's **Admin** page. Events are still defined in `src/config/events.ts`.
+Guests, passwords, events and RSVPs live in a Cloudflare D1 database (`wed`) behind a small
+Cloudflare Worker (`wed-api`, at https://wed-api.ardenchew.workers.dev). Emily and Arden manage
+guests and events from the site's **Admin** page.
 
 ## Run locally
 
@@ -17,7 +17,8 @@ npm run dev       # the site, in a second terminal
 ```
 
 Then open http://localhost:5173/wed/. Sign-in needs the API running: the guest list and passwords
-come from it. The local database is seeded with the original guests by `migrations/0003_guests.sql`.
+come from it. The local database is seeded with the original guests by `migrations/0003_guests.sql`
+and the original five events by `migrations/0004_events.sql`.
 
 ## Deploy
 
@@ -29,14 +30,20 @@ npm run deploy
 
 This builds the site and pushes `dist/` to the `gh-pages` branch, which GitHub Pages serves.
 
-**API** (when `worker/`, `migrations/` or `src/config/events.ts` changed — guest edits made in the
-admin page need no deploy):
+**API** (when `worker/`, `migrations/` or the shared `src/*/shared.ts` files changed — guest and
+event edits made in the admin page need no deploy):
 
 ```bash
 npx wrangler login     # once per machine
 npm run api:migrate    # apply new files in migrations/ to the real database
 npm run api:deploy
 ```
+
+When a change touches both, ship the API first: **`npm run api:migrate`, then `npm run api:deploy`,
+then `npm run deploy`**. The site calls the live API, so a site that expects a new route or field
+breaks for every guest until the API that serves it is out. (Moving events into the database was
+such a change: the site reads them from `GET /events`, which only exists once 0004 is migrated and
+the Worker deployed.)
 
 ## Scripts
 
@@ -54,15 +61,19 @@ npm run api:deploy
 ## Where things live
 
 - `src/pages/` — Landing (sign-in), Home, Schedule, Admin, and a `/splash` preview page
-- `src/config/` — events and nav items
-- `src/api/` — the API client (`client.ts`) and guest / admin calls (`guests.ts`)
-- `src/guests/shared.ts`, `src/rsvp/shared.ts` — types and validation shared by the site and the
-  Worker, so both always agree
+- `src/config/` — nav items and the venue time zone (`events.ts`)
+- `src/api/` — the API client (`client.ts`) and guest, event and admin calls (`guests.ts`,
+  `events.ts`)
+- `src/guests/shared.ts`, `src/events/shared.ts`, `src/rsvp/shared.ts` — types and validation
+  shared by the site and the Worker, so both always agree
+- `src/context/EventsProvider.tsx` — loads the signed-in guest's invited events once for the
+  Schedule (cached on the device so return visits render at once)
 - `src/components/RsvpModal.tsx`, `RsvpStatusButton.tsx` — the RSVP modal and the status
   indicator on Home and Schedule; `src/context/RsvpProvider.tsx` loads RSVPs once and opens the
   modal from anywhere
-- `src/components/AdminGuestDialog.tsx` — the admin add / edit form
-- `worker/` — the API: `index.ts` (routes), `guests.ts` (guests + sign-in), `rsvp.ts`, `admin.ts`
+- `src/components/AdminGuestDialog.tsx`, `AdminEventDialog.tsx` — the admin add / edit forms
+- `worker/` — the API: `index.ts` (routes), `guests.ts` (guests + sign-in), `events.ts`, `rsvp.ts`,
+  `admin.ts`
 - `migrations/` — D1 schema, applied in order by Wrangler
 - `src/utils/cloudinary.ts` — builds Cloudinary image URLs from public ids like `wed/home/...`
 - `src/styles/index.css` — all styles
@@ -86,6 +97,22 @@ npm run api:deploy
   form, tick everyone who belongs in a guest's party: the party becomes exactly that guest plus
   the people ticked. Ticking someone from another party moves them over (the form says so), and
   anyone left on their own is simply solo again.
+
+## Events
+
+- Events live in the `events` table: name, start and optional end time, location, description,
+  attire, a Cloudinary image id and a map link. Admins add, edit and delete them in the **Events**
+  section of the Admin page, including who's invited (the guest dialog can still set a guest's
+  invitations too).
+- Times are entered and shown in venue time (`America/Los_Angeles`) and stored in UTC; the
+  conversion uses the time zone database, so PDT and PST are both right. An end time earlier than
+  the start means the next day. Times that don't exist (the hour skipped in spring) are rejected.
+- An event's slug comes from its name when it's created and never changes: invitations
+  (`guest_events`) and answers (`event_rsvps`) key on it, with foreign keys to `events`.
+- Deleting an event (after a confirm that shows the counts) also deletes its invitations and RSVP
+  answers.
+- Guests only ever receive the events they're invited to (`GET /events`, `GET /me`); the RSVP
+  call also includes events their party members are invited to, so they can answer for them.
 
 ## RSVPs
 

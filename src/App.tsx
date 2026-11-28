@@ -1,6 +1,7 @@
 import { useCallback, useState, useEffect, useRef } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router';
 import { FreshLoadSplash } from './components/FreshLoadSplash';
+import { EventsProvider } from './context/EventsProvider';
 import { RsvpProvider } from './context/RsvpProvider';
 import { UserProvider } from './context/UserProvider';
 import { wantsRsvp } from './hooks/useOpenRsvp';
@@ -149,12 +150,14 @@ function App() {
 
   return (
     <UserProvider>
-      <RsvpProvider>
-        <HashRouter>
-          {!splashDone && <FreshLoadSplash onComplete={handleSplashComplete} />}
-          <AppRoutes />
-        </HashRouter>
-      </RsvpProvider>
+      <EventsProvider>
+        <RsvpProvider>
+          <HashRouter>
+            {!splashDone && <FreshLoadSplash onComplete={handleSplashComplete} />}
+            <AppRoutes />
+          </HashRouter>
+        </RsvpProvider>
+      </EventsProvider>
     </UserProvider>
   );
 }

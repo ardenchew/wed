@@ -5,19 +5,28 @@
  *   GET    /guests/names        → everyone's display name (public; deprecated, remove once the
  *                                  site using /guests/lookup is live)
  *   GET    /me                  → the signed-in guest's profile (also how sign-in checks a password)
- *   GET    /rsvp                → the guest's party, with each member's invitations and answers
+ *   GET    /events              → details of the events the guest is invited to (no others)
+ *   GET    /rsvp                → the guest's party, each member's invitations and answers, and
+ *                                  the details of those events
  *   PUT    /rsvp                → save answers (plus phone and dietary restrictions) for that party
  *   GET    /admin/guests        → every guest, with password, party and RSVP   (admins only)
  *   POST   /admin/guests        → add a guest                                   (admins only)
  *   PUT    /admin/guests/:slug  → edit a guest                                  (admins only)
  *   DELETE /admin/guests/:slug  → remove a guest and their RSVP                 (admins only)
+ *   GET    /admin/events        → every event, with who's invited and their answers (admins only)
+ *   POST   /admin/events        → add an event                                  (admins only)
+ *   PUT    /admin/events/:slug  → edit an event and who's invited               (admins only)
+ *   DELETE /admin/events/:slug  → remove an event, its invitations and RSVPs    (admins only)
  *
- * Guests authenticate with HTTP Basic auth (`slug:password`) against the `guests` table.
- * Events still come from src/config/events.ts.
+ * Guests authenticate with HTTP Basic auth (`slug:password`) against the `guests` table. Events
+ * live in the `events` table; a guest only ever sees the ones they (or, in /rsvp, their party)
+ * are invited to.
  */
+import type { EventInput } from '../src/events/shared';
 import type { GuestInput } from '../src/guests/shared';
 import type { RsvpUpdateRequest } from '../src/rsvp/shared';
 import { createGuest, deleteGuest, listAdminGuests, requireAdmin, updateGuest } from './admin';
+import { createEvent, deleteEvent, listAdminEvents, loadEvents, updateEvent } from './events';
 import { authenticate, loadGuestNames, lookupGuests, toProfile } from './guests';
 import { corsHeaders, errorResponse, HttpError, json, readJson, type Env } from './http';
 import { loadParty, saveParty } from './rsvp';
@@ -39,6 +48,7 @@ export default {
       const self = await authenticate(request, db);
 
       if (pathname === '/me' && method === 'GET') return ok(toProfile(self));
+      if (pathname === '/events' && method === 'GET') return ok(await loadEvents(db, self.events));
 
       if (pathname === '/rsvp') {
         if (method === 'GET') return ok(await loadParty(db, self));
@@ -62,6 +72,23 @@ export default {
         if (method === 'DELETE') {
           if (slug === self.row.slug) throw new HttpError(400, 'You can’t remove yourself.');
           await deleteGuest(db, slug);
+          return ok({ deleted: slug });
+        }
+      }
+
+      if (pathname === '/admin/events') {
+        requireAdmin(self);
+        if (method === 'GET') return ok(await listAdminEvents(db));
+        if (method === 'POST') return ok(await createEvent(db, await readJson<EventInput>(request)), 201);
+      }
+
+      const adminEvent = /^\/admin\/events\/([a-z0-9_]+)$/.exec(pathname);
+      if (adminEvent) {
+        requireAdmin(self);
+        const slug = adminEvent[1];
+        if (method === 'PUT') return ok(await updateEvent(db, slug, await readJson<EventInput>(request)));
+        if (method === 'DELETE') {
+          await deleteEvent(db, slug);
           return ok({ deleted: slug });
         }
       }

@@ -3444,6 +3444,16 @@ body:has(.paper-bg)::before {
   white-space: nowrap;
 }
 
+.schedule__message {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  padding: 48px 16px;
+  font-family: 'Bacasime Antique', Georgia, 'Times New Roman', serif;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
 .admin {
   max-width: 1040px;
   min-height: 100vh;
@@ -3668,12 +3678,14 @@ body:has(.paper-bg)::before {
     color: rgba(17, 17, 17, 0.55);
   }
 
-  .admin-table td[data-label='Guest'] {
+  .admin-table td[data-label='Guest'],
+  .admin-table td[data-label='Event'] {
     display: block;
     padding-right: 48px;
   }
 
-  .admin-table td[data-label='Guest']::before {
+  .admin-table td[data-label='Guest']::before,
+  .admin-table td[data-label='Event']::before {
     content: none;
   }
 
@@ -3880,6 +3892,61 @@ body:has(.paper-bg)::before {
   border: 1px solid rgba(17, 17, 17, 0.15);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.55);
+}
+
+/* Events section and dialog */
+.admin__section-title {
+  margin-top: 72px;
+}
+
+.admin-party legend.admin-form__heading {
+  margin-bottom: 0;
+  font-size: 1.2rem;
+}
+
+.admin-form__row--three {
+  grid-template-columns: 1.3fr 1fr 1fr;
+}
+
+.admin-image {
+  display: grid;
+  grid-template-columns: 1fr 160px;
+  gap: 16px;
+  align-items: start;
+}
+
+.admin-image-preview {
+  width: 160px;
+  aspect-ratio: 3 / 2;
+  object-fit: contain;
+  border: 1px solid rgba(17, 17, 17, 0.15);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.admin-invite__tools {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.admin-invite__search {
+  flex: 1;
+  max-width: 240px;
+  margin-right: auto;
+  padding-left: 0;
+}
+
+@media (max-width: 640px) {
+  .admin-form__row--three,
+  .admin-image {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-invite__tools {
+    flex-wrap: wrap;
+  }
 }
 
 /* Gifts Page — one screen, never scrolls */
