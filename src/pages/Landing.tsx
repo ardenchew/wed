@@ -154,7 +154,7 @@ export default function Landing() {
         const guest = GUESTS[guestSlug];
         if (guest) {
           deferAutoHomeNavRef.current = true;
-          signIn(guest);
+          signIn(guest, password.trim());
           setExitToHome(true);
         } else {
           setError('Failed to load guest data. Please try again.');

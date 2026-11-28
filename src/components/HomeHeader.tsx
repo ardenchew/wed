@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { NAV_ITEMS } from '../config/nav';
+import { SCHEDULE_PATH, useOpenRsvp } from '../hooks/useOpenRsvp';
 import { useUser } from '../hooks/useUser';
 import { resolveAsset } from '../utils/asset';
 import { scrollToId } from '../utils/scrollToId';
@@ -21,6 +22,7 @@ type HomeHeaderProps = {
 export function HomeHeader({ activePath, activeSectionId }: HomeHeaderProps) {
   const navigate = useNavigate();
   const { signOut } = useUser();
+  const openRsvp = useOpenRsvp();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const skipCloseScrollRef = useRef(false);
@@ -113,6 +115,19 @@ export function HomeHeader({ activePath, activeSectionId }: HomeHeaderProps) {
                   </button>
                 );
               })}
+              <button
+                type="button"
+                className="home-menu__action"
+                role="menuitem"
+                onClick={() => {
+                  // Already on Schedule: keep the scroll position; the modal opens over it.
+                  if (activePath === SCHEDULE_PATH) skipCloseScrollRef.current = true;
+                  setIsMenuOpen(false);
+                  openRsvp();
+                }}
+              >
+                RSVP
+              </button>
             </div>
             <div className="home-menu__divider" aria-hidden="true" />
             <button type="button" className="home-menu__action" role="menuitem" onClick={signOut}>

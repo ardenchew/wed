@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { Button } from '../components/Button';
 import { HomeHeader } from '../components/HomeHeader';
+import { RsvpStatusButton } from '../components/RsvpStatusButton';
 import { EVENT_TIME_ZONE, EVENTS } from '../config/events';
 import { useGuest } from '../hooks/useGuest';
 import type { Event } from '../types';
@@ -320,9 +321,7 @@ export default function Schedule() {
       <h1 className="schedule__title">Schedule</h1>
 
       <div className="schedule__actions">
-        <Button variant="text" className="schedule__action">
-          RSVP
-        </Button>
+        <RsvpStatusButton textClassName="schedule__action" />
         <span className="schedule__action-sep" aria-hidden="true">
           •
         </span>

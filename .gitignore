@@ -33,3 +33,5 @@ public/crater_lake_vid.mp4
 
 # Claude Code worktrees (temporary, user-specific)
 .claude/worktrees/
+# Wrangler local state (local D1, dev cache)
+.wrangler

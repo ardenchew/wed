@@ -1,0 +1,20 @@
+// RSVP API Worker. The site itself is still served by GitHub Pages; only /rsvp lives here.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "wed-api",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+  "observability": { "enabled": true },
+  "vars": {
+    "SITE_ORIGIN": "https://ardenchew.github.io"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "wed",
+      "database_id": "ced8b57a-4e1f-42b9-8a62-841e844683f6",
+      "migrations_dir": "migrations"
+    }
+  ]
+}

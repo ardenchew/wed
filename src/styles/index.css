@@ -765,6 +765,7 @@ body:has(.home-page--schedule) {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 12px;
 }
@@ -1693,7 +1694,7 @@ body:has(.home-page--schedule) {
   object-position: center;
 }
 
-.home__rsvp-placeholder {
+.home__rsvp {
   position: absolute;
   left: 0;
   right: 0;
@@ -1708,10 +1709,21 @@ body:has(.home-page--schedule) {
   z-index: 2;
 }
 
-.home__rsvp-placeholder .ui-button {
+/* Before a guest has answered this is the original text button, which fades from ink to white as
+   the page behind it darkens (--home-bottom-fade 0 → 1). Answered states are pills with solid
+   fills so they read on both. */
+.home__rsvp .ui-button {
   min-width: 0;
   color: color-mix(in srgb, #141414 calc((1 - var(--home-bottom-fade, 0)) * 100%), #fff);
   border-color: color-mix(in srgb, #141414 calc((1 - var(--home-bottom-fade, 0)) * 100%), #fff);
+}
+
+.home__rsvp .rsvp-status--yes {
+  background: #e3ebe4;
+}
+
+.home__rsvp .rsvp-status--no {
+  background: #ebe8e3;
 }
 
 @keyframes home-gallery-marquee {
@@ -1796,5 +1808,622 @@ body:has(.home-page--schedule) {
   .home__gallery-viewport {
     overflow-x: auto;
     overflow-y: hidden;
+  }
+}
+
+/* ── RSVP: schedule-page status indicator ───────────────────────────────── */
+.rsvp-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: clamp(1rem, 1.5vw, 1.2rem);
+  line-height: 1.3;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+
+
+.rsvp-status:hover {
+  transform: translateY(-1px);
+}
+
+.rsvp-status:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 3px;
+}
+
+.rsvp-status__icon {
+  width: 1em;
+  height: 1em;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.rsvp-status--yes {
+  color: #2f5a3c;
+  background: rgba(70, 115, 85, 0.12);
+  border-color: rgba(70, 115, 85, 0.4);
+}
+
+.rsvp-status--no {
+  color: #5c5650;
+  background: rgba(17, 17, 17, 0.05);
+  border-color: rgba(17, 17, 17, 0.22);
+}
+
+.rsvp-status__edit {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.15rem;
+  padding-left: 0.5rem;
+  border-left: 1px solid currentColor;
+}
+
+.rsvp-status__edit {
+  opacity: 0.75;
+}
+
+.rsvp-status__edit .rsvp-status__icon {
+  stroke-width: 1.8;
+}
+
+/* ── RSVP: modal (centered card; full screen on phones) ─────────────────── */
+.rsvp-modal {
+  width: min(560px, calc(100vw - 32px));
+  max-width: none;
+  max-height: none;
+  margin: auto;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #111;
+  font-family: 'Bacasime Antique', Georgia, 'Times New Roman', serif;
+  overflow: visible;
+}
+
+.rsvp-modal::backdrop {
+  background: rgba(20, 20, 20, 0.45);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+
+.rsvp-modal__panel {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 48px);
+  background: var(--parchment-primary);
+  border-radius: 14px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+  animation: rsvp-modal-in 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@keyframes rsvp-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+
+.rsvp-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 16px 14px 24px;
+  border-bottom: 1px solid rgba(17, 17, 17, 0.1);
+}
+
+.rsvp-modal__title {
+  font-size: 1.9rem;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.rsvp-modal__close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #111;
+  cursor: pointer;
+}
+
+.rsvp-modal__close:hover:not(:disabled) {
+  background: rgba(17, 17, 17, 0.06);
+}
+
+.rsvp-modal__close svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.rsvp-modal__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 20px 24px 0;
+}
+
+.rsvp-modal__body > form,
+.rsvp-modal__done {
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 auto;
+}
+
+.rsvp-modal__lead {
+  font-size: 1.3rem;
+  margin-bottom: 14px;
+}
+
+.rsvp-modal__hint {
+  margin: 14px 0 20px;
+  font-size: 0.95rem;
+  color: rgba(17, 17, 17, 0.6);
+}
+
+.rsvp-modal__message {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  padding: 40px 0 48px;
+  text-align: center;
+  font-size: 1.15rem;
+}
+
+.rsvp-modal__error {
+  margin: 4px 0 20px;
+  color: var(--error-color);
+  font-size: 1rem;
+}
+
+.rsvp-modal__footer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  /* auto top margin pins it to the bottom; the content above keeps ≥20px clear of it. */
+  margin: auto -24px 0;
+  padding: 14px 24px calc(16px + env(safe-area-inset-bottom));
+  background: var(--parchment-primary);
+  border-top: 1px solid rgba(17, 17, 17, 0.1);
+}
+
+.rsvp-button {
+  min-height: 44px;
+  padding: 0.6rem 1.4rem;
+  border: 1px solid #111;
+  border-radius: 999px;
+  background: transparent;
+  color: #111;
+  font-family: inherit;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.rsvp-button:hover:not(:disabled) {
+  background: rgba(17, 17, 17, 0.06);
+}
+
+.rsvp-button--primary {
+  background: #111;
+  color: var(--parchment-primary);
+}
+
+.rsvp-button--primary:hover:not(:disabled) {
+  background: #333;
+}
+
+.rsvp-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.rsvp-button:focus-visible,
+.rsvp-modal__close:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+/* Party picker */
+.rsvp-party {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 20px;
+  list-style: none;
+}
+
+.rsvp-party__row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid rgba(17, 17, 17, 0.15);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.rsvp-party__row.is-selected {
+  border-color: #111;
+  background: #fff;
+}
+
+.rsvp-party__row input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--green);
+}
+
+.rsvp-party__name {
+  font-size: 1.15rem;
+}
+
+.rsvp-party__you {
+  color: rgba(17, 17, 17, 0.55);
+  font-size: 0.95em;
+}
+
+/* Status chips (inside the modal) */
+.rsvp-chip {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.rsvp-chip--yes,
+.rsvp-chip--partial {
+  background: rgba(70, 115, 85, 0.14);
+  color: #2f5a3c;
+}
+
+.rsvp-chip--no {
+  background: rgba(17, 17, 17, 0.07);
+  color: #5c5650;
+}
+
+.rsvp-chip--pending {
+  background: rgba(212, 165, 116, 0.22);
+  color: #7a5c35;
+}
+
+/* "All events" / "Event by event" switch, and yes/no choices */
+.rsvp-mode {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-bottom: 18px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(17, 17, 17, 0.06);
+}
+
+.rsvp-mode__option,
+.rsvp-choice__option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.rsvp-mode__option {
+  min-height: 40px;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  font-size: 1rem;
+}
+
+.rsvp-mode__option.is-selected {
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.rsvp-mode__option input,
+.rsvp-choice__option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.rsvp-mode__option:has(input:focus-visible),
+.rsvp-choice__option:has(input:focus-visible) {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+.rsvp-choice {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.rsvp-choice__option {
+  min-height: 44px;
+  padding: 0.5rem;
+  border: 1px solid rgba(17, 17, 17, 0.25);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.rsvp-choice__option:hover:not(.is-selected) {
+  border-color: rgba(17, 17, 17, 0.55);
+}
+
+.rsvp-choice__option--yes.is-selected {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+
+.rsvp-choice__option--no.is-selected {
+  background: #5c5650;
+  border-color: #5c5650;
+  color: #fff;
+}
+
+/* One card per guest being RSVP'd for */
+.rsvp-guest {
+  margin: 0 0 14px;
+  padding: 6px 16px 16px;
+  border: 1px solid rgba(17, 17, 17, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.55);
+  min-width: 0;
+}
+
+.rsvp-guest:last-of-type {
+  margin-bottom: 20px;
+}
+
+.rsvp-guest.has-error {
+  border-color: var(--error-color);
+}
+
+.rsvp-guest__name {
+  padding: 0 6px;
+  font-size: 1.25rem;
+}
+
+.rsvp-guest__hint {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: rgba(17, 17, 17, 0.6);
+}
+
+.rsvp-events {
+  list-style: none;
+}
+
+.rsvp-events__row {
+  display: grid;
+  grid-template-columns: 1fr minmax(140px, 170px);
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px dashed rgba(17, 17, 17, 0.14);
+}
+
+.rsvp-events__row:last-child {
+  border-bottom: none;
+}
+
+.rsvp-events__name {
+  display: block;
+  font-size: 1.05rem;
+}
+
+.rsvp-events__when {
+  display: block;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.8rem;
+  color: rgba(17, 17, 17, 0.6);
+}
+
+.rsvp-events .rsvp-choice__option {
+  min-height: 40px;
+  padding: 0.35rem;
+}
+
+.rsvp-phone {
+  display: grid;
+  gap: 6px;
+  margin-top: 16px;
+}
+
+.rsvp-phone__label {
+  font-size: 1rem;
+}
+
+.rsvp-phone input {
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(17, 17, 17, 0.3);
+  border-radius: 8px;
+  background: #fff;
+  /* 16px stops iOS Safari zooming in on focus. */
+  font: 16px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #111;
+}
+
+.rsvp-phone input:focus {
+  outline: 2px solid var(--green);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.rsvp-phone__hint {
+  font-size: 0.85rem;
+  color: rgba(17, 17, 17, 0.6);
+}
+
+.rsvp-dietary {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.rsvp-dietary__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.rsvp-dietary__toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--green);
+}
+
+.rsvp-dietary__input {
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(17, 17, 17, 0.3);
+  border-radius: 8px;
+  background: #fff;
+  /* 16px stops iOS Safari zooming in on focus. */
+  font: 16px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #111;
+}
+
+.rsvp-dietary__input:focus {
+  outline: 2px solid var(--green);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.rsvp-phone__required {
+  color: var(--error-color);
+}
+
+.rsvp-phone.is-invalid input {
+  border-color: var(--error-color);
+}
+
+.rsvp-phone.is-invalid .rsvp-phone__hint {
+  color: var(--error-color);
+}
+
+.rsvp-modal__footer-note {
+  align-self: center;
+  margin-right: auto;
+  font-size: 0.9rem;
+  color: rgba(17, 17, 17, 0.65);
+}
+
+/* Confirmation */
+.rsvp-summary {
+  list-style: none;
+}
+
+.rsvp-summary__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(17, 17, 17, 0.1);
+}
+
+.rsvp-summary__name {
+  font-size: 1.15rem;
+}
+
+@media (max-width: 640px) {
+  .rsvp-modal {
+    width: 100vw;
+    height: 100dvh;
+    margin: 0;
+  }
+
+  .rsvp-modal__panel {
+    height: 100%;
+    max-height: none;
+    border-radius: 0;
+    animation-name: rsvp-modal-in-sheet;
+  }
+
+  .rsvp-modal__header {
+    padding-top: calc(14px + env(safe-area-inset-top));
+    padding-left: 20px;
+  }
+
+  .rsvp-modal__body {
+    padding: 18px 20px 0;
+  }
+
+  .rsvp-modal__footer {
+    margin: auto -20px 0;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .rsvp-modal__footer .rsvp-button {
+    flex: 1;
+  }
+
+  .rsvp-modal__footer {
+    flex-wrap: wrap;
+  }
+
+  .rsvp-modal__footer-note {
+    flex-basis: 100%;
+    margin-right: 0;
+    text-align: center;
+    order: -1;
+  }
+
+  .rsvp-events__row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+@keyframes rsvp-modal-in-sheet {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rsvp-modal__panel {
+    animation: none;
+  }
+
+  .rsvp-status:hover {
+    transform: none;
   }
 }
