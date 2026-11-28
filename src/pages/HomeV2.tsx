@@ -1,6 +1,6 @@
-import { useMemo, type CSSProperties } from 'react';
+import { useMemo, useRef, type CSSProperties } from 'react';
 import { HomeHeader } from '../components/HomeHeader';
-import { LetterEnvelope } from '../components/LetterEnvelope';
+import { LetterEnvelope, type LetterEnvelopeHandle } from '../components/LetterEnvelope';
 import type { StackPhoto } from '../components/PhotoStack';
 import {
   DEFAULT_WEEKEND_POLAROID_DATE,
@@ -16,10 +16,12 @@ const vineMask = { '--vine-mask': `url(${resolveAsset('/vine.svg')})` } as CSSPr
 
 /**
  * Home V2, a side-by-side preview of a redesigned Home: a botanical green border around the
- * screen, and a sealed envelope in the middle holding the guest's letter and polaroids.
+ * screen, and a sealed envelope in the middle holding the guest's letter and polaroids. The logo
+ * puts everything back in the envelope.
  */
 export default function HomeV2() {
   const guest = useGuest();
+  const envelopeRef = useRef<LetterEnvelopeHandle>(null);
   const polaroids = guest?.polaroids;
 
   const photos = useMemo<StackPhoto[]>(() => {
@@ -46,9 +48,11 @@ export default function HomeV2() {
         <span className="home-v2__vine home-v2__vine--right" style={vineMask} />
       </div>
       <div className="home-v2__header">
-        <HomeHeader activePath={HOME_V2_PATH} />
+        {/* Here the logo reseals the envelope rather than going to Home. */}
+        <HomeHeader activePath={HOME_V2_PATH} onLogoClick={() => envelopeRef.current?.close()} />
       </div>
       <LetterEnvelope
+        ref={envelopeRef}
         greeting={guest?.welcomeGreetingText ?? WELCOME_DEFAULTS.greeting}
         body={guest?.welcomeBodyText ?? WELCOME_DEFAULTS.body}
         signature={guest?.welcomeSignatureText ?? WELCOME_DEFAULTS.signature}

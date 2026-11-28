@@ -1,4 +1,4 @@
-import { RefObject, useCallback, useLayoutEffect } from 'react';
+import { RefObject, useLayoutEffect } from 'react';
 
 type Refs = {
   /** Positioned box the envelope, letter and photos are laid out in. */
@@ -9,6 +9,9 @@ type Refs = {
 };
 
 type Pose = { x: number; y: number; s: number; r: number };
+
+/** `opening` and `closing` play the same timeline, forwards and in reverse. */
+export type EnvelopePhase = 'closed' | 'opening' | 'open' | 'closing';
 
 /** Length of the whole opening, from the seal cracking to the letter and photos settling. */
 const DURATION_MS = 2800;
@@ -21,11 +24,12 @@ const LETTER_TUCK_WIDTH = 0.84;
 const PHOTOS_TUCK_WIDTH = 0.58;
 /** How far below the envelope's top edge each sits while tucked in (× envelope height). */
 const LETTER_TUCK_TOP = 0.08;
-const PHOTOS_TUCK_TOP = 0.03;
+/** Low enough that the stack's tilted corners stay hidden behind the closed flap. */
+const PHOTOS_TUCK_TOP = 0.16;
 /** Share of the rise taken by the envelope sinking rather than the letter lifting. */
 const ENVELOPE_SINK_SHARE = 0.35;
-/** The photos (behind the letter) come up a little further, so they peek out over its top. */
-const PHOTOS_LIFT_SHARE = 1.15;
+/** Extra rise for the photos (× envelope height), so they peek out over the letter's top edge. */
+const PHOTOS_EXTRA_LIFT = 0.2;
 
 const pose = ({ x, y, s, r }: Pose) =>
   `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${s.toFixed(4)}) rotate(${r}deg)`;
@@ -90,7 +94,7 @@ function measure(content: HTMLElement, envelope: HTMLElement, letter: HTMLElemen
     photosRisen: {
       ...photosTuck,
       // Never past the top border.
-      y: photosTuck.y - Math.min(lift * PHOTOS_LIFT_SHARE, env.y + eh * PHOTOS_TUCK_TOP - topLimit),
+      y: photosTuck.y - Math.min(lift + eh * PHOTOS_EXTRA_LIFT, env.y + eh * PHOTOS_TUCK_TOP - topLimit),
       r: 2,
     },
     sink,
@@ -99,17 +103,19 @@ function measure(content: HTMLElement, envelope: HTMLElement, letter: HTMLElemen
 }
 
 /**
- * Tucks the letter and the photo stack into the envelope (while `opened` is false) and plays the
- * opening when `open()` is called: the seal cracks, the flap swings up, the letter and photos rise
- * out of the pocket, and they move to their own places while the envelope drops away.
+ * Tucks the letter and the photo stack into the envelope while `phase` is `closed`, and plays the
+ * opening when it becomes `opening`: the seal cracks, the flap swings up, the letter and photos
+ * rise out of the pocket, and they move to their own places while the envelope drops away.
+ * `closing` plays the same thing backwards, putting everything back and resealing it. When either
+ * finishes, `onSettled` is called with the phase to move to.
  *
  * Both are laid out where they end up; every transform is relative to that, so the settled state
  * is simply no transform at all. Only `transform` and `opacity` are animated.
  */
 export function useLetterEnvelope(
   { contentRef, envelopeRef, letterRef, photosRef }: Refs,
-  opened: boolean,
-  onOpened: () => void,
+  phase: EnvelopePhase,
+  onSettled: (phase: 'open' | 'closed') => void,
 ) {
   // While closed, keep the letter and photos tucked in, re-measuring whenever the layout changes.
   useLayoutEffect(() => {
@@ -117,7 +123,7 @@ export function useLetterEnvelope(
     const envelope = envelopeRef.current;
     const letter = letterRef.current;
     const photos = photosRef.current;
-    if (!content || !envelope || !letter || !photos || opened) return;
+    if (!content || !envelope || !letter || !photos || phase !== 'closed') return;
 
     const tuckIn = () => {
       const g = measure(content, envelope, letter, photos);
@@ -135,9 +141,11 @@ export function useLetterEnvelope(
       observer?.disconnect();
       window.removeEventListener('resize', tuckIn);
     };
-  }, [contentRef, envelopeRef, letterRef, photosRef, opened]);
+  }, [contentRef, envelopeRef, letterRef, photosRef, phase]);
 
-  return useCallback(() => {
+  useLayoutEffect(() => {
+    if (phase !== 'opening' && phase !== 'closing') return;
+    const closing = phase === 'closing';
     const content = contentRef.current;
     const envelope = envelopeRef.current;
     const letter = letterRef.current;
@@ -149,7 +157,11 @@ export function useLetterEnvelope(
     const animations: Animation[] = [];
     const play = (el: Element | null, keyframes: Keyframe[]) => {
       if (!el) return undefined;
-      const animation = el.animate(keyframes, { duration: DURATION_MS, fill: 'forwards' });
+      const animation = el.animate(keyframes, {
+        duration: DURATION_MS,
+        fill: 'forwards',
+        direction: closing ? 'reverse' : 'normal',
+      });
       animations.push(animation);
       return animation;
     };
@@ -240,17 +252,26 @@ export function useLetterEnvelope(
 
     Promise.all(animations.map((a) => a.finished))
       .then(() => {
-        // The letter and photos end untransformed; drop their animations and the inline tuck so
-        // nothing stale is left behind if the layout changes later. The envelope's animations stay
-        // filled until it's hidden.
-        letter.style.transform = '';
-        photos.style.transform = '';
-        letterMove?.cancel();
-        photosMove?.cancel();
-        onOpened();
+        if (closing) {
+          // Everything is back where the CSS draws it closed; hand the tuck back to inline styles.
+          letter.style.transform = pose(g.letterTuck);
+          photos.style.transform = pose(g.photosTuck);
+          animations.forEach((a) => a.cancel());
+          onSettled('closed');
+        } else {
+          // The letter and photos end untransformed; drop their animations and the inline tuck so
+          // nothing stale is left if the layout changes later. The envelope unmounts once open.
+          letter.style.transform = '';
+          photos.style.transform = '';
+          letterMove?.cancel();
+          photosMove?.cancel();
+          onSettled('open');
+        }
       })
       .catch(() => {
-        // Cancelled (the page unmounted mid-opening): nothing to settle.
+        // Cancelled (unmounted, or the phase changed mid-way): nothing to settle.
       });
-  }, [contentRef, envelopeRef, letterRef, photosRef, onOpened]);
+
+    return () => animations.forEach((a) => a.cancel());
+  }, [contentRef, envelopeRef, letterRef, photosRef, phase, onSettled]);
 }

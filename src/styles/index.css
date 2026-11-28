@@ -1976,9 +1976,9 @@ body:has(.home-page--schedule) {
   }
 }
 
-.letter-envelope[data-phase='opening'] .letter,
-.letter-envelope[data-phase='opening'] .letter-envelope__photos,
-.letter-envelope[data-phase='opening'] .envelope__layer {
+.letter-envelope:is([data-phase='opening'], [data-phase='closing']) .letter,
+.letter-envelope:is([data-phase='opening'], [data-phase='closing']) .letter-envelope__photos,
+.letter-envelope:is([data-phase='opening'], [data-phase='closing']) .envelope__layer {
   will-change: transform, opacity;
 }
 

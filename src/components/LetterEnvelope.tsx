@@ -1,18 +1,22 @@
-import { useCallback, useRef, useState, type CSSProperties } from 'react';
-import { useLetterEnvelope } from '../hooks/useLetterEnvelope';
+import { useCallback, useImperativeHandle, useRef, useState, type CSSProperties, type Ref } from 'react';
+import { useLetterEnvelope, type EnvelopePhase } from '../hooks/useLetterEnvelope';
 import { resolveAsset } from '../utils/asset';
 import { PhotoStack, type StackPhoto } from './PhotoStack';
 
 const vineMask = { '--vine-mask': `url(${resolveAsset('/vine.svg')})` } as CSSProperties;
+
+export interface LetterEnvelopeHandle {
+  /** Puts the letter and photos back in the envelope and reseals it (when it's open). */
+  close: () => void;
+}
 
 interface LetterEnvelopeProps {
   greeting: string;
   body: string;
   signature: string;
   photos: StackPhoto[];
+  ref?: Ref<LetterEnvelopeHandle>;
 }
-
-type Phase = 'closed' | 'opening' | 'open';
 
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -29,30 +33,42 @@ function SealFace() {
 /**
  * A sealed envelope holding the guest's welcome letter and, behind it, a stack of polaroids. A tap
  * or click opens it: the seal cracks, the flap lifts, and the letter and photos come out and settle
- * side by side (letter right, photos left; on phones the photos go below the letter).
+ * side by side (letter right, photos left; on phones the photos go below the letter). `close()`
+ * on the ref plays it backwards.
  *
  * The envelope is decoration. The letter is ordinary text laid out where it ends up, so it reads
  * the same to screen readers before and after opening. With reduced motion it starts open.
  */
-export function LetterEnvelope({ greeting, body, signature, photos }: LetterEnvelopeProps) {
-  const [phase, setPhase] = useState<Phase>(() => (prefersReducedMotion() ? 'open' : 'closed'));
+export function LetterEnvelope({ greeting, body, signature, photos, ref }: LetterEnvelopeProps) {
+  const [phase, setPhase] = useState<EnvelopePhase>(() =>
+    prefersReducedMotion() ? 'open' : 'closed',
+  );
   const contentRef = useRef<HTMLDivElement>(null);
   const envelopeRef = useRef<HTMLDivElement>(null);
   const letterRef = useRef<HTMLElement>(null);
   const photosRef = useRef<HTMLDivElement>(null);
 
-  const onOpened = useCallback(() => setPhase('open'), []);
-  const playOpening = useLetterEnvelope(
-    { contentRef, envelopeRef, letterRef, photosRef },
-    phase !== 'closed',
-    onOpened,
-  );
+  const onSettled = useCallback((settled: 'open' | 'closed') => setPhase(settled), []);
+  useLetterEnvelope({ contentRef, envelopeRef, letterRef, photosRef }, phase, onSettled);
 
   const open = () => {
     if (phase !== 'closed') return;
-    setPhase('opening');
-    playOpening();
+    setPhase(prefersReducedMotion() ? 'open' : 'opening');
   };
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      close: () => {
+        if (phase !== 'open') return;
+        // Back to the top first: the closed envelope sits in the first screenful.
+        window.scrollTo({ top: 0 });
+        letterRef.current?.querySelector('.letter__scroll')?.scrollTo({ top: 0 });
+        setPhase(prefersReducedMotion() ? 'closed' : 'closing');
+      },
+    }),
+    [phase],
+  );
 
   return (
     <div ref={contentRef} className="letter-envelope" data-phase={phase}>
