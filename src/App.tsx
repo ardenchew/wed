@@ -10,7 +10,8 @@ import Landing from './pages/Landing';
 import Home from './pages/Home';
 import Schedule from './pages/Schedule';
 import Admin from './pages/Admin';
-import { ADMIN_PATH } from './config/nav';
+import Gifts from './pages/Gifts';
+import { ADMIN_PATH, GIFTS_PATH } from './config/nav';
 import SplashPreview from './pages/SplashPreview';
 import './styles/index.css';
 
@@ -107,6 +108,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Schedule />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={GIFTS_PATH}
+          element={
+            <ProtectedRoute>
+              <Gifts />
             </ProtectedRoute>
           }
         />
