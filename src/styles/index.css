@@ -714,6 +714,16 @@ body:has(.home-page--schedule) {
   background: rgba(255, 255, 255, 0.16);
 }
 
+.home-menu__action--rsvp {
+  background: var(--parchment-primary);
+  color: #121c16;
+  font-weight: 600;
+}
+
+.home-menu__action--rsvp:hover {
+  background: #fff;
+}
+
 .home-menu__action:focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.95);
   outline-offset: 3px;

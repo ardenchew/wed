@@ -8,7 +8,7 @@ export default function Gifts() {
       <HomeHeader activePath={GIFTS_PATH} />
       <section className="gifts__content" aria-labelledby="gifts-title">
         <h1 id="gifts-title" className="schedule__title">
-          Gifts
+          Gift
         </h1>
         <img className="gifts__vine" src={resolveAsset('vine.svg')} alt="" aria-hidden="true" />
         <p className="gifts__lead">Your being there is the greatest gift.</p>

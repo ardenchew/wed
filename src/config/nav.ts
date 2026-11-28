@@ -18,5 +18,5 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Home', path: '/home' },
   { label: 'Welcome', path: '/home', scrollTargetId: HOME_WELCOME_SECTION_ID },
   { label: 'Schedule', path: '/schedule' },
-  { label: 'Gifts', path: GIFTS_PATH },
+  { label: 'Gift', path: GIFTS_PATH },
 ];
