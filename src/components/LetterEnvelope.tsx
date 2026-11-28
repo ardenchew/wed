@@ -4,9 +4,9 @@ import { resolveAsset } from '../utils/asset';
 import { PhotoStack, type StackPhoto } from './PhotoStack';
 import { RsvpStamp } from './RsvpStamp';
 
-/** A line sketch of the Golden Gate Bridge heading the letter. */
+/** A sketch of the Golden Gate Bridge heading the letter (transparent PNG, used as a mask). */
 const ornamentMask = {
-  '--ornament-mask': `url(${resolveAsset('/golden-gate.svg')})`,
+  '--ornament-mask': `url(${resolveAsset('/golden-gate.png')})`,
 } as CSSProperties;
 
 export interface LetterEnvelopeHandle {

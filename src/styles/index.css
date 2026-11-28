@@ -2361,10 +2361,10 @@ body:has(.home-page--schedule) {
   opacity: 1;
 }
 
-/* public/golden-gate.svg, drawn in the sage ink. */
+/* public/golden-gate.png (its alpha is the drawing), inked in sage. */
 .letter__ornament {
   width: min(70%, 15rem);
-  aspect-ratio: 600 / 240;
+  aspect-ratio: 837 / 429;
   margin: 0 auto clamp(0.75rem, 3vw, 1.1rem);
   background-color: #56644a;
   mask: var(--ornament-mask) center / contain no-repeat;
