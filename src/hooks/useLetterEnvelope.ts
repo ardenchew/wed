@@ -21,11 +21,11 @@ const LETTER_TUCK_WIDTH = 0.84;
 const PHOTOS_TUCK_WIDTH = 0.58;
 /** How far below the envelope's top edge each sits while tucked in (× envelope height). */
 const LETTER_TUCK_TOP = 0.08;
-const PHOTOS_TUCK_TOP = 0.2;
+const PHOTOS_TUCK_TOP = 0.03;
 /** Share of the rise taken by the envelope sinking rather than the letter lifting. */
 const ENVELOPE_SINK_SHARE = 0.35;
-/** The photos come up less far than the letter, so they stay in front of its lower half. */
-const PHOTOS_LIFT_SHARE = 0.7;
+/** The photos (behind the letter) come up a little further, so they peek out over its top. */
+const PHOTOS_LIFT_SHARE = 1.15;
 
 const pose = ({ x, y, s, r }: Pose) =>
   `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${s.toFixed(4)}) rotate(${r}deg)`;
@@ -87,7 +87,12 @@ function measure(content: HTMLElement, envelope: HTMLElement, letter: HTMLElemen
     letterTuck,
     photosTuck,
     letterRisen: { ...letterTuck, y: letterTuck.y - lift, r: -0.8 },
-    photosRisen: { ...photosTuck, y: photosTuck.y - lift * PHOTOS_LIFT_SHARE, r: 2 },
+    photosRisen: {
+      ...photosTuck,
+      // Never past the top border.
+      y: photosTuck.y - Math.min(lift * PHOTOS_LIFT_SHARE, env.y + eh * PHOTOS_TUCK_TOP - topLimit),
+      r: 2,
+    },
     sink,
     drop: vh - env.y + 40,
   };

@@ -1992,7 +1992,7 @@ body:has(.home-page--schedule) {
   pointer-events: none;
 }
 
-/* The envelope is three layers so the letter (2) and photos (3) can sit between them. */
+/* The envelope is three layers so the photos (2) and the letter (3) can sit between them. */
 .envelope__layer {
   position: absolute;
   inset: 0;
@@ -2277,7 +2277,7 @@ body:has(.home-page--schedule) {
 /* The letter: real text, laid out where it ends up. */
 .letter {
   position: relative;
-  z-index: 2;
+  z-index: 3;
   display: flex;
   flex-direction: column;
   flex: none;
@@ -2363,7 +2363,7 @@ body:has(.home-page--schedule) {
 /* The polaroids: below the letter on phones, to its left from 900px. */
 .letter-envelope__photos {
   position: relative;
-  z-index: 3;
+  z-index: 2;
   flex: none;
   width: min(72vw, 17rem);
   margin: 0 0 auto;

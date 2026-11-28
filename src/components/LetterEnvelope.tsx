@@ -27,7 +27,7 @@ function SealFace() {
 }
 
 /**
- * A sealed envelope holding the guest's welcome letter and a stack of polaroids (in front). A tap
+ * A sealed envelope holding the guest's welcome letter and, behind it, a stack of polaroids. A tap
  * or click opens it: the seal cracks, the flap lifts, and the letter and photos come out and settle
  * side by side (letter right, photos left; on phones the photos go below the letter).
  *
