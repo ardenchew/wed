@@ -2089,11 +2089,13 @@ body:has(.home-page--schedule) {
   filter: drop-shadow(0 1.5px 1.5px rgba(70, 52, 20, 0.26));
 }
 
+/* The flap's point stops just above the seal's crack, so it's always under the seal's top half
+   and never shows over the bottom half (which sits on the pocket, below the flap). */
 .envelope__flap-paper,
 .envelope__flap-shade {
   position: absolute;
   inset: 0;
-  clip-path: polygon(0 0, 100% 0, 52.6% 57.4%, 50% 59%, 47.4% 57.4%);
+  clip-path: polygon(0 0, 100% 0, 52.4% 53.4%, 50% 55%, 47.6% 53.4%);
 }
 
 .envelope__flap-paper {
@@ -2113,12 +2115,12 @@ body:has(.home-page--schedule) {
   left: 0;
   right: 0;
   bottom: 100%;
-  height: 59%;
+  height: 55%;
   transform-origin: 50% 100%;
   transform: rotateX(-180deg);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
-  clip-path: polygon(0 100%, 100% 100%, 52.6% 2.6%, 50% 0, 47.4% 2.6%);
+  clip-path: polygon(0 100%, 100% 100%, 52.4% 2.9%, 50% 0, 47.6% 2.9%);
   background:
     linear-gradient(to top, rgba(45, 35, 15, 0.2), transparent 45%),
     var(--env-liner-texture);
@@ -2183,7 +2185,7 @@ body:has(.home-page--schedule) {
   content: '';
   position: absolute;
   inset: 0;
-  clip-path: polygon(0 0, 100% 0, 52.6% 57.4%, 50% 59%, 47.4% 57.4%);
+  clip-path: polygon(0 0, 100% 0, 52.4% 53.4%, 50% 55%, 47.6% 53.4%);
   background: rgba(50, 38, 15, 0.32);
 }
 
