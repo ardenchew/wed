@@ -763,7 +763,10 @@ body:has(.home-page--schedule) {
   padding: 0 32px 96px;
   /* The one accent color, used sparingly: times, the card frame, the map icon, hovers. */
   --accent: #a8654a; /* dusty terracotta */
-  --frame-color: color-mix(in srgb, var(--accent) 70%, transparent);
+  /* Opaque so the vine, drawn in the same color, matches the hairlines exactly. */
+  --frame-color: color-mix(in srgb, var(--accent) 80%, var(--parchment-secondary));
+  /* Darker shade of the accent for text, for contrast on parchment. */
+  --accent-text: #8a4a33;
 }
 
 .schedule__title {
@@ -896,65 +899,60 @@ body:has(.home-page--schedule) {
   gap: 24px;
 }
 
+/*
+ * The vines continue the frame: drawn in the hairline color (vine.svg as a mask) with the stem
+ * centred between the two hairlines, which run straight into the stem ends.
+ *
+ * Geometry: the art is 100px wide (229x80 viewBox, so ~34.9px tall) and its stem ends sit 16px from
+ * its top. Offsets are from the card's padding box: the outer hairline is the 1px border just
+ * outside it, the inner one the inset shadow 4px inside it, so the pair is centred 2px in.
+ */
 .schedule__day-card-vine {
   position: absolute;
   left: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 100px;
+  transform: translateX(-50%);
   z-index: 2;
   pointer-events: none;
 }
 
-/* Hides both hairlines behind the vine: 2px outside the edge, 8px inside it. */
-.schedule__day-card-vine::before {
-  content: '';
-  position: absolute;
-  left: 4px;
-  right: 4px;
-  height: 10px;
-  z-index: -1;
-  mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
-}
-
-.schedule__day-card-vine--top::before {
-  top: calc(50% - 2px);
-  background: linear-gradient(
-    to bottom,
-    var(--parchment-primary) 2px,
-    var(--parchment-secondary) 2px
-  );
-}
-
-.schedule__day-card-vine--bottom::before {
-  bottom: calc(50% - 2px);
-  background: linear-gradient(
-    to top,
-    var(--parchment-primary) 2px,
-    var(--parchment-secondary) 2px
-  );
-}
-
 .schedule__day-card-vine--top {
-  top: 0;
-  transform: translate(-50%, -50%);
+  top: -14px;
 }
 
 .schedule__day-card-vine--bottom {
-  bottom: 0;
-  transform: translate(-50%, 50%);
+  bottom: -17px;
 }
 
-.schedule__day-card-vine img {
-  display: block;
-  width: 100px;
-  height: auto;
+/*
+ * Breaks both hairlines exactly between the stem ends, with no fade. It spans from the outer line
+ * to just past the inner one and never reaches outside the card, so no light patch shows there.
+ */
+.schedule__day-card-vine::before {
+  content: '';
+  position: absolute;
+  /* Inset 1px so the hairlines tuck under the stem tips instead of stopping short of them. */
+  left: 1px;
+  right: 1px;
+  height: 7px;
+  background: var(--parchment-secondary);
+}
+
+.schedule__day-card-vine--top::before {
+  top: 13px;
+}
+
+.schedule__day-card-vine--bottom::before {
+  top: 12px;
+}
+
+.schedule__day-card-vine-art {
   position: relative;
-  z-index: 1;
-}
-
-.schedule__day-card-vine--bottom img {
-  transform: translateY(2px);
+  display: block;
+  width: 100%;
+  aspect-ratio: 229 / 80;
+  background-color: var(--frame-color);
+  mask: var(--vine-mask) center / contain no-repeat;
 }
 
 .schedule__event {
@@ -1004,12 +1002,14 @@ body:has(.home-page--schedule) {
 }
 
 .schedule__event-time {
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   line-height: 1.4;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   white-space: nowrap;
-  color: var(--accent);
+  color: var(--accent-text);
+  /* Bacasime Antique ships one weight; a hairline stroke thickens it without faux bold. */
+  -webkit-text-stroke: 0.35px currentColor;
 }
 
 .schedule__event-name {

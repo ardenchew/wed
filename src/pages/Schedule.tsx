@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo, type CSSProperties } from 'react';
 import { Button } from '../components/Button';
 import { HomeHeader } from '../components/HomeHeader';
 import { RsvpStatusButton } from '../components/RsvpStatusButton';
@@ -10,6 +10,9 @@ import { resolveAsset } from '../utils/asset';
 import { cloudinaryUrl, isCloudinaryId } from '../utils/cloudinary';
 
 const HERO_PUBLIC_ID = 'wed/schedule/hero';
+
+/** vine.svg as a CSS mask, so the vine takes the frame's color (see `.schedule__day-card-vine`). */
+const vineMask = { '--vine-mask': `url(${resolveAsset('/vine.svg')})` } as CSSProperties;
 
 /*
  * Every formatter below pins `timeZone` to the venue: a guest reading the schedule from another
@@ -373,13 +376,13 @@ export default function Schedule() {
                 className="schedule__day-card-vine schedule__day-card-vine--top"
                 aria-hidden="true"
               >
-                <img src={resolveAsset('/vine.svg')} alt="" />
+                <span className="schedule__day-card-vine-art" style={vineMask} />
               </span>
               <span
                 className="schedule__day-card-vine schedule__day-card-vine--bottom"
                 aria-hidden="true"
               >
-                <img src={resolveAsset('/vine.svg')} alt="" />
+                <span className="schedule__day-card-vine-art" style={vineMask} />
               </span>
               {group.events.map((event, j) => {
                 const sideClass = event.image
