@@ -1,14 +1,18 @@
-import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo, type CSSProperties } from 'react';
 import { Button } from '../components/Button';
 import { HomeHeader } from '../components/HomeHeader';
 import { RsvpStatusButton } from '../components/RsvpStatusButton';
 import { EVENT_TIME_ZONE, EVENTS } from '../config/events';
 import { useGuest } from '../hooks/useGuest';
+import { useReveal } from '../hooks/useReveal';
 import type { Event } from '../types';
 import { resolveAsset } from '../utils/asset';
 import { cloudinaryUrl, isCloudinaryId } from '../utils/cloudinary';
 
 const HERO_PUBLIC_ID = 'wed/schedule/hero';
+
+/** vine-frame.svg as a CSS mask, so the vine takes the frame's color (see `.schedule__day-card-vine`). */
+const vineMask = { '--vine-mask': `url(${resolveAsset('/vine-frame.svg')})` } as CSSProperties;
 
 /*
  * Every formatter below pins `timeZone` to the venue: a guest reading the schedule from another
@@ -44,22 +48,89 @@ const dateKeyFormatter = new Intl.DateTimeFormat('en-CA', {
   timeZone: EVENT_TIME_ZONE,
 });
 
+/** "5 PM", "11:30 AM": the CSS sets it in letterspaced small caps. */
 function formatTime(date: Date): string {
   const parts = timeFormatter.formatToParts(date);
   const hour = parts.find((p) => p.type === 'hour')?.value ?? '';
   const minute = parts.find((p) => p.type === 'minute')?.value ?? '';
-  const period = (parts.find((p) => p.type === 'dayPeriod')?.value ?? '').toLowerCase();
-  if (minute === '00') return `${hour}${period}`;
-  return `${hour}:${minute}${period}`;
+  const period = (parts.find((p) => p.type === 'dayPeriod')?.value ?? '').toUpperCase();
+  if (minute === '00') return `${hour} ${period}`;
+  return `${hour}:${minute} ${period}`;
 }
 
-function formatDateHeading(date: Date): string {
+/** Splits the day heading into the weekday title and the date line beneath it. */
+function formatDateHeading(date: Date): { weekday: string; date: string } {
   const parts = dateHeadingFormatter.formatToParts(date);
   const month = parts.find((p) => p.type === 'month')?.value ?? '';
   const day = parts.find((p) => p.type === 'day')?.value ?? '';
   const year = parts.find((p) => p.type === 'year')?.value ?? '';
   const weekday = parts.find((p) => p.type === 'weekday')?.value ?? '';
-  return `${month} ${day}, ${year} · ${weekday}`;
+  return { weekday, date: `${month} ${day}, ${year}` };
+}
+
+/** Width-to-height ratio of `.schedule__event-image-wrap` (its CSS `aspect-ratio`). */
+const IMAGE_BOX_RATIO = 3 / 2;
+
+/**
+ * Where the drawing's ink sits in its image, as fractions of the image: the lowest inked row
+ * (`base`) and the horizontal extent of the ink near that base (`left`..`right`). Read from the
+ * alpha channel of a small copy; null if the pixels can't be read.
+ */
+function measureInk(img: HTMLImageElement) {
+  const w = 120;
+  const h = Math.max(1, Math.round((w * img.naturalHeight) / img.naturalWidth));
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  if (!ctx) return null;
+  ctx.drawImage(img, 0, 0, w, h);
+  let data: Uint8ClampedArray;
+  try {
+    data = ctx.getImageData(0, 0, w, h).data;
+  } catch {
+    return null; // cross-origin pixels without CORS
+  }
+  const inked = (x: number, y: number) => data[(y * w + x) * 4 + 3] > 60;
+  // Lowest row with a real run of ink (ignores stray specks).
+  let base = -1;
+  for (let y = h - 1; y >= 0 && base < 0; y--) {
+    let count = 0;
+    for (let x = 0; x < w; x++) if (inked(x, y)) count++;
+    if (count >= 3) base = y;
+  }
+  if (base < 0) return null;
+  // Width of the ink across the bottom tenth of the drawing.
+  let left = w;
+  let right = -1;
+  for (let y = Math.max(0, base - Math.round(h * 0.1)); y <= base; y++) {
+    for (let x = 0; x < w; x++) {
+      if (!inked(x, y)) continue;
+      left = Math.min(left, x);
+      right = Math.max(right, x);
+    }
+  }
+  return { base: (base + 1) / h, left: left / w, right: (right + 1) / w };
+}
+
+/**
+ * Places the ground shadow (`::after` on the wrap) under the drawing's base, at its width. The
+ * drawings are `object-fit: contain` in a 3:2 box, so a wide one is letterboxed and a narrow one
+ * pillarboxed, and many have empty space inside the image too; both are accounted for here.
+ */
+function fitGroundShadow(e: React.SyntheticEvent<HTMLImageElement>) {
+  const img = e.currentTarget;
+  const wrap = img.parentElement;
+  if (!wrap || !img.naturalWidth || !img.naturalHeight) return;
+  const ratio = img.naturalWidth / img.naturalHeight;
+  const fillW = ratio >= IMAGE_BOX_RATIO ? 1 : ratio / IMAGE_BOX_RATIO;
+  const fillH = ratio >= IMAGE_BOX_RATIO ? IMAGE_BOX_RATIO / ratio : 1;
+  const ink = measureInk(img) ?? { base: 1, left: 0.04, right: 0.96 };
+  const offsetX = (1 - fillW) / 2;
+  const offsetY = (1 - fillH) / 2;
+  wrap.style.setProperty('--ground-y', (offsetY + fillH * ink.base).toFixed(4));
+  wrap.style.setProperty('--ground-x', (offsetX + (fillW * (ink.left + ink.right)) / 2).toFixed(4));
+  wrap.style.setProperty('--ground-w', (fillW * (ink.right - ink.left)).toFixed(4));
 }
 
 function formatDateShort(date: Date): string {
@@ -70,7 +141,13 @@ function dateKey(date: Date): string {
   return dateKeyFormatter.format(date);
 }
 
-type DateGroup = { label: string; shortLabel: string; events: Event[] };
+type DateGroup = {
+  key: string;
+  weekday: string;
+  dateLabel: string;
+  shortLabel: string;
+  events: Event[];
+};
 
 function groupEventsByDate(events: Event[]): DateGroup[] {
   const sorted = [...events].sort(
@@ -83,8 +160,11 @@ function groupEventsByDate(events: Event[]): DateGroup[] {
     const key = dateKey(event.start_time);
     if (key !== currentKey) {
       currentKey = key;
+      const heading = formatDateHeading(event.start_time);
       groups.push({
-        label: formatDateHeading(event.start_time),
+        key,
+        weekday: heading.weekday,
+        dateLabel: heading.date,
         shortLabel: formatDateShort(event.start_time),
         events: [],
       });
@@ -182,7 +262,7 @@ function ScheduleTimeline({
         />
         {groups.map((group, i) => (
           <button
-            key={group.label}
+            key={group.key}
             type="button"
             className={`schedule-timeline__label${
               i === activeIndex ? ' schedule-timeline__label--active' : ''
@@ -217,6 +297,8 @@ export default function Schedule() {
   const heroUrl = cloudinaryUrl(HERO_PUBLIC_ID, { w: 1200, c: 'limit' });
 
   const dayHeaderRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const contentRef = useRef<HTMLDivElement>(null);
+  useReveal(contentRef, dateGroups);
   const scrollIdleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const [activeGroupIndex, setActiveGroupIndex] = useState(0);
@@ -334,22 +416,23 @@ export default function Schedule() {
         <img className="schedule__hero-image" src={heroUrl} alt="" />
       </div>
 
-      <div className="schedule__content">
+      <div className="schedule__content" ref={contentRef}>
         {dateGroups.map((group, i) => (
           <div
-            key={group.label}
+            key={group.key}
             className="schedule__day"
             ref={(el) => {
               dayHeaderRefs.current[i] = el;
             }}
           >
-            <h2 className="schedule__day-header">
+            <h2 className="schedule__day-header" data-reveal="">
               <button
                 type="button"
                 className="schedule__day-header-button"
                 onClick={() => scrollToDate(i)}
               >
-                {group.label}
+                <span className="schedule__day-weekday">{group.weekday}</span>
+                <span className="schedule__day-date">{group.dateLabel}</span>
               </button>
             </h2>
 
@@ -358,13 +441,13 @@ export default function Schedule() {
                 className="schedule__day-card-vine schedule__day-card-vine--top"
                 aria-hidden="true"
               >
-                <img src={resolveAsset('/vine.svg')} alt="" />
+                <span className="schedule__day-card-vine-art" style={vineMask} />
               </span>
               <span
                 className="schedule__day-card-vine schedule__day-card-vine--bottom"
                 aria-hidden="true"
               >
-                <img src={resolveAsset('/vine.svg')} alt="" />
+                <span className="schedule__day-card-vine-art" style={vineMask} />
               </span>
               {group.events.map((event, j) => {
                 const sideClass = event.image
@@ -378,6 +461,7 @@ export default function Schedule() {
                   <div
                     key={event.slug}
                     className={`schedule__event ${sideClass}`}
+                    data-reveal=""
                   >
                     <div className="schedule__event-row">
                       {event.image && (
@@ -390,15 +474,20 @@ export default function Schedule() {
                                 : resolveAsset(event.image)
                             }
                             alt={event.name}
+                            crossOrigin="anonymous"
+                            onLoad={fitGroundShadow}
                           />
                         </div>
                       )}
                       <div className="schedule__event-text">
+                        <time
+                          className="schedule__event-time"
+                          dateTime={event.start_time.toISOString()}
+                        >
+                          {formatTime(event.start_time)}
+                        </time>
                         <p className="schedule__event-name">{event.name}</p>
                         <p className="schedule__event-meta">
-                          <span className="schedule__time-pill">
-                            {formatTime(event.start_time)}
-                          </span>
                           <span className="schedule__event-location">
                             {event.location}
                           </span>
