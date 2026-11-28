@@ -5,7 +5,7 @@ import { HomeHeader } from '../components/HomeHeader';
 import { Polaroid } from '../components/Polaroid';
 import { RsvpStatusButton } from '../components/RsvpStatusButton';
 import { WelcomeEnvelope } from '../components/WelcomeEnvelope';
-import { HOME_WELCOME_SECTION_ID } from '../config/nav';
+import { HOME_V2_PATH, HOME_WELCOME_SECTION_ID } from '../config/nav';
 import { WELCOME_DEFAULTS } from '../guests/shared';
 import { useGuest } from '../hooks/useGuest';
 import { useHomeHeroScene } from '../hooks/useHomeHeroScene';
@@ -30,7 +30,15 @@ const HOME_GALLERY_PUBLIC_IDS = ['wed/home/home1', 'wed/home/home2', 'wed/home/h
  */
 const GALLERY_SIZES = '(max-width: 640px) 90vh, 47vw';
 
-export default function Home() {
+interface HomeProps {
+  /**
+   * How the welcome letter is shown: `fade` (Home) fades it in beside the polaroid; `envelope`
+   * (Home V2, a side-by-side preview) opens it out of an envelope as the guest scrolls.
+   */
+  welcome?: 'fade' | 'envelope';
+}
+
+export default function Home({ welcome = 'fade' }: HomeProps) {
   const guest = useGuest();
   const location = useLocation();
   const navigate = useNavigate();
@@ -239,25 +247,58 @@ export default function Home() {
 
       <div className="home__mount-scope">
         <div className="home__fixed-header-wrap">
-          <HomeHeader activePath="/home" activeSectionId={activeSectionId} />
+          <HomeHeader
+            activePath={welcome === 'envelope' ? HOME_V2_PATH : '/home'}
+            activeSectionId={activeSectionId}
+          />
         </div>
 
         <div className="home__scroll-track">
-          <section id={HOME_WELCOME_SECTION_ID} className="home__scroll" aria-label="Weekend details">
-            <WelcomeEnvelope
-              greeting={weekendGreeting}
-              body={weekendBody}
-              signature={weekendSignature}
-            />
-            <div className="home__weekend-image-wrap home__reveal">
-              <Polaroid
-                className="home__weekend-polaroid"
-                dateText={weekendPolaroidDate}
-                publicId={weekendPolaroidPublicId}
-                alt="Emily and Arden"
+          {welcome === 'envelope' ? (
+            <section
+              id={HOME_WELCOME_SECTION_ID}
+              className="home__scroll home__scroll--envelope"
+              aria-label="Weekend details"
+            >
+              <WelcomeEnvelope
+                greeting={weekendGreeting}
+                body={weekendBody}
+                signature={weekendSignature}
               />
-            </div>
-          </section>
+              <div className="home__weekend-image-wrap home__reveal">
+                <Polaroid
+                  className="home__weekend-polaroid"
+                  dateText={weekendPolaroidDate}
+                  publicId={weekendPolaroidPublicId}
+                  alt="Emily and Arden"
+                />
+              </div>
+            </section>
+          ) : (
+            <section id={HOME_WELCOME_SECTION_ID} className="home__scroll" aria-label="Weekend details">
+              <div className="home__scroll-inner">
+                <div className="home__weekend-content">
+                  <div className="home__weekend-text">
+                    <p className="home__weekend-greeting home__reveal">{weekendGreeting}</p>
+                    <p className="home__weekend-body home__reveal home__reveal--step-1">
+                      {weekendBody}
+                    </p>
+                    <p className="home__weekend-signature home__reveal home__reveal--step-2">
+                      {weekendSignature}
+                    </p>
+                  </div>
+                  <div className="home__weekend-image-wrap home__reveal home__reveal--step-3">
+                    <Polaroid
+                      className="home__weekend-polaroid"
+                      dateText={weekendPolaroidDate}
+                      publicId={weekendPolaroidPublicId}
+                      alt="Emily and Arden"
+                    />
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
           <section ref={gallerySectionRef} className="home__gallery" aria-label="Photo gallery">
             <div ref={galleryPinRef} className="home__gallery-pin">
               <div className="home__gallery-viewport">

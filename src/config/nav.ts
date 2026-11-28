@@ -7,6 +7,9 @@ export type NavItem = {
 /** Id of the homepage's intro/welcome blurb section — shared with the hero scroll cue. */
 export const HOME_WELCOME_SECTION_ID = 'home-welcome';
 
+/** Preview of the redesigned Home (envelope welcome letter), to compare against Home. */
+export const HOME_V2_PATH = '/home-v2';
+
 /** Guest management for Emily and Arden; shown in the menu only to admins. */
 export const ADMIN_PATH = '/admin';
 
@@ -16,6 +19,7 @@ export const REGISTRY_URL = 'https://registry.theknot.com/arden-chew-january-202
 
 export const NAV_ITEMS: NavItem[] = [
   { label: 'Home', path: '/home' },
+  { label: 'Home V2', path: HOME_V2_PATH },
   { label: 'Welcome', path: '/home', scrollTargetId: HOME_WELCOME_SECTION_ID },
   { label: 'Schedule', path: '/schedule' },
   { label: 'Gift', path: GIFTS_PATH },
