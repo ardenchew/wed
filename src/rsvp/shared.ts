@@ -2,7 +2,7 @@
  * RSVP types and rules shared by the site and the API Worker (`worker/index.ts`).
  * Keep this file free of browser- and Worker-only APIs: both bundles import it.
  */
-import { EVENTS } from '../config/events';
+import type { ApiEvent } from '../events/shared';
 
 /** One party member as the API returns them: who they are, what they're invited to, what they said. */
 export interface PartyMemberRsvp {
@@ -27,6 +27,8 @@ export interface PartyRsvpResponse {
   self: string;
   /** The signed-in guest first, then the rest of their party. */
   party: PartyMemberRsvp[];
+  /** Every event anyone in the party is invited to, in schedule order. */
+  events: ApiEvent[];
 }
 
 export interface GuestRsvpUpdate {
@@ -59,13 +61,6 @@ export function rsvpStatus(member: Pick<PartyMemberRsvp, 'events' | 'responses'>
   if (yes > 0) return 'partial';
   if (answers.length > 0 && no === answers.length) return 'no';
   return 'pending';
-}
-
-/** Event slugs sorted by start time — the order the schedule shows them in. */
-export function sortEventSlugs(slugs: string[]): string[] {
-  return slugs
-    .filter((slug) => EVENTS[slug])
-    .sort((a, b) => EVENTS[a].start_time.getTime() - EVENTS[b].start_time.getTime());
 }
 
 /**

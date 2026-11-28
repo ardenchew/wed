@@ -4,6 +4,7 @@ import {
   type AdminGuest,
   type GuestInput,
 } from '../src/guests/shared';
+import { eventSlugs } from './events';
 import { loadGuest, loadGuests, toProfile, type GuestRecord } from './guests';
 import { HttpError, placeholders } from './http';
 import { loadRsvps } from './rsvp';
@@ -28,8 +29,8 @@ export async function listAdminGuests(db: D1Database, slugs?: string[]): Promise
   });
 }
 
-function cleanInput(body: GuestInput): GuestInput {
-  const result = validateGuestInput(body);
+async function cleanInput(db: D1Database, body: GuestInput): Promise<GuestInput> {
+  const result = validateGuestInput(body, await eventSlugs(db));
   if ('error' in result) throw new HttpError(400, result.error);
   return result.value;
 }
@@ -116,7 +117,7 @@ async function uniqueSlug(db: D1Database, first: string, last: string): Promise<
 }
 
 export async function createGuest(db: D1Database, body: GuestInput): Promise<AdminGuest> {
-  const input = cleanInput(body);
+  const input = await cleanInput(db, body);
   const slug = await uniqueSlug(db, input.first, input.last);
   const { partyId, statements: partyStatements } = await resolveParty(db, slug, null, input.partyMembers);
   const now = new Date().toISOString();
@@ -154,7 +155,7 @@ export async function createGuest(db: D1Database, body: GuestInput): Promise<Adm
 export async function updateGuest(db: D1Database, slug: string, body: GuestInput): Promise<AdminGuest> {
   const existing = await loadGuest(db, slug);
   if (!existing) throw new HttpError(404, 'That guest no longer exists.');
-  const input = cleanInput(body);
+  const input = await cleanInput(db, body);
   const { partyId, statements: partyStatements } = await resolveParty(
     db,
     slug,

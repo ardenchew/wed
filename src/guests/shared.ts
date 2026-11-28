@@ -2,7 +2,6 @@
  * Guest types and rules shared by the site and the API Worker. Keep this file free of browser-
  * and Worker-only APIs: both bundles import it.
  */
-import { EVENTS } from '../config/events';
 import type { GuestPolaroid } from '../types';
 import type { PartyMemberRsvp } from '../rsvp/shared';
 
@@ -96,9 +95,13 @@ export function slugForName(first: string, last: string): string {
 
 /**
  * Checks and tidies admin form input. Returns the cleaned input, or an error message naming the
- * first problem. The API runs this too, so the page and server always agree.
+ * first problem. The API runs this too, so the page and server always agree. `eventSlugs` is
+ * every event that exists (the API reads it from the database, the page from the admin list).
  */
-export function validateGuestInput(input: GuestInput): { value: GuestInput } | { error: string } {
+export function validateGuestInput(
+  input: GuestInput,
+  eventSlugs: ReadonlySet<string>,
+): { value: GuestInput } | { error: string } {
   const text = (value: unknown) => (typeof value === 'string' ? value.trim() : '');
   const first = text(input?.first);
   const last = text(input?.last);
@@ -121,7 +124,9 @@ export function validateGuestInput(input: GuestInput): { value: GuestInput } | {
 
   if (!Array.isArray(input.events)) return { error: 'Invalid events.' };
   const events = [...new Set(input.events)];
-  if (events.some((slug) => typeof slug !== 'string' || !EVENTS[slug])) return { error: 'Unknown event.' };
+  if (events.some((slug) => typeof slug !== 'string' || !eventSlugs.has(slug))) {
+    return { error: 'One of the chosen events no longer exists. Reload and try again.' };
+  }
 
   if (!Array.isArray(input.polaroids)) return { error: 'Invalid polaroids.' };
   if (input.polaroids.length > L.polaroids) return { error: `Up to ${L.polaroids} polaroids.` };

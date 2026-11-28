@@ -89,6 +89,8 @@ export function useAdminGuests() {
     loading: requestKey !== null && result?.key !== requestKey,
     error: result?.key === requestKey ? result.error : null,
     reload,
+    /** Refetches without a loading state (after an event's guest list changes). */
+    refresh: afterWrite,
     create,
     update,
     remove,
