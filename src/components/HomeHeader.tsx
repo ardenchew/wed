@@ -97,7 +97,7 @@ export function HomeHeader({ activePath, activeSectionId }: HomeHeaderProps) {
               <>
                 <button
                   type="button"
-                  className="home-menu__action home-menu__action--rsvp"
+                  className="home-menu__action"
                   role="menuitem"
                   onClick={() => {
                     // Already on Schedule: keep the scroll position; the modal opens over it.
