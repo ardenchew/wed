@@ -71,15 +71,32 @@ export default function Admin() {
         )}
 
         <div className="admin__toolbar">
-          <input
-            type="search"
-            className="admin__search"
-            placeholder="Search guests"
-            aria-label="Search guests by name"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            disabled={!guests}
-          />
+          <div className="admin__search-wrap">
+            <svg
+              className="admin__search-icon"
+              viewBox="0 0 16 16"
+              width="14"
+              height="14"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <circle cx="7" cy="7" r="4.75" />
+              <path d="M10.5 10.5 14 14" />
+            </svg>
+            <input
+              type="search"
+              className="admin__search"
+              placeholder="Search"
+              aria-label="Search guests by name"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              disabled={!guests}
+            />
+          </div>
           <button
             type="button"
             className="rsvp-button rsvp-button--primary"
