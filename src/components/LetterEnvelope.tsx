@@ -4,7 +4,10 @@ import { resolveAsset } from '../utils/asset';
 import { PhotoStack, type StackPhoto } from './PhotoStack';
 import { RsvpStamp } from './RsvpStamp';
 
-const vineMask = { '--vine-mask': `url(${resolveAsset('/vine.svg')})` } as CSSProperties;
+/** A line sketch of the Golden Gate Bridge heading the letter. */
+const ornamentMask = {
+  '--ornament-mask': `url(${resolveAsset('/golden-gate.svg')})`,
+} as CSSProperties;
 
 export interface LetterEnvelopeHandle {
   /** Puts the letter and photos back in the envelope and reseals it (when it's open). */
@@ -96,7 +99,7 @@ export function LetterEnvelope({
     <div ref={contentRef} className="letter-envelope" data-phase={phase}>
       <article ref={letterRef} className="letter" aria-label="Welcome letter">
         <div className="letter__scroll">
-          <div className="letter__ornament" style={vineMask} aria-hidden="true" />
+          <div className="letter__ornament" style={ornamentMask} aria-hidden="true" />
           <p className="letter__greeting">{greeting}</p>
           <p className="letter__body">{body}</p>
           <p className="letter__signature">{signature}</p>

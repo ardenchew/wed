@@ -2361,12 +2361,13 @@ body:has(.home-page--schedule) {
   opacity: 1;
 }
 
+/* public/golden-gate.svg, drawn in the sage ink. */
 .letter__ornament {
-  width: clamp(5.5rem, 24vw, 7rem);
-  aspect-ratio: 229 / 80;
+  width: min(70%, 15rem);
+  aspect-ratio: 600 / 240;
   margin: 0 auto clamp(0.75rem, 3vw, 1.1rem);
-  background-color: #6f7d62;
-  mask: var(--vine-mask) center / contain no-repeat;
+  background-color: #56644a;
+  mask: var(--ornament-mask) center / contain no-repeat;
 }
 
 .letter__greeting {
