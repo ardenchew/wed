@@ -1,10 +1,6 @@
-import type { CSSProperties } from 'react';
 import { useOpenRsvp } from '../hooks/useOpenRsvp';
 import { useRsvp } from '../hooks/useRsvp';
 import { rsvpStatus } from '../rsvp/shared';
-import { resolveAsset } from '../utils/asset';
-
-const vineMask = { '--vine-mask': `url(${resolveAsset('/vine.svg')})` } as CSSProperties;
 
 interface RsvpStampProps {
   /** False while it's still tucked in the envelope: shown, but not clickable or focusable. */
@@ -32,9 +28,7 @@ export function RsvpStamp({ interactive }: RsvpStampProps) {
     >
       <span className="rsvp-stamp__paper" aria-hidden="true" />
       <span className="rsvp-stamp__face">
-        <span className="rsvp-stamp__vine" style={vineMask} aria-hidden="true" />
         <span className="rsvp-stamp__label">RSVP</span>
-        <span className="rsvp-stamp__note">kindly reply</span>
       </span>
     </button>
   );

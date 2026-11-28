@@ -1960,6 +1960,13 @@ body:has(.home-page--schedule) {
   overflow-x: clip;
 }
 
+/* On phones the page ends below the polaroids; leave room for the RSVP stamp hanging off them. */
+@media (max-width: 899px) {
+  .letter-envelope {
+    padding-bottom: calc(var(--band-y) + 4.5rem);
+  }
+}
+
 /* Nothing to scroll to until the envelope is open. */
 .letter-envelope:not([data-phase='open']) {
   height: 100vh;
@@ -2378,7 +2385,8 @@ body:has(.home-page--schedule) {
 .rsvp-stamp {
   position: absolute;
   z-index: 4;
-  right: -14px;
+  /* On phones the stack is close to the border, so the stamp stays on the cards' corner. */
+  right: 2px;
   bottom: -30px;
   width: clamp(80px, 26%, 100px);
   aspect-ratio: 92 / 112;
@@ -2434,26 +2442,11 @@ body:has(.home-page--schedule) {
   text-align: center;
 }
 
-.rsvp-stamp__vine {
-  width: 72%;
-  aspect-ratio: 229 / 80;
-  background-color: #6f7d62;
-  mask: var(--vine-mask) center / contain no-repeat;
-}
-
 .rsvp-stamp__label {
   font-family: 'Bacasime Antique', Georgia, 'Times New Roman', serif;
-  font-size: clamp(1.1rem, 4.5vw, 1.35rem);
+  font-size: clamp(1.2rem, 5vw, 1.5rem);
   letter-spacing: 0.08em;
   line-height: 1;
-}
-
-.rsvp-stamp__note {
-  font-family: 'Reenie Beanie', cursive;
-  font-size: clamp(0.95rem, 3.6vw, 1.15rem);
-  white-space: nowrap;
-  line-height: 1;
-  color: #56644a;
 }
 
 @media (prefers-reduced-motion: reduce) {
