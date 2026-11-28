@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ADMIN_PATH, NAV_ITEMS } from '../config/nav';
 import { SCHEDULE_PATH, useOpenRsvp } from '../hooks/useOpenRsvp';
+import { useRsvp } from '../hooks/useRsvp';
 import { useUser } from '../hooks/useUser';
+import { rsvpStatus } from '../rsvp/shared';
 import { resolveAsset } from '../utils/asset';
 import { scrollToId } from '../utils/scrollToId';
 
@@ -23,6 +25,9 @@ export function HomeHeader({ activePath, activeSectionId }: HomeHeaderProps) {
   const navigate = useNavigate();
   const { user, signOut } = useUser();
   const openRsvp = useOpenRsvp();
+  const { myRsvp } = useRsvp();
+  /** Offer RSVP in the menu only until the guest has answered (still shown while it loads). */
+  const showRsvp = !myRsvp || rsvpStatus(myRsvp) === 'pending';
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const skipCloseScrollRef = useRef(false);
@@ -88,6 +93,40 @@ export function HomeHeader({ activePath, activeSectionId }: HomeHeaderProps) {
 
         {isMenuOpen && (
           <div id="home-menu-panel" className="home-menu__panel" role="menu" aria-label="User menu">
+            {showRsvp && (
+              <>
+                <button
+                  type="button"
+                  className="home-menu__action home-menu__action--icon"
+                  role="menuitem"
+                  onClick={() => {
+                    // Already on Schedule: keep the scroll position; the modal opens over it.
+                    if (activePath === SCHEDULE_PATH) skipCloseScrollRef.current = true;
+                    setIsMenuOpen(false);
+                    openRsvp();
+                  }}
+                >
+                  <svg
+                    className="home-menu__icon"
+                    viewBox="0 0 16 16"
+                    width="14"
+                    height="14"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <rect x="2" y="3.5" width="12" height="9" rx="1" />
+                    <path d="m2.5 4.5 5.5 4 5.5-4" />
+                  </svg>
+                  RSVP
+                </button>
+                <div className="home-menu__divider" aria-hidden="true" />
+              </>
+            )}
             <div className="home-menu__section">
               {NAV_ITEMS.map((item) => {
                 const isActive =
@@ -115,19 +154,6 @@ export function HomeHeader({ activePath, activeSectionId }: HomeHeaderProps) {
                   </button>
                 );
               })}
-              <button
-                type="button"
-                className="home-menu__action"
-                role="menuitem"
-                onClick={() => {
-                  // Already on Schedule: keep the scroll position; the modal opens over it.
-                  if (activePath === SCHEDULE_PATH) skipCloseScrollRef.current = true;
-                  setIsMenuOpen(false);
-                  openRsvp();
-                }}
-              >
-                RSVP
-              </button>
               {user?.isAdmin && (
                 <button
                   type="button"
