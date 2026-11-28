@@ -28,8 +28,6 @@
   --green: #467355;
   --parchment-primary: #f7f4ec;
   --parchment-secondary: #f3eee0;
-  --time-pill-bg: rgba(118, 131, 107, 0.13);
-  --time-pill-text: #76836b;
 }
 
 body {
@@ -763,6 +761,9 @@ body:has(.home-page--schedule) {
   color: #000;
   font-family: 'Bacasime Antique', Georgia, 'Times New Roman', serif;
   padding: 0 32px 96px;
+  /* The one accent color, used sparingly: times, the card frame, the map icon, hovers. */
+  --accent: #a8654a; /* dusty terracotta */
+  --frame-color: color-mix(in srgb, var(--accent) 70%, transparent);
 }
 
 .schedule__title {
@@ -834,11 +835,9 @@ body:has(.home-page--schedule) {
   display: block;
   width: 100%;
   margin: 0;
-  padding: 14px 8px;
+  padding: 14px 8px 28px;
   text-align: center;
-  font-size: clamp(1.35rem, 2.2vw, 1.75rem);
   font-weight: 400;
-  line-height: 1.5;
 }
 
 .schedule__day-header-button {
@@ -853,11 +852,31 @@ body:has(.home-page--schedule) {
   display: block;
   width: 100%;
   text-align: center;
-  transition: text-decoration-color 0.2s ease;
+}
+
+.schedule__day-weekday {
+  display: block;
+  font-size: clamp(2rem, 3.4vw, 2.6rem);
+  line-height: 1.15;
+  transition: color 0.2s ease;
+}
+
+.schedule__day-header-button:hover .schedule__day-weekday {
+  color: var(--accent);
+}
+
+.schedule__day-date {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.62);
 }
 
 .schedule__day-header-button:focus-visible {
-  outline: 2px solid var(--green);
+  outline: 2px solid var(--accent);
   outline-offset: 4px;
   border-radius: 2px;
 }
@@ -865,8 +884,12 @@ body:has(.home-page--schedule) {
 .schedule__day-card {
   position: relative;
   background: var(--parchment-secondary);
-  border: 2px solid #000;
-  box-shadow: 0 6px 32px rgba(0, 0, 0, 0.28);
+  /* Double hairline: the border is the outer line, the inset shadows draw the inner one 5px in. */
+  border: 1px solid var(--frame-color);
+  box-shadow:
+    inset 0 0 0 4px var(--parchment-secondary),
+    inset 0 0 0 5px var(--frame-color),
+    0 6px 32px rgba(0, 0, 0, 0.28);
   padding: 56px 64px;
   display: flex;
   flex-direction: column;
@@ -883,30 +906,32 @@ body:has(.home-page--schedule) {
   pointer-events: none;
 }
 
+/* Hides both hairlines behind the vine: 2px outside the edge, 8px inside it. */
 .schedule__day-card-vine::before {
   content: '';
   position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 6px;
-  transform: translateY(-50%);
+  left: 4px;
+  right: 4px;
+  height: 10px;
   z-index: -1;
+  mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
 }
 
 .schedule__day-card-vine--top::before {
+  top: calc(50% - 2px);
   background: linear-gradient(
     to bottom,
-    var(--parchment-primary) 50%,
-    var(--parchment-secondary) 50%
+    var(--parchment-primary) 2px,
+    var(--parchment-secondary) 2px
   );
 }
 
 .schedule__day-card-vine--bottom::before {
+  bottom: calc(50% - 2px);
   background: linear-gradient(
-    to bottom,
-    var(--parchment-secondary) 50%,
-    var(--parchment-primary) 50%
+    to top,
+    var(--parchment-primary) 2px,
+    var(--parchment-secondary) 2px
   );
 }
 
@@ -978,9 +1003,20 @@ body:has(.home-page--schedule) {
   min-width: 0;
 }
 
+.schedule__event-time {
+  font-size: 0.95rem;
+  line-height: 1.4;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--accent);
+}
+
 .schedule__event-name {
-  font-size: clamp(1.4rem, 2.2vw, 1.75rem);
-  line-height: 1.5;
+  font-size: clamp(1.7rem, 2.8vw, 2.2rem);
+  font-style: italic;
+  line-height: 1.2;
+  margin-bottom: 4px;
 }
 
 .schedule__event-meta {
@@ -996,31 +1032,14 @@ body:has(.home-page--schedule) {
   align-items: center;
   justify-content: center;
   margin-left: -4px;
-  color: inherit;
-  opacity: 0.6;
+  color: var(--accent);
+  opacity: 0.8;
   transition: opacity 0.15s ease;
 }
 
 .schedule__event-map-link:hover,
 .schedule__event-map-link:focus-visible {
   opacity: 1;
-}
-
-.schedule__time-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--time-pill-bg);
-  color: var(--time-pill-text);
-  font-family: 'Inter', sans-serif;
-  font-weight: 700;
-  font-style: italic;
-  font-size: 13px;
-  letter-spacing: 0.01em;
-  border-radius: 20px;
-  padding: 4px 16px;
-  min-width: 72px;
-  white-space: nowrap;
 }
 
 .schedule__event-location {
@@ -1030,6 +1049,7 @@ body:has(.home-page--schedule) {
 .schedule__event-attire {
   font-size: clamp(0.95rem, 1.3vw, 1.05rem);
   line-height: 1.5;
+  color: rgba(0, 0, 0, 0.72);
   text-decoration: underline dotted;
   text-underline-offset: 4px;
 }
@@ -1072,6 +1092,23 @@ body:has(.home-page--schedule) {
 .schedule__event-connector::after {
   bottom: 0;
   transform: translate(-50%, 50%);
+}
+
+/* Scroll fade-ins (see useReveal): only items that start below the fold are ever hidden. */
+.schedule [data-reveal] {
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+
+.schedule [data-reveal-state='hidden'] {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .schedule [data-reveal-state='hidden'] {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* Schedule Timeline Indicator */

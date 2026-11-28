@@ -4,6 +4,7 @@ import { HomeHeader } from '../components/HomeHeader';
 import { RsvpStatusButton } from '../components/RsvpStatusButton';
 import { EVENT_TIME_ZONE, EVENTS } from '../config/events';
 import { useGuest } from '../hooks/useGuest';
+import { useReveal } from '../hooks/useReveal';
 import type { Event } from '../types';
 import { resolveAsset } from '../utils/asset';
 import { cloudinaryUrl, isCloudinaryId } from '../utils/cloudinary';
@@ -44,22 +45,24 @@ const dateKeyFormatter = new Intl.DateTimeFormat('en-CA', {
   timeZone: EVENT_TIME_ZONE,
 });
 
+/** "5 PM", "11:30 AM": the CSS sets it in letterspaced small caps. */
 function formatTime(date: Date): string {
   const parts = timeFormatter.formatToParts(date);
   const hour = parts.find((p) => p.type === 'hour')?.value ?? '';
   const minute = parts.find((p) => p.type === 'minute')?.value ?? '';
-  const period = (parts.find((p) => p.type === 'dayPeriod')?.value ?? '').toLowerCase();
-  if (minute === '00') return `${hour}${period}`;
-  return `${hour}:${minute}${period}`;
+  const period = (parts.find((p) => p.type === 'dayPeriod')?.value ?? '').toUpperCase();
+  if (minute === '00') return `${hour} ${period}`;
+  return `${hour}:${minute} ${period}`;
 }
 
-function formatDateHeading(date: Date): string {
+/** Splits the day heading into the weekday title and the date line beneath it. */
+function formatDateHeading(date: Date): { weekday: string; date: string } {
   const parts = dateHeadingFormatter.formatToParts(date);
   const month = parts.find((p) => p.type === 'month')?.value ?? '';
   const day = parts.find((p) => p.type === 'day')?.value ?? '';
   const year = parts.find((p) => p.type === 'year')?.value ?? '';
   const weekday = parts.find((p) => p.type === 'weekday')?.value ?? '';
-  return `${month} ${day}, ${year} · ${weekday}`;
+  return { weekday, date: `${month} ${day}, ${year}` };
 }
 
 function formatDateShort(date: Date): string {
@@ -70,7 +73,13 @@ function dateKey(date: Date): string {
   return dateKeyFormatter.format(date);
 }
 
-type DateGroup = { label: string; shortLabel: string; events: Event[] };
+type DateGroup = {
+  key: string;
+  weekday: string;
+  dateLabel: string;
+  shortLabel: string;
+  events: Event[];
+};
 
 function groupEventsByDate(events: Event[]): DateGroup[] {
   const sorted = [...events].sort(
@@ -83,8 +92,11 @@ function groupEventsByDate(events: Event[]): DateGroup[] {
     const key = dateKey(event.start_time);
     if (key !== currentKey) {
       currentKey = key;
+      const heading = formatDateHeading(event.start_time);
       groups.push({
-        label: formatDateHeading(event.start_time),
+        key,
+        weekday: heading.weekday,
+        dateLabel: heading.date,
         shortLabel: formatDateShort(event.start_time),
         events: [],
       });
@@ -182,7 +194,7 @@ function ScheduleTimeline({
         />
         {groups.map((group, i) => (
           <button
-            key={group.label}
+            key={group.key}
             type="button"
             className={`schedule-timeline__label${
               i === activeIndex ? ' schedule-timeline__label--active' : ''
@@ -217,6 +229,8 @@ export default function Schedule() {
   const heroUrl = cloudinaryUrl(HERO_PUBLIC_ID, { w: 1200, c: 'limit' });
 
   const dayHeaderRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const contentRef = useRef<HTMLDivElement>(null);
+  useReveal(contentRef, dateGroups);
   const scrollIdleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const [activeGroupIndex, setActiveGroupIndex] = useState(0);
@@ -334,22 +348,23 @@ export default function Schedule() {
         <img className="schedule__hero-image" src={heroUrl} alt="" />
       </div>
 
-      <div className="schedule__content">
+      <div className="schedule__content" ref={contentRef}>
         {dateGroups.map((group, i) => (
           <div
-            key={group.label}
+            key={group.key}
             className="schedule__day"
             ref={(el) => {
               dayHeaderRefs.current[i] = el;
             }}
           >
-            <h2 className="schedule__day-header">
+            <h2 className="schedule__day-header" data-reveal="">
               <button
                 type="button"
                 className="schedule__day-header-button"
                 onClick={() => scrollToDate(i)}
               >
-                {group.label}
+                <span className="schedule__day-weekday">{group.weekday}</span>
+                <span className="schedule__day-date">{group.dateLabel}</span>
               </button>
             </h2>
 
@@ -378,6 +393,7 @@ export default function Schedule() {
                   <div
                     key={event.slug}
                     className={`schedule__event ${sideClass}`}
+                    data-reveal=""
                   >
                     <div className="schedule__event-row">
                       {event.image && (
@@ -394,11 +410,14 @@ export default function Schedule() {
                         </div>
                       )}
                       <div className="schedule__event-text">
+                        <time
+                          className="schedule__event-time"
+                          dateTime={event.start_time.toISOString()}
+                        >
+                          {formatTime(event.start_time)}
+                        </time>
                         <p className="schedule__event-name">{event.name}</p>
                         <p className="schedule__event-meta">
-                          <span className="schedule__time-pill">
-                            {formatTime(event.start_time)}
-                          </span>
                           <span className="schedule__event-location">
                             {event.location}
                           </span>
