@@ -1045,6 +1045,24 @@ body:has(.home-page--schedule) {
   color: var(--accent-text);
   /* Bacasime Antique ships one weight; a hairline stroke thickens it without faux bold. */
   -webkit-text-stroke: 0.35px currentColor;
+  /* Set off by a short hairline either side, like a letterpress program: "—— 5 PM ——". */
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.schedule__event-time::before,
+.schedule__event-time::after {
+  content: '';
+  flex: none;
+  width: 32px;
+  height: 1px;
+  background: var(--frame-color);
+}
+
+/* letter-spacing also trails the last letter; pull the right rule in so both gaps match. */
+.schedule__event-time::after {
+  margin-left: -0.18em;
 }
 
 .schedule__event-name {
