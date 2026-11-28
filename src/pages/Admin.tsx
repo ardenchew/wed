@@ -57,7 +57,7 @@ export default function Admin() {
     editing?.mode === 'edit' ? (guests ?? []).find((guest) => guest.slug === editing.slug) ?? null : null;
 
   return (
-    <main className="home-page home-page--schedule">
+    <main className="home-page home-page--schedule paper-bg">
       <HomeHeader activePath={ADMIN_PATH} />
       <section className="admin">
         <h1 className="schedule__title">Guests</h1>

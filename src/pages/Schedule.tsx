@@ -382,7 +382,7 @@ export default function Schedule() {
   }, []);
 
   return (
-    <main className="home-page home-page--schedule">
+    <main className="home-page home-page--schedule paper-bg">
       <HomeHeader activePath="/schedule" />
       <section className="schedule">
         <ScheduleTimeline

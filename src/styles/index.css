@@ -586,6 +586,35 @@ body:has(.home-page--schedule) {
   background: var(--parchment-primary);
 }
 
+/*
+ * Letter-paper ground (Schedule, Gifts, Admin). The grain is a seamless feTurbulence tile
+ * (stitchTiles) on the body, so it scrolls with the page and covers any length without seams.
+ */
+body:has(.paper-bg) {
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .35 0 0 0 0 .22 1.6 0 0 0 -.7'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='.6'/%3E%3C/svg%3E");
+  background-color: var(--parchment-primary);
+  background-image: var(--paper-grain);
+}
+
+/* Soft warm tone at the screen edges, pinned to the viewport behind the content. */
+body:has(.paper-bg)::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 120% 100% at 50% 45%,
+    transparent 55%,
+    rgba(150, 125, 80, 0.07) 100%
+  );
+}
+
+.paper-bg,
+.paper-bg .schedule {
+  background: transparent;
+}
+
 /* Home Header */
 .home-header {
   position: sticky;
@@ -3012,15 +3041,10 @@ body:has(.gifts),
   font-family: 'Bacasime Antique', Georgia, 'Times New Roman', serif;
 }
 
-.gifts__vine {
+.gifts__flowers {
   display: block;
-  width: clamp(110px, 28vw, 160px);
+  width: clamp(80px, 24vw, 110px);
   height: auto;
-}
-
-.gifts__lead {
-  font-size: clamp(1.35rem, 2.4vw, 1.75rem);
-  line-height: 1.35;
 }
 
 .gifts__body {
