@@ -2427,3 +2427,368 @@ body:has(.home-page--schedule) {
     transform: none;
   }
 }
+
+/* ── Admin: guest management (Emily & Arden only) ───────────────────────── */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.admin {
+  max-width: 1040px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 0 32px 96px;
+  color: #111;
+  font-family: 'Bacasime Antique', Georgia, 'Times New Roman', serif;
+}
+
+.admin__summary {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 1.05rem;
+  color: rgba(17, 17, 17, 0.7);
+}
+
+.admin__toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin: 24px 0 12px;
+}
+
+.admin__message {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  padding: 48px 0;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1rem;
+}
+
+.admin-table th {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(17, 17, 17, 0.25);
+  font-weight: 400;
+  font-size: 0.9rem;
+  text-align: left;
+  color: rgba(17, 17, 17, 0.6);
+}
+
+.admin-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid rgba(17, 17, 17, 0.1);
+  vertical-align: top;
+}
+
+.admin-table__name {
+  font-size: 1.15rem;
+}
+
+.admin-table__tag {
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(17, 17, 17, 0.08);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 11px;
+  vertical-align: middle;
+}
+
+.admin-table__meta {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.85rem;
+  color: rgba(17, 17, 17, 0.55);
+}
+
+.admin-table__actions {
+  text-align: right;
+}
+
+.admin-link {
+  padding: 0.25rem 0;
+  border: none;
+  border-bottom: 1px solid rgba(17, 17, 17, 0.35);
+  background: transparent;
+  color: #111;
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.admin-link:hover {
+  border-bottom-color: #111;
+}
+
+.admin-link:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+/* Phones: each guest becomes a card with labelled rows. */
+@media (max-width: 720px) {
+  .admin {
+    padding: 0 16px 64px;
+  }
+
+  .admin-table thead {
+    display: none;
+  }
+
+  .admin-table,
+  .admin-table tbody,
+  .admin-table tr,
+  .admin-table td {
+    display: block;
+  }
+
+  .admin-table tr {
+    position: relative;
+    margin-bottom: 12px;
+    padding: 12px 14px;
+    border: 1px solid rgba(17, 17, 17, 0.12);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.55);
+  }
+
+  .admin-table td {
+    display: grid;
+    grid-template-columns: 84px 1fr;
+    gap: 8px;
+    padding: 4px 0;
+    border: none;
+  }
+
+  .admin-table td > .rsvp-chip {
+    justify-self: start;
+  }
+
+  .admin-table td::before {
+    content: attr(data-label);
+    font-size: 0.85rem;
+    color: rgba(17, 17, 17, 0.55);
+  }
+
+  .admin-table td[data-label='Guest'] {
+    display: block;
+    padding-right: 48px;
+  }
+
+  .admin-table td[data-label='Guest']::before {
+    content: none;
+  }
+
+  .admin-table__actions {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+  }
+}
+
+/* Add / edit dialog (shares the RSVP modal's shell) */
+.admin-dialog {
+  width: min(640px, calc(100vw - 32px));
+}
+
+.admin-form__section {
+  margin-bottom: 22px;
+}
+
+.admin-form__heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+  font-weight: 400;
+}
+
+.admin-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.admin-form__note {
+  margin: 4px 0 10px;
+  font-size: 0.9rem;
+  color: rgba(17, 17, 17, 0.6);
+}
+
+.admin-form__note code {
+  font-size: 0.85em;
+}
+
+.admin-field {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+}
+
+.admin-field input,
+.admin-field select,
+.admin-field textarea,
+.admin-polaroid input {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid rgba(17, 17, 17, 0.3);
+  border-radius: 8px;
+  background: #fff;
+  /* 16px stops iOS Safari zooming in on focus. */
+  font: 16px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #111;
+}
+
+.admin-field textarea {
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.admin-field input:focus,
+.admin-field select:focus,
+.admin-field textarea:focus,
+.admin-polaroid input:focus {
+  outline: 2px solid var(--green);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.admin-events {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.admin-check input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--green);
+}
+
+.admin-check__meta {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.8rem;
+  color: rgba(17, 17, 17, 0.55);
+}
+
+.admin-polaroid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr auto;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.admin-rsvp {
+  list-style: none;
+  margin-bottom: 10px;
+}
+
+.admin-rsvp li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px dashed rgba(17, 17, 17, 0.14);
+}
+
+.admin-rsvp__answer {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.85rem;
+}
+
+.admin-rsvp__answer--true {
+  color: #2f5a3c;
+}
+
+.admin-rsvp__answer--false {
+  color: #5c5650;
+}
+
+.admin-rsvp__answer--undefined {
+  color: #7a5c35;
+}
+
+.admin-rsvp__details {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 14px;
+  font-size: 0.95rem;
+}
+
+.admin-rsvp__details dt {
+  color: rgba(17, 17, 17, 0.55);
+}
+
+.admin-dialog__delete {
+  margin-right: auto;
+  border-color: var(--error-color);
+  color: var(--error-color);
+}
+
+@media (max-width: 640px) {
+  .admin-dialog {
+    width: 100vw;
+  }
+
+  .admin-form__row,
+  .admin-polaroid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-dialog__footer {
+    flex-wrap: wrap;
+  }
+
+  .admin-dialog__delete {
+    flex-basis: 100%;
+    margin-right: 0;
+    order: 1;
+  }
+}
+
+.admin-field ::placeholder,
+.admin-polaroid ::placeholder {
+  color: rgba(17, 17, 17, 0.35);
+}
+
+.admin-party {
+  margin: 4px 0 12px;
+  padding: 0;
+  border: none;
+  min-width: 0;
+}
+
+.admin-party legend {
+  margin-bottom: 4px;
+  font-size: 0.95rem;
+}
+
+.admin-party__list {
+  display: grid;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 10px 12px;
+  border: 1px solid rgba(17, 17, 17, 0.15);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.55);
+}

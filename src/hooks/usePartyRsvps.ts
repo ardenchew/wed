@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { fetchPartyRsvps, savePartyRsvps, type RsvpApiError } from '../rsvp/api';
+import type { ApiError } from '../api/client';
+import { fetchPartyRsvps, savePartyRsvps } from '../rsvp/api';
 import type { PartyRsvpResponse, RsvpUpdateRequest } from '../rsvp/shared';
 import { useUser } from './useUser';
 
@@ -7,7 +8,7 @@ export interface PartyRsvpsState {
   data: PartyRsvpResponse | null;
   loading: boolean;
   /** Error from the last load (not from saves — `save` rejects with those instead). */
-  loadError: RsvpApiError | null;
+  loadError: ApiError | null;
   reload: () => void;
   /** Saves and, on success, replaces `data` with the server's updated party. */
   save: (update: RsvpUpdateRequest) => Promise<PartyRsvpResponse>;
@@ -17,7 +18,7 @@ interface Result {
   /** Which request this answers; `loading` is true until it matches the current one. */
   key: string;
   data: PartyRsvpResponse | null;
-  error: RsvpApiError | null;
+  error: ApiError | null;
 }
 
 /** The signed-in guest's party and everyone's RSVP answers, from the RSVP API. */
@@ -35,7 +36,7 @@ export function usePartyRsvps(): PartyRsvpsState {
       (data) => {
         if (!cancelled) setResult({ key: requestKey, data, error: null });
       },
-      (error: RsvpApiError) => {
+      (error: ApiError) => {
         // Keep showing the last good data if a reload fails.
         if (!cancelled) setResult((prev) => ({ key: requestKey, data: prev?.data ?? null, error }));
       },

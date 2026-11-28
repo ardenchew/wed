@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState, type FormEvent, type MouseEvent } from 'react';
 import { EVENT_TIME_ZONE, EVENTS } from '../config/events';
-import { RsvpApiError } from '../rsvp/api';
+import { ApiError } from '../api/client';
 import { statusLabel } from '../rsvp/labels';
 import {
   DIETARY_MAX_LENGTH,
@@ -29,7 +29,7 @@ interface Draft {
 interface RsvpModalProps {
   data: PartyRsvpResponse | null;
   loading: boolean;
-  loadError: RsvpApiError | null;
+  loadError: ApiError | null;
   onRetry: () => void;
   onSave: (update: RsvpUpdateRequest) => Promise<PartyRsvpResponse>;
   onSignInAgain: () => void;
@@ -241,7 +241,7 @@ function RsvpFlow({ data, formId, saving, setSaving, onSave, onClose }: RsvpFlow
       setDrafts(initialDrafts(result.party));
       setStep('done');
     } catch (caught) {
-      const apiError = caught instanceof RsvpApiError ? caught : null;
+      const apiError = caught instanceof ApiError ? caught : null;
       setError({
         message: apiError?.message ?? 'Something went wrong. Please try again.',
         guest: apiError?.guest,

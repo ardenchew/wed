@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { NAV_ITEMS } from '../config/nav';
+import { ADMIN_PATH, NAV_ITEMS } from '../config/nav';
 import { SCHEDULE_PATH, useOpenRsvp } from '../hooks/useOpenRsvp';
 import { useUser } from '../hooks/useUser';
 import { resolveAsset } from '../utils/asset';
@@ -21,7 +21,7 @@ type HomeHeaderProps = {
  */
 export function HomeHeader({ activePath, activeSectionId }: HomeHeaderProps) {
   const navigate = useNavigate();
-  const { signOut } = useUser();
+  const { user, signOut } = useUser();
   const openRsvp = useOpenRsvp();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -128,6 +128,19 @@ export function HomeHeader({ activePath, activeSectionId }: HomeHeaderProps) {
               >
                 RSVP
               </button>
+              {user?.isAdmin && (
+                <button
+                  type="button"
+                  className={`home-menu__action${activePath === ADMIN_PATH ? ' home-menu__action--active' : ''}`}
+                  role="menuitem"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    navigate(ADMIN_PATH);
+                  }}
+                >
+                  Admin
+                </button>
+              )}
             </div>
             <div className="home-menu__divider" aria-hidden="true" />
             <button type="button" className="home-menu__action" role="menuitem" onClick={signOut}>

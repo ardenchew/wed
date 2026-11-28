@@ -3,7 +3,6 @@
  * Keep this file free of browser- and Worker-only APIs: both bundles import it.
  */
 import { EVENTS } from '../config/events';
-import { GUESTS } from '../config/guests';
 
 /** One party member as the API returns them: who they are, what they're invited to, what they said. */
 export interface PartyMemberRsvp {
@@ -44,12 +43,6 @@ export interface RsvpUpdateRequest {
   guests: GuestRsvpUpdate[];
 }
 
-export interface RsvpErrorBody {
-  error: string;
-  /** Guest the error is about, when it's about one. */
-  guest?: string;
-}
-
 /**
  * - `yes`: attending every invited event
  * - `partial`: attending some events (the rest declined or not answered yet)
@@ -73,21 +66,6 @@ export function sortEventSlugs(slugs: string[]): string[] {
   return slugs
     .filter((slug) => EVENTS[slug])
     .sort((a, b) => EVENTS[a].start_time.getTime() - EVENTS[b].start_time.getTime());
-}
-
-/**
- * The guest plus everyone in their party. `party` lists are kept per guest in
- * `src/config/guests.ts`; membership counts in either direction, so a one-sided listing still
- * groups both guests together.
- */
-export function partyOf(slug: string): string[] {
-  const guest = GUESTS[slug];
-  if (!guest) return [];
-  const members = new Set<string>([slug, ...(guest.party ?? [])]);
-  for (const other of Object.values(GUESTS)) {
-    if (other.party?.includes(slug)) members.add(other.slug);
-  }
-  return [...members].filter((member) => GUESTS[member]);
 }
 
 /**
