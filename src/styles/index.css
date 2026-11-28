@@ -414,22 +414,13 @@ body.splash-active {
   color: #141414;
 }
 
-/* "Which one are you?" — shown when a typed name matches several guests. */
+/* The list of names to pick from, shown when a typed name matches several guests. */
 .landing-picker {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
   text-align: center;
-}
-
-.landing-picker__title {
-  margin: 0;
-  font-family: 'Bacasime Antique', Georgia, 'Times New Roman', serif;
-  font-size: clamp(1.6rem, 3.6vw, 2.4rem);
-  font-weight: 400;
-  line-height: 1.25;
-  color: #141414;
 }
 
 .landing-picker__list {

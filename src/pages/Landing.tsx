@@ -15,7 +15,7 @@ export default function Landing() {
   const [password, setPassword] = useState('');
   const [matchedGuest, setMatchedGuest] = useState<GuestName | null>(null);
   const matchedDisplayName = matchedGuest?.name ?? null;
-  /** Set when the typed name matched several guests: the "Which one are you?" step. */
+  /** Set when the typed name matched several guests: the step that lists them to pick from. */
   const [candidates, setCandidates] = useState<GuestName[] | null>(null);
   /** True while the name form (ENTER / name input) is the step on screen. */
   const onNameStep = !matchedGuest && !candidates;
@@ -288,13 +288,10 @@ export default function Landing() {
               </form>
             ) : !matchedGuest && candidates ? (
               <div className="landing-picker">
-                <h2 id="landing-picker-title" className="landing-picker__title">
-                  Which one are you?
-                </h2>
                 <ul
                   ref={pickerRef}
                   className="landing-picker__list"
-                  aria-labelledby="landing-picker-title"
+                  aria-label="Which one are you?"
                   onKeyDown={handlePickerKeyDown}
                 >
                   {candidates.map((guest) => (
@@ -310,7 +307,7 @@ export default function Landing() {
                   ))}
                 </ul>
                 <Button type="button" variant="text" onClick={handleSearchAgain}>
-                  None of these
+                  Back
                 </Button>
               </div>
             ) : (
