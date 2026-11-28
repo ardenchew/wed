@@ -97,7 +97,7 @@ export function HomeHeader({ activePath, activeSectionId }: HomeHeaderProps) {
               <>
                 <button
                   type="button"
-                  className="home-menu__action"
+                  className="home-menu__action home-menu__action--icon"
                   role="menuitem"
                   onClick={() => {
                     // Already on Schedule: keep the scroll position; the modal opens over it.
@@ -106,6 +106,22 @@ export function HomeHeader({ activePath, activeSectionId }: HomeHeaderProps) {
                     openRsvp();
                   }}
                 >
+                  <svg
+                    className="home-menu__icon"
+                    viewBox="0 0 16 16"
+                    width="14"
+                    height="14"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <rect x="2" y="3.5" width="12" height="9" rx="1" />
+                    <path d="m2.5 4.5 5.5 4 5.5-4" />
+                  </svg>
                   RSVP
                 </button>
                 <div className="home-menu__divider" aria-hidden="true" />
