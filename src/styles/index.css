@@ -586,6 +586,37 @@ body:has(.home-page--schedule) {
   background: var(--parchment-primary);
 }
 
+/*
+ * Letter-paper ground (Schedule, Gifts, Admin). The grain is a seamless feTurbulence tile
+ * (stitchTiles) and the fibers a seamless tile of short curled strokes, both on the body, so they
+ * scroll with the page and cover any length without seams.
+ */
+body:has(.paper-bg) {
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .35 0 0 0 0 .22 1.6 0 0 0 -.7'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='.6'/%3E%3C/svg%3E");
+  --paper-fibers: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='420'%3E%3Cg opacity='.5' fill='none' stroke='%238a7550' stroke-width='.6' stroke-linecap='round'%3E%3Cpath stroke-opacity='0.62' d='M0.0 187.7Q-5.0 191.6 -4.1 197.9M420.0 187.7Q415.0 191.6 415.9 197.9'/%3E%3Cpath stroke-opacity='0.81' d='M217.3 196.4Q210.0 201.4 201.4 199.2'/%3E%3Cpath stroke-opacity='0.41' d='M59.1 159.7Q45.7 154.6 35.1 144.9'/%3E%3Cpath stroke-opacity='0.50' d='M91.4 308.8Q81.9 303.0 72.8 296.6'/%3E%3Cpath stroke-opacity='0.81' d='M129.3 334.4Q136.3 335.8 143.5 335.4'/%3E%3Cpath stroke-opacity='0.75' d='M5.7 161.4Q9.3 149.1 22.0 147.3'/%3E%3Cpath stroke-opacity='0.88' d='M402.8 134.6Q408.1 133.1 411.3 128.6'/%3E%3Cpath stroke-opacity='0.83' d='M398.7 120.5Q397.0 137.4 412.5 144.4'/%3E%3Cpath stroke-opacity='0.37' d='M419.9 336.2Q412.2 338.2 405.7 342.7'/%3E%3Cpath stroke-opacity='0.78' d='M399.8 349.3Q400.4 368.0 382.4 372.7'/%3E%3Cpath stroke-opacity='0.63' d='M399.5 230.9Q400.3 218.7 390.4 211.8'/%3E%3Cpath stroke-opacity='0.50' d='M389.6 419.2Q377.1 425.3 364.7 431.8M389.6 -0.8Q377.1 5.3 364.7 11.8'/%3E%3Cpath stroke-opacity='0.71' d='M20.1 21.8Q21.7 15.7 25.9 10.9'/%3E%3Cpath stroke-opacity='0.72' d='M158.2 198.3Q168.4 200.3 172.6 209.7'/%3E%3Cpath stroke-opacity='0.85' d='M231.3 388.5Q236.9 407.8 257.0 406.8'/%3E%3Cpath stroke-opacity='0.55' d='M237.4 155.2Q245.2 146.0 252.9 136.7'/%3E%3Cpath stroke-opacity='0.45' d='M223.8 107.8Q236.5 112.3 245.7 102.5'/%3E%3Cpath stroke-opacity='0.59' d='M66.9 403.9Q67.9 394.7 61.0 388.6'/%3E%3Cpath stroke-opacity='0.87' d='M369.2 203.0Q361.4 207.4 354.1 202.1'/%3E%3Cpath stroke-opacity='0.63' d='M366.8 110.2Q372.3 101.7 367.6 92.8'/%3E%3Cpath stroke-opacity='0.88' d='M0.4 8.6Q12.0 7.3 22.2 13.2'/%3E%3Cpath stroke-opacity='0.46' d='M133.1 268.4Q143.8 272.0 153.9 267.1'/%3E%3Cpath stroke-opacity='0.75' d='M274.5 207.8Q274.9 215.7 275.1 223.6'/%3E%3Cpath stroke-opacity='0.76' d='M192.8 126.6Q182.6 133.6 171.6 127.7'/%3E%3Cpath stroke-opacity='0.59' d='M342.9 208.5Q337.2 202.8 329.2 203.1'/%3E%3Cpath stroke-opacity='0.95' d='M43.8 240.3Q38.3 244.9 33.0 249.7'/%3E%3C/g%3E%3C/svg%3E");
+  background-color: var(--parchment-primary);
+  background-image: var(--paper-grain), var(--paper-fibers);
+}
+
+/* Soft warm tone at the screen edges, pinned to the viewport behind the content. */
+body:has(.paper-bg)::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 120% 100% at 50% 45%,
+    transparent 55%,
+    rgba(150, 125, 80, 0.07) 100%
+  );
+}
+
+.paper-bg,
+.paper-bg .schedule {
+  background: transparent;
+}
+
 /* Home Header */
 .home-header {
   position: sticky;

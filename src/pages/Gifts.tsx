@@ -4,7 +4,7 @@ import { resolveAsset } from '../utils/asset';
 
 export default function Gifts() {
   return (
-    <main className="home-page home-page--schedule gifts">
+    <main className="home-page home-page--schedule paper-bg gifts">
       <HomeHeader activePath={GIFTS_PATH} />
       <section className="gifts__content" aria-labelledby="gifts-title">
         <h1 id="gifts-title" className="schedule__title">
