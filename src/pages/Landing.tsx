@@ -19,6 +19,7 @@ export default function Landing() {
   const [candidates, setCandidates] = useState<GuestName[] | null>(null);
   /** True while the name form (ENTER / name input) is the step on screen. */
   const onNameStep = !matchedGuest && !candidates;
+  const hasName = name.trim().length > 0;
   const [error, setError] = useState('');
   const [wrongPassword, setWrongPassword] = useState(false);
   const pickerRef = useRef<HTMLUListElement>(null);
@@ -232,15 +233,40 @@ export default function Landing() {
                           ENTER
                         </button>
                       ) : (
-                        <input
-                          type="text"
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          placeholder="Enter guest name"
-                          className="landing-entry-morph__input"
-                          disabled={loading || exitToHome}
-                          autoFocus
-                        />
+                        <>
+                          <input
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="Enter guest name"
+                            aria-label="Your name"
+                            className="landing-entry-morph__input"
+                            disabled={loading || exitToHome}
+                            autoFocus
+                          />
+                          {/* Appears once a name is typed; Enter in the field submits too. */}
+                          <button
+                            type="submit"
+                            className={`landing-entry-morph__submit${
+                              hasName ? ' landing-entry-morph__submit--visible' : ''
+                            }${loading ? ' landing-entry-morph__submit--busy' : ''}`}
+                            aria-label={loading ? 'Searching' : 'Search'}
+                            aria-hidden={!hasName}
+                            tabIndex={hasName ? 0 : -1}
+                            disabled={!hasName || loading || exitToHome}
+                          >
+                            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+                              <path
+                                d="M4 12h15M13 6l6 6-6 6"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </button>
+                        </>
                       )}
                     </div>
                     <div
@@ -259,16 +285,6 @@ export default function Landing() {
                 </div>
 
                 {error && <div className="error-message" role="alert">{error}</div>}
-
-                <Button
-                  type="submit"
-                  variant="text"
-                  disabled={!isAuthVisible || loading || exitToHome || !name.trim()}
-                  className={!isAuthVisible ? 'landing-search-submit--concealed' : undefined}
-                  aria-hidden={!isAuthVisible}
-                >
-                  {loading ? 'Searching...' : 'Search'}
-                </Button>
               </form>
             ) : !matchedGuest && candidates ? (
               <div className="landing-picker">
