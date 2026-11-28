@@ -870,12 +870,14 @@ body:has(.home-page--schedule) {
 
 .schedule__day-date {
   display: block;
-  margin-top: 6px;
-  font-size: 0.85rem;
+  margin-top: 8px;
+  /* ~16px on phones, up to 18px on desktop: readable for every guest, still well under the
+     weekday (32px+). */
+  font-size: clamp(1rem, 0.9rem + 0.4vw, 1.125rem);
   line-height: 1.4;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(0, 0, 0, 0.62);
+  color: #4a4842; /* 8.32:1 on the page parchment (#f7f4ec) */
 }
 
 .schedule__day-header-button:focus-visible {
