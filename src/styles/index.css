@@ -1651,63 +1651,428 @@ body:has(.home-page--schedule) {
 }
 
 .home__scroll {
-  min-height: 55vh;
-  padding: clamp(2.25rem, 7vw, 4rem) 1.25rem clamp(3rem, 10vw, 5rem);
+  padding: 0 0 clamp(3rem, 10vw, 5rem);
   background: var(--home-page-bg, var(--background));
   color: var(--text-color);
   box-shadow: none;
 }
 
-.home__scroll-inner {
-  max-width: 980px;
-  margin: 0 auto;
-}
-
-.home__weekend-content {
-  display: flex;
-  flex-direction: row-reverse;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(1.5rem, 4vw, 4rem);
-  margin-top: clamp(1rem, 2vw, 1.5rem);
-}
-
-.home__weekend-text {
-  width: min(100%, 36rem);
-  text-align: center;
-  color: #141414;
-}
-
-.home__weekend-greeting {
-  margin: 0;
-  font-family: 'Bacasime Antique', Georgia, 'Times New Roman', serif;
-  font-size: clamp(2rem, 3.1vw, 2.625rem);
-  line-height: 1.35;
-}
-
-.home__weekend-body {
-  margin: 1.5rem 0 1.75rem;
-  white-space: pre-wrap;
-  font-size: clamp(1rem, 1.5vw, 1.75rem);
-  line-height: 1.6;
-}
-
-.home__weekend-signature {
-  margin: 0;
-  white-space: pre-wrap;
-  font-size: clamp(1rem, 1.5vw, 1.75rem);
-  line-height: 1.55;
-}
-
 .home__weekend-image-wrap {
-  width: min(100%, 22.125rem);
-  flex-shrink: 0;
+  width: min(calc(100% - 2.5rem), 20rem);
+  margin: clamp(2.5rem, 8vw, 4rem) auto 0;
 }
 
 .home__weekend-polaroid {
   margin: 0 auto;
   width: 100%;
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.38);
+}
+
+/* ── Home: welcome envelope ─────────────────────────────────────────────────
+   A tall scene whose sticky stage holds the envelope and the letter. useEnvelopeScene turns scroll
+   progress into the custom properties below; everything moves with transform and opacity only.
+   The defaults are the settled state, so without JS (or with reduced motion) the letter is just a
+   card on the page and the envelope isn't drawn. */
+.envelope-scene {
+  --env-w: min(calc(100vw - 3rem), 30rem);
+  --env-h: calc(var(--env-w) / 1.42);
+  --env-paper: #f6f1e3;
+  --env-liner: #e1e6d7;
+  --seal: #6f7d62;
+  --seal-hi: #93a083;
+  --seal-lo: #4a553f;
+  --seal-ink: #39422f;
+  /* Laid fibres and a soft highlight: paper, drawn with gradients. */
+  --paper-grain:
+    repeating-linear-gradient(33deg, rgba(110, 90, 50, 0.03) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(-61deg, rgba(110, 90, 50, 0.024) 0 1px, transparent 1px 5px);
+  --env-paper-texture:
+    radial-gradient(140% 100% at 20% 0%, rgba(255, 255, 255, 0.55), transparent 55%),
+    var(--paper-grain), var(--env-paper);
+  --env-liner-texture: var(--paper-grain), var(--env-liner);
+
+  --letter-x: 0px;
+  --letter-y: 0px;
+  --letter-s: 1;
+  --letter-r: 0deg;
+  --letter-shade: 0;
+  --env-y: 0px;
+  --env-o: 1;
+  --flap-rot: 0deg;
+  --flap-shade: 0;
+  --flap-inner-shade: 0;
+  --seal-crack: 0;
+  position: relative;
+}
+
+.envelope-scene__stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(3rem, 9vw, 4.5rem) 1rem 0;
+}
+
+.envelope {
+  display: none;
+}
+
+.envelope-scene.is-animated .envelope-scene__stage {
+  position: sticky;
+  top: 0;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: 4.5rem 1rem 2.5rem;
+  /* Clips the flap's 3D swing and the pocket mask; never scrolls (nothing overflows sideways). */
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.envelope-scene.is-animated .envelope {
+  display: block;
+  position: absolute;
+  left: calc(50% - var(--env-w) / 2);
+  top: calc(50vh - var(--env-h) / 2);
+  top: calc(50svh - var(--env-h) / 2);
+  width: var(--env-w);
+  height: var(--env-h);
+  pointer-events: none;
+}
+
+.envelope-scene.is-animated .envelope-scene__runway {
+  height: 220vh;
+  height: 220svh;
+}
+
+/* The envelope is three layers so the letter (z-index 2) can sit between them. */
+.envelope__layer {
+  position: absolute;
+  inset: 0;
+  transform: translate3d(0, var(--env-y), 0);
+  opacity: var(--env-o);
+  will-change: transform, opacity;
+}
+
+.envelope__layer--back {
+  z-index: 1;
+}
+
+.envelope__layer--front {
+  z-index: 3;
+}
+
+.envelope__layer--flap {
+  z-index: 4;
+}
+
+.envelope__back {
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  background:
+    linear-gradient(rgba(52, 40, 16, 0.26), rgba(52, 40, 16, 0.05) 42%, transparent 62%),
+    var(--env-liner-texture);
+}
+
+.envelope__hinge {
+  position: absolute;
+  inset: 0;
+  perspective: calc(var(--env-w) * 2.6);
+  perspective-origin: 50% 0;
+}
+
+/* Outside of the flap: hinged on the envelope's top edge, tip lifting toward the viewer. */
+.envelope__flap {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 0;
+  transform: rotateX(var(--flap-rot));
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.envelope__flap-edge {
+  position: absolute;
+  inset: 0;
+  filter: drop-shadow(0 1.5px 1.5px rgba(70, 52, 20, 0.26));
+}
+
+.envelope__flap-paper,
+.envelope__flap-shade {
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(0 0, 100% 0, 52.6% 57.4%, 50% 59%, 47.4% 57.4%);
+}
+
+.envelope__flap-paper {
+  background:
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(90, 70, 35, 0.07)),
+    var(--env-paper-texture);
+}
+
+.envelope__flap-shade {
+  background: linear-gradient(to bottom, rgba(45, 35, 15, 0.08), rgba(45, 35, 15, 0.42));
+  opacity: var(--flap-shade);
+}
+
+/* Inside of the flap, standing above the envelope once it's open: the liner. */
+.envelope__flap-inner {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 59%;
+  transform-origin: 50% 100%;
+  transform: rotateX(calc(var(--flap-rot) - 180deg));
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  clip-path: polygon(0 100%, 100% 100%, 52.6% 2.6%, 50% 0, 47.4% 2.6%);
+  background:
+    linear-gradient(to top, rgba(45, 35, 15, 0.2), transparent 45%),
+    var(--env-liner-texture);
+}
+
+.envelope__flap-inner-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(45, 35, 15, 0.5), rgba(45, 35, 15, 0.2));
+  opacity: var(--flap-inner-shade);
+}
+
+/* The pocket: two side flaps under a bottom flap. Its top edges cast a hairline onto the letter. */
+.envelope__pocket {
+  position: absolute;
+  inset: 0;
+  filter: drop-shadow(0 -0.5px 1px rgba(70, 52, 20, 0.2));
+}
+
+.envelope__side,
+.envelope__bottom {
+  position: absolute;
+  inset: 0;
+}
+
+.envelope__side--left {
+  clip-path: polygon(0 0, 52% 52%, 0 100%);
+  background:
+    linear-gradient(100deg, transparent 55%, rgba(70, 52, 20, 0.08)),
+    var(--env-paper-texture);
+}
+
+.envelope__side--right {
+  clip-path: polygon(100% 0, 48% 52%, 100% 100%);
+  background:
+    linear-gradient(-100deg, transparent 55%, rgba(70, 52, 20, 0.1)),
+    var(--env-paper-texture);
+}
+
+.envelope__bottom-edge {
+  position: absolute;
+  inset: 0;
+  filter: drop-shadow(0 -1px 1.5px rgba(70, 52, 20, 0.22));
+}
+
+.envelope__bottom {
+  clip-path: polygon(0 100%, 50% 44%, 100% 100%);
+  background:
+    linear-gradient(to top, transparent 35%, rgba(255, 255, 255, 0.35)),
+    var(--env-paper-texture);
+}
+
+/* Shadow the lifting flap casts on the pocket, gone by the time the flap stands upright. */
+.envelope__flap-cast {
+  position: absolute;
+  inset: 0;
+  filter: blur(calc(var(--env-w) * 0.012));
+  opacity: var(--flap-cast, 0);
+}
+
+.envelope__flap-cast::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(0 0, 100% 0, 52.6% 57.4%, 50% 59%, 47.4% 57.4%);
+  background: rgba(50, 38, 15, 0.32);
+}
+
+.envelope__shadow {
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  box-shadow:
+    0 18px 30px -10px rgba(60, 48, 25, 0.3),
+    0 3px 6px rgba(60, 48, 25, 0.1);
+}
+
+/* Hides whatever of a long letter hangs below the envelope while it's still inside. */
+.envelope__mask {
+  position: absolute;
+  top: 100%;
+  left: calc((var(--env-w) - 100vw) / 2);
+  right: calc((var(--env-w) - 100vw) / 2);
+  height: 100vh;
+  height: 100lvh;
+  background: var(--home-page-bg, var(--background));
+}
+
+/* Wax seal, straddling the flap tip. Each half is a full seal clipped along the same crack. */
+.envelope__seal {
+  position: absolute;
+  left: 50%;
+  top: 59%;
+  width: 24%;
+  aspect-ratio: 1;
+  margin: -13% 0 0 -12%;
+  transform-origin: 50% 50%;
+}
+
+.envelope__seal--upper {
+  /* Overlaps the lower half by a hair, so the seal shows no seam until it cracks. */
+  clip-path: polygon(-20% -20%, 120% -20%, 120% 52%, 100% 52%, 86% 57%, 74% 49%, 61% 58%, 50% 51%,
+      39% 58%, 27% 50%, 14% 57%, 0 52%, -20% 52%);
+  transform:
+    translate(calc(var(--seal-crack) * -0.5px), calc(var(--seal-crack) * -1.5px))
+    rotate(calc(var(--seal-crack) * -2.5deg));
+}
+
+.envelope__seal--lower {
+  clip-path: polygon(-20% 50%, 0 50%, 14% 55%, 27% 48%, 39% 56%, 50% 49%, 61% 56%, 74% 47%, 86% 55%,
+      100% 50%, 120% 50%, 120% 120%, -20% 120%);
+  transform:
+    translate(calc(var(--seal-crack) * 1px), calc(var(--seal-crack) * 2.5px))
+    rotate(calc(var(--seal-crack) * 3deg));
+}
+
+.envelope__seal-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 51% 49% 47% 53% / 48% 52% 50% 50%;
+  background: radial-gradient(circle at 35% 30%, var(--seal-hi), var(--seal) 45%, var(--seal-lo));
+  /* Inset light and shade for the dome; offset same-colour shadows for the wax's uneven spill. */
+  box-shadow:
+    inset 0 -2px 3px rgba(0, 0, 0, 0.22),
+    inset 0 2px 2px rgba(255, 255, 255, 0.22),
+    4px 3px 0 -2px var(--seal-lo),
+    -3px 4px 0 -2px var(--seal-lo),
+    -4px -2px 0 -2px var(--seal),
+    2px -4px 0 -2px var(--seal),
+    5px -1px 0 -3px var(--seal),
+    -1px 5px 0 -3px var(--seal-lo),
+    0 3px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* The pressed ring of the stamp. */
+.envelope__seal-face::before {
+  content: '';
+  position: absolute;
+  inset: 14%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, var(--seal-hi), var(--seal) 70%);
+  box-shadow:
+    inset 1px 1px 2px rgba(0, 0, 0, 0.35),
+    inset -1px -1px 1px rgba(255, 255, 255, 0.22);
+}
+
+.envelope__seal-monogram {
+  position: relative;
+  font-family: 'Bacasime Antique', Georgia, 'Times New Roman', serif;
+  font-size: calc(var(--env-w) * 0.058);
+  letter-spacing: 0.02em;
+  color: var(--seal-ink);
+  /* Debossed: lit from the top left. */
+  text-shadow:
+    1px 1px 0 rgba(255, 255, 255, 0.28),
+    -0.5px -0.5px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* The letter: real text, laid out where it ends up. */
+.letter {
+  position: relative;
+  z-index: 2;
+  width: min(100%, 38rem);
+  margin: 0;
+  padding: clamp(2rem, 7vw, 3.25rem) clamp(1.6rem, 6.5vw, 3.25rem) clamp(1.75rem, 6vw, 2.5rem);
+  border-radius: 2px;
+  background:
+    radial-gradient(130% 70% at 25% 0%, rgba(255, 255, 255, 0.75), transparent 60%),
+    linear-gradient(to bottom, transparent 70%, rgba(120, 100, 60, 0.035)),
+    var(--paper-grain, none),
+    #fdf9f0;
+  color: #1f1f1c;
+  font-family: 'Bacasime Antique', Georgia, 'Times New Roman', serif;
+  box-shadow:
+    0 1px 2px rgba(60, 48, 25, 0.12),
+    0 16px 36px -14px rgba(60, 48, 25, 0.32);
+  transform-origin: 50% 0;
+  transform:
+    translate3d(var(--letter-x), var(--letter-y), 0)
+    scale(var(--letter-s))
+    rotate(var(--letter-r));
+}
+
+.envelope-scene.is-animated .letter {
+  will-change: transform;
+}
+
+.envelope-scene[data-letter-front] .letter {
+  z-index: 5;
+}
+
+/* Hairline frame, like the Schedule cards. */
+.letter::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 1px solid color-mix(in srgb, #6f7d62 42%, transparent);
+  pointer-events: none;
+}
+
+/* Shade of the envelope's inside, lifting as the letter comes out. */
+.letter::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(rgba(45, 35, 15, 0.3), rgba(45, 35, 15, 0.14));
+  opacity: var(--letter-shade);
+  pointer-events: none;
+}
+
+.letter__ornament {
+  width: clamp(5.5rem, 24vw, 7rem);
+  aspect-ratio: 229 / 80;
+  margin: 0 auto clamp(0.75rem, 3vw, 1.1rem);
+  background-color: #6f7d62;
+  mask: var(--vine-mask) center / contain no-repeat;
+}
+
+.letter__greeting {
+  margin: 0;
+  text-align: center;
+  font-size: clamp(1.9rem, 1.2rem + 2.6vw, 2.75rem);
+  line-height: 1.2;
+}
+
+.letter__body {
+  margin: clamp(1.1rem, 4vw, 1.5rem) 0 clamp(1.25rem, 4.5vw, 1.75rem);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: clamp(1.06rem, 0.95rem + 0.7vw, 1.3rem);
+  line-height: 1.65;
+}
+
+.letter__signature {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  text-align: right;
+  font-family: 'Reenie Beanie', cursive;
+  font-size: clamp(1.7rem, 1.35rem + 1.4vw, 2.3rem);
+  line-height: 1.1;
+  color: #2b2b27;
 }
 
 .home__reveal {
@@ -1718,18 +2083,6 @@ body:has(.home-page--schedule) {
     transform 720ms cubic-bezier(0.22, 0.61, 0.36, 1);
   transition-delay: var(--home-reveal-delay, 0ms);
   will-change: opacity, transform;
-}
-
-.home__reveal--step-1 {
-  --home-reveal-delay: 90ms;
-}
-
-.home__reveal--step-2 {
-  --home-reveal-delay: 180ms;
-}
-
-.home__reveal--step-3 {
-  --home-reveal-delay: 260ms;
 }
 
 .home__reveal.is-visible {
@@ -1838,20 +2191,6 @@ body:has(.home-page--schedule) {
 }
 
 @media (max-width: 860px) {
-  .home__weekend-content {
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-
-  .home__weekend-text {
-    width: min(100%, 32rem);
-    text-align: center;
-  }
-
-  .home__weekend-image-wrap {
-    width: min(100%, 18rem);
-  }
-
   .home__gallery {
     margin-top: clamp(3.5rem, 14vw, 5rem);
     min-height: 180vh;

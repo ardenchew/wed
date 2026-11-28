@@ -4,6 +4,7 @@ import { HeroImage } from '../components/HeroImage';
 import { HomeHeader } from '../components/HomeHeader';
 import { Polaroid } from '../components/Polaroid';
 import { RsvpStatusButton } from '../components/RsvpStatusButton';
+import { WelcomeEnvelope } from '../components/WelcomeEnvelope';
 import { HOME_WELCOME_SECTION_ID } from '../config/nav';
 import { WELCOME_DEFAULTS } from '../guests/shared';
 import { useGuest } from '../hooks/useGuest';
@@ -243,26 +244,18 @@ export default function Home() {
 
         <div className="home__scroll-track">
           <section id={HOME_WELCOME_SECTION_ID} className="home__scroll" aria-label="Weekend details">
-            <div className="home__scroll-inner">
-              <div className="home__weekend-content">
-                <div className="home__weekend-text">
-                  <p className="home__weekend-greeting home__reveal">{weekendGreeting}</p>
-                  <p className="home__weekend-body home__reveal home__reveal--step-1">
-                    {weekendBody}
-                  </p>
-                  <p className="home__weekend-signature home__reveal home__reveal--step-2">
-                    {weekendSignature}
-                  </p>
-                </div>
-                <div className="home__weekend-image-wrap home__reveal home__reveal--step-3">
-                  <Polaroid
-                    className="home__weekend-polaroid"
-                    dateText={weekendPolaroidDate}
-                    publicId={weekendPolaroidPublicId}
-                    alt="Emily and Arden"
-                  />
-                </div>
-              </div>
+            <WelcomeEnvelope
+              greeting={weekendGreeting}
+              body={weekendBody}
+              signature={weekendSignature}
+            />
+            <div className="home__weekend-image-wrap home__reveal">
+              <Polaroid
+                className="home__weekend-polaroid"
+                dateText={weekendPolaroidDate}
+                publicId={weekendPolaroidPublicId}
+                alt="Emily and Arden"
+              />
             </div>
           </section>
           <section ref={gallerySectionRef} className="home__gallery" aria-label="Photo gallery">
