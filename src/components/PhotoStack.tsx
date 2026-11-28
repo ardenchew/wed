@@ -1,4 +1,4 @@
-import { useRef, useState, type CSSProperties, type MouseEvent, type PointerEvent } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
 import { cloudinarySrcSet, cloudinaryUrl } from '../utils/cloudinary';
 
 export interface StackPhoto {
@@ -15,7 +15,7 @@ interface PhotoStackProps {
 
 /**
  * Where each depth of the stack sits: offset (px) and tilt. Index 0 is the top card. The angles
- * alternate sides so every card behind the top one shows an edge you can reach.
+ * alternate sides so the pile looks tossed together rather than squared up.
  */
 const SLOTS = [
   { x: 0, y: 0, r: -2 },
@@ -27,91 +27,84 @@ const SLOTS = [
 ];
 const MAX_CARDS = SLOTS.length;
 
-/** Ignore further hovers while a card is still swinging round, so the stack can't cascade. */
-const HOVER_COOLDOWN_MS = 450;
-/** A click this soon after hovering the same card to the front is the same gesture, not "next". */
-const CLICK_AFTER_HOVER_MS = 700;
-
-type Pull = { card: number; tick: number; dir: 1 | -1 };
+/** While a mouse rests on the stack, the top card goes to the back this often. */
+const HOVER_CYCLE_MS = 1400;
 
 /**
- * An artsy pile of polaroids. Hovering (mouse) or tapping a card behind the top one swings it out
- * and back onto the top of the pile; clicking or tapping the top card tucks it underneath, so a
- * guest on a phone can flip through them all.
+ * An artsy pile of polaroids that cycles: the top card swings out and tucks in at the back. A tap,
+ * click, Enter or Space does it once; a mouse resting on the stack keeps it going until it leaves.
  */
 export function PhotoStack({ photos, className = '' }: PhotoStackProps) {
   const cards = photos.slice(0, MAX_CARDS);
-  /** `order[depth]` is the card at that depth; depth 0 is on top. */
-  const [order, setOrder] = useState(() => cards.map((_, i) => i));
-  const [pull, setPull] = useState<Pull | null>(null);
-  const lastShuffleRef = useRef({ card: -1, at: -Infinity, viaHover: false });
+  /** How many times the stack has cycled; card `i` is at depth `(i - turns) mod n`. */
+  const [turns, setTurns] = useState(0);
+  const hoverTimerRef = useRef<number | null>(null);
 
-  // Times come from the triggering event's `timeStamp` (same clock as performance.now()).
-  const shuffle = (card: number, nextOrder: number[], dir: 1 | -1, at: number, viaHover: boolean) => {
-    lastShuffleRef.current = { card, at, viaHover };
-    setOrder(nextOrder);
-    setPull((prev) => ({ card, dir, tick: (prev?.tick ?? 0) + 1 }));
+  const stopHoverCycle = () => {
+    if (hoverTimerRef.current != null) window.clearInterval(hoverTimerRef.current);
+    hoverTimerRef.current = null;
   };
 
-  const bringToFront = (card: number, at: number, viaHover: boolean) => {
-    const depth = order.indexOf(card);
-    if (depth <= 0) return;
-    // Swing out on the side the card is already leaning toward.
-    const dir = SLOTS[depth].x >= 0 ? 1 : -1;
-    shuffle(card, [card, ...order.filter((c) => c !== card)], dir, at, viaHover);
+  useEffect(() => stopHoverCycle, []);
+
+  const next = () => setTurns((t) => t + 1);
+
+  const startHoverCycle = () => {
+    stopHoverCycle();
+    hoverTimerRef.current = window.setInterval(next, HOVER_CYCLE_MS);
   };
 
-  const sendToBack = (card: number, at: number) => {
-    shuffle(card, [...order.filter((c) => c !== card), card], -1, at, false);
+  const onPointerEnter = (event: PointerEvent<HTMLButtonElement>) => {
+    if (event.pointerType !== 'mouse' || cards.length < 2) return;
+    next();
+    startHoverCycle();
   };
 
-  const onPointerEnter = (card: number) => (event: PointerEvent<HTMLButtonElement>) => {
-    if (event.pointerType !== 'mouse') return;
-    if (event.timeStamp - lastShuffleRef.current.at < HOVER_COOLDOWN_MS) return;
-    bringToFront(card, event.timeStamp, true);
+  const onPointerLeave = (event: PointerEvent<HTMLButtonElement>) => {
+    if (event.pointerType === 'mouse') stopHoverCycle();
   };
 
-  const onClick = (card: number) => (event: MouseEvent<HTMLButtonElement>) => {
-    const at = event.timeStamp;
-    if (order[0] !== card) {
-      bringToFront(card, at, false);
-      return;
-    }
-    const last = lastShuffleRef.current;
-    const justHovered =
-      last.viaHover && last.card === card && at - last.at < CLICK_AFTER_HOVER_MS;
-    if (!justHovered && cards.length > 1) sendToBack(card, at);
+  /** Taps, clicks and the keyboard each turn the stack once. */
+  const onClick = () => {
+    if (cards.length < 2) return;
+    next();
+    // Mid-hover, restart the beat so the click and the next automatic turn don't land together.
+    if (hoverTimerRef.current != null) startHoverCycle();
   };
+
+  const n = cards.length;
+  const topCard = n ? turns % n : 0;
+  /** The card that just went to the back plays the swing; alternate sides each turn. */
+  const pulledCard = turns > 0 ? (turns - 1) % n : -1;
+  const pullDir = turns % 2 ? 1 : -1;
 
   return (
-    <div className={`photo-stack ${className}`.trim()} role="group" aria-label="Photos">
+    <button
+      type="button"
+      className={`photo-stack ${className}`.trim()}
+      aria-label={`Photo ${topCard + 1} of ${n}. Show the next photo`}
+      onPointerEnter={onPointerEnter}
+      onPointerLeave={onPointerLeave}
+      onClick={onClick}
+    >
       {cards.map((photo, card) => {
-        const depth = order.indexOf(card);
+        const depth = (((card - turns) % n) + n) % n;
         const slot = SLOTS[depth];
-        const isTop = depth === 0;
-        const isPulled = pull?.card === card;
+        const isPulled = card === pulledCard;
         const style = {
           '--x': `${slot.x}px`,
           '--y': `${slot.y}px`,
           '--r': `${slot.r}deg`,
-          '--pull-dir': isPulled ? pull.dir : 1,
-          zIndex: cards.length - depth,
+          '--pull-dir': pullDir,
+          zIndex: n - depth,
         } as CSSProperties;
 
         return (
-          <button
+          <span
             key={photo.publicId}
-            type="button"
             className="photo-stack__card"
             style={style}
-            data-pull={isPulled ? (pull.tick % 2 ? 'a' : 'b') : undefined}
-            aria-label={
-              isTop
-                ? `Photo ${card + 1} of ${cards.length}, on top. Show the next one`
-                : `Bring photo ${card + 1} to the top`
-            }
-            onPointerEnter={onPointerEnter(card)}
-            onClick={onClick(card)}
+            data-pull={isPulled ? (turns % 2 ? 'a' : 'b') : undefined}
           >
             <span className="polaroid photo-stack__polaroid">
               <span className="polaroid__imageWrap">
@@ -128,9 +121,9 @@ export function PhotoStack({ photos, className = '' }: PhotoStackProps) {
                 {photo.dateText && <span className="polaroid__date">{photo.dateText}</span>}
               </span>
             </span>
-          </button>
+          </span>
         );
       })}
-    </div>
+    </button>
   );
 }
