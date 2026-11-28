@@ -1,5 +1,5 @@
-import { useEffect, useId, useRef, useState, type FormEvent, type MouseEvent } from 'react';
-import { EVENT_TIME_ZONE, EVENTS } from '../config/events';
+import { useEffect, useId, useMemo, useRef, useState, type FormEvent, type MouseEvent } from 'react';
+import { EVENT_TIME_ZONE } from '../config/events';
 import { ApiError } from '../api/client';
 import { statusLabel } from '../rsvp/labels';
 import {
@@ -45,8 +45,8 @@ const eventWhenFormatter = new Intl.DateTimeFormat('en-US', {
   timeZone: EVENT_TIME_ZONE,
 });
 
-function formatEventWhen(slug: string): string {
-  const parts = eventWhenFormatter.formatToParts(EVENTS[slug].start_time);
+function formatEventWhen(startTime: string): string {
+  const parts = eventWhenFormatter.formatToParts(new Date(startTime));
   const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? '';
   const minute = get('minute');
   const time = `${get('hour')}${minute === '00' ? '' : `:${minute}`}${get('dayPeriod').toLowerCase()}`;
@@ -137,6 +137,9 @@ interface RsvpFlowProps {
 function RsvpFlow({ data, formId, saving, setSaving, onSave, onClose }: RsvpFlowProps) {
   const party = data.party;
   const self = data.self;
+  // The API sends the details of every event anyone in the party is invited to.
+  const eventsBySlug = useMemo(() => new Map(data.events.map((event) => [event.slug, event])), [data.events]);
+  const eventName = (slug: string) => eventsBySlug.get(slug)?.name ?? 'this event';
   const [step, setStep] = useState<Step>(party.length > 1 ? 'who' : 'respond');
   const [selected, setSelected] = useState<Set<string>>(() => new Set([self]));
   const [mode, setMode] = useState<Mode>(() => {
@@ -364,7 +367,7 @@ if (step === 'done') {
                 />
                 <p className="rsvp-guest__hint">
                   {member.events.length === 1
-                    ? `For ${EVENTS[member.events[0]].name}.`
+                    ? `For ${eventName(member.events[0])}.`
                     : `For all ${member.events.length} events ${member.first} is invited to.`}
                   {choice === undefined && member.events.some((slug) => draft.responses[slug] !== undefined)
                     ? ' Answers currently differ by event — choosing here replaces them all.'
@@ -375,11 +378,12 @@ if (step === 'done') {
               <ul className="rsvp-events">
                 {member.events.map((slug) => {
                   const eventLabelId = `${headingId}-${slug}`;
+                  const details = eventsBySlug.get(slug);
                   return (
                     <li key={slug} className="rsvp-events__row">
                       <div className="rsvp-events__label" id={eventLabelId}>
-                        <span className="rsvp-events__name">{EVENTS[slug].name}</span>
-                        <span className="rsvp-events__when">{formatEventWhen(slug)}</span>
+                        <span className="rsvp-events__name">{eventName(slug)}</span>
+                        {details && <span className="rsvp-events__when">{formatEventWhen(details.start_time)}</span>}
                       </div>
                       <ChoiceButtons
                         name={`${formId}-${member.slug}-${slug}`}

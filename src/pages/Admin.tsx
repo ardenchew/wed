@@ -1,39 +1,61 @@
 import { useMemo, useState } from 'react';
+import { AdminEventDialog } from '../components/AdminEventDialog';
 import { AdminGuestDialog } from '../components/AdminGuestDialog';
 import { HomeHeader } from '../components/HomeHeader';
+import { EVENT_TIME_ZONE } from '../config/events';
 import { ADMIN_PATH } from '../config/nav';
-import { displayName, type AdminGuest } from '../guests/shared';
+import type { AdminEvent, EventInput } from '../events/shared';
+import { displayName, type AdminGuest, type GuestInput } from '../guests/shared';
+import { useAdminEvents } from '../hooks/useAdminEvents';
 import { useAdminGuests } from '../hooks/useAdminGuests';
+import { useEvents } from '../hooks/useEvents';
 import { statusLabel } from '../rsvp/labels';
 import { formatPhone, rsvpStatus, type RsvpStatus } from '../rsvp/shared';
+import { matchesSearch } from '../utils/search';
 
-type Editing = { mode: 'add' } | { mode: 'edit'; slug: string } | null;
+type Editing =
+  | { kind: 'guest'; mode: 'add' }
+  | { kind: 'guest'; mode: 'edit'; slug: string }
+  | { kind: 'event'; mode: 'add' }
+  | { kind: 'event'; mode: 'edit'; slug: string }
+  | null;
 
-/** Lower-case, accent-free, single-spaced — so "zoe" finds "Zoë" and extra spaces don't matter. */
-function normalize(text: string): string {
-  return text
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .trim();
+const eventWhenFormatter = new Intl.DateTimeFormat('en-US', {
+  weekday: 'short',
+  month: 'short',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+  timeZone: EVENT_TIME_ZONE,
+});
+
+const eventEndFormatter = new Intl.DateTimeFormat('en-US', {
+  hour: 'numeric',
+  minute: '2-digit',
+  timeZone: EVENT_TIME_ZONE,
+});
+
+function eventWhen(event: AdminEvent): string {
+  const start = eventWhenFormatter.format(new Date(event.start_time));
+  return event.end_time ? `${start} – ${eventEndFormatter.format(new Date(event.end_time))}` : start;
 }
 
-/** Every word typed must appear somewhere in the guest's name or nickname. */
-function matchesSearch(guest: AdminGuest, query: string): boolean {
-  const words = normalize(query).split(' ').filter(Boolean);
-  if (words.length === 0) return true;
-  const haystack = normalize(`${guest.first} ${guest.last} ${guest.nickname ?? ''}`);
-  return words.every((word) => haystack.includes(word));
+function eventAnswers(event: AdminEvent): { yes: number; no: number } {
+  const answers = Object.values(event.responses);
+  return { yes: answers.filter(Boolean).length, no: answers.filter((a) => !a).length };
 }
 
 function statusOf(guest: AdminGuest): RsvpStatus {
   return rsvpStatus({ events: guest.events, responses: guest.rsvp.responses });
 }
 
-/** Guest list, RSVPs and add / edit / remove — for Emily and Arden only (see AdminRoute). */
+/** Guests, events, RSVPs and add / edit / remove — for Emily and Arden only (see AdminRoute). */
 export default function Admin() {
-  const { guests, loading, error, reload, create, update, remove } = useAdminGuests();
+  const { guests, loading, error, reload, refresh: refreshGuests, create, update, remove } = useAdminGuests();
+  const adminEvents = useAdminEvents();
+  const { events, refresh: refreshEvents } = adminEvents;
+  // The admin's own schedule, so it shows their edits without a page reload.
+  const { reload: reloadMyEvents } = useEvents();
   const [editing, setEditing] = useState<Editing>(null);
   const [query, setQuery] = useState('');
   const visibleGuests = useMemo(
@@ -54,7 +76,31 @@ export default function Admin() {
       .join(', ');
 
   const editingGuest =
-    editing?.mode === 'edit' ? (guests ?? []).find((guest) => guest.slug === editing.slug) ?? null : null;
+    editing?.kind === 'guest' && editing.mode === 'edit'
+      ? (guests ?? []).find((guest) => guest.slug === editing.slug) ?? null
+      : null;
+  const editingEvent =
+    editing?.kind === 'event' && editing.mode === 'edit'
+      ? (events ?? []).find((event) => event.slug === editing.slug) ?? null
+      : null;
+
+  // A guest's invitations show on the events table and vice versa, so refresh the other list too.
+  const afterGuestWrite = async <T,>(write: Promise<T>) => {
+    const out = await write;
+    await refreshEvents().catch(() => undefined);
+    reloadMyEvents();
+    return out;
+  };
+  const afterEventWrite = async <T,>(write: Promise<T>) => {
+    const out = await write;
+    await refreshGuests().catch(() => undefined);
+    reloadMyEvents();
+    return out;
+  };
+  const saveGuest = (input: GuestInput) =>
+    afterGuestWrite(editingGuest ? update(editingGuest.slug, input) : create(input));
+  const saveEvent = (input: EventInput) =>
+    afterEventWrite(editingEvent ? adminEvents.update(editingEvent.slug, input) : adminEvents.create(input));
 
   return (
     <main className="home-page home-page--schedule paper-bg">
@@ -102,8 +148,8 @@ export default function Admin() {
             className="admin__add"
             aria-label="Add guest"
             title="Add guest"
-            onClick={() => setEditing({ mode: 'add' })}
-            disabled={!guests}
+            onClick={() => setEditing({ kind: 'guest', mode: 'add' })}
+            disabled={!guests || !events}
           >
             <svg
               viewBox="0 0 16 16"
@@ -169,7 +215,8 @@ export default function Admin() {
                     <button
                       type="button"
                       className="admin-link"
-                      onClick={() => setEditing({ mode: 'edit', slug: guest.slug })}
+                      onClick={() => setEditing({ kind: 'guest', mode: 'edit', slug: guest.slug })}
+                      disabled={!events}
                       aria-label={`Edit ${displayName(guest)}`}
                     >
                       Edit
@@ -189,15 +236,116 @@ export default function Admin() {
             </button>
           </p>
         )}
+
+        <h2 className="schedule__title admin__section-title">Events</h2>
+        {events && (
+          <p className="admin__summary">
+            {events.length} event{events.length === 1 ? '' : 's'} · times in California time
+          </p>
+        )}
+        <div className="admin__toolbar">
+          <button
+            type="button"
+            className="admin__add"
+            aria-label="Add event"
+            title="Add event"
+            onClick={() => setEditing({ kind: 'event', mode: 'add' })}
+            disabled={!events || !guests}
+          >
+            <svg
+              viewBox="0 0 16 16"
+              width="16"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path d="M8 3v10M3 8h10" />
+            </svg>
+          </button>
+        </div>
+
+        {!events && adminEvents.loading && <p className="admin__message">Loading events…</p>}
+        {adminEvents.error && (
+          <div className="admin__message" role="alert">
+            <p>{adminEvents.error.message}</p>
+            <button type="button" className="rsvp-button" onClick={adminEvents.reload}>
+              Try again
+            </button>
+          </div>
+        )}
+
+        {events && events.length === 0 && <p className="admin__message">No events yet.</p>}
+        {events && events.length > 0 && (
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th scope="col">Event</th>
+                <th scope="col">Location</th>
+                <th scope="col">Invited</th>
+                <th scope="col">RSVPs</th>
+                <th scope="col">
+                  <span className="visually-hidden">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {events.map((event) => {
+                const { yes, no } = eventAnswers(event);
+                return (
+                  <tr key={event.slug}>
+                    <td data-label="Event">
+                      <span className="admin-table__name">{event.name}</span>
+                      <span className="admin-table__meta">{eventWhen(event)}</span>
+                    </td>
+                    <td data-label="Location">{event.location}</td>
+                    <td data-label="Invited">{event.invited.length}</td>
+                    <td data-label="RSVPs">
+                      {yes} attending · {no} not · {event.invited.length - yes - no} no answer
+                    </td>
+                    <td className="admin-table__actions">
+                      <button
+                        type="button"
+                        className="admin-link"
+                        onClick={() => setEditing({ kind: 'event', mode: 'edit', slug: event.slug })}
+                        disabled={!guests}
+                        aria-label={`Edit ${event.name}`}
+                      >
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
       </section>
 
-      {guests && editing && (editing.mode === 'add' || editingGuest) && (
+      {guests && events && editing?.kind === 'guest' && (editing.mode === 'add' || editingGuest) && (
         <AdminGuestDialog
           key={editing.mode === 'edit' ? editing.slug : 'new'}
           guest={editingGuest}
           guests={guests}
-          onSave={(input) => (editingGuest ? update(editingGuest.slug, input) : create(input))}
-          onDelete={() => (editingGuest ? remove(editingGuest.slug) : Promise.resolve())}
+          events={events}
+          onSave={saveGuest}
+          onDelete={() => (editingGuest ? afterGuestWrite(remove(editingGuest.slug)) : Promise.resolve())}
+          onClose={() => setEditing(null)}
+        />
+      )}
+
+      {guests && events && editing?.kind === 'event' && (editing.mode === 'add' || editingEvent) && (
+        <AdminEventDialog
+          key={editing.mode === 'edit' ? editing.slug : 'new-event'}
+          event={editingEvent}
+          guests={guests}
+          onSave={saveEvent}
+          onDelete={() =>
+            editingEvent ? afterEventWrite(adminEvents.remove(editingEvent.slug)) : Promise.resolve()
+          }
           onClose={() => setEditing(null)}
         />
       )}

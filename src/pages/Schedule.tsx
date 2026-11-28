@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState, useMemo, type CSSProperties }
 import { Button } from '../components/Button';
 import { HomeHeader } from '../components/HomeHeader';
 import { RsvpStatusButton } from '../components/RsvpStatusButton';
-import { EVENT_TIME_ZONE, EVENTS } from '../config/events';
-import { useGuest } from '../hooks/useGuest';
+import { EVENT_TIME_ZONE } from '../config/events';
+import { useEvents } from '../hooks/useEvents';
 import { useReveal } from '../hooks/useReveal';
 import type { Event } from '../types';
 import { resolveAsset } from '../utils/asset';
@@ -284,15 +284,9 @@ function ScheduleTimeline({
 }
 
 export default function Schedule() {
-  const guest = useGuest();
-
-  const dateGroups = useMemo(() => {
-    const guestEventSlugs = new Set(guest?.events ?? []);
-    const accessible = Object.values(EVENTS).filter((e) =>
-      guestEventSlugs.has(e.slug),
-    );
-    return groupEventsByDate(accessible);
-  }, [guest?.events]);
+  // Only the guest's invited events: the API never sends the others.
+  const { events, loading, loadError, reload } = useEvents();
+  const dateGroups = useMemo(() => groupEventsByDate(events ?? []), [events]);
 
   const heroUrl = cloudinaryUrl(HERO_PUBLIC_ID, { w: 1200, c: 'limit' });
 
@@ -415,6 +409,19 @@ export default function Schedule() {
       <div className="schedule__hero">
         <img className="schedule__hero-image" src={heroUrl} alt="" />
       </div>
+
+      {!events && loading && <p className="schedule__message">Loading the schedule…</p>}
+      {!events && loadError && (
+        <div className="schedule__message" role="alert">
+          <p>{loadError.message}</p>
+          <button type="button" className="rsvp-button" onClick={reload}>
+            Try again
+          </button>
+        </div>
+      )}
+      {events && events.length === 0 && (
+        <p className="schedule__message">Details for your events are coming soon.</p>
+      )}
 
       <div className="schedule__content" ref={contentRef}>
         {dateGroups.map((group, i) => (
