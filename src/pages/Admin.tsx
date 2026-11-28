@@ -9,6 +9,24 @@ import { formatPhone, rsvpStatus, type RsvpStatus } from '../rsvp/shared';
 
 type Editing = { mode: 'add' } | { mode: 'edit'; slug: string } | null;
 
+/** Lower-case, accent-free, single-spaced — so "zoe" finds "Zoë" and extra spaces don't matter. */
+function normalize(text: string): string {
+  return text
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** Every word typed must appear somewhere in the guest's name or nickname. */
+function matchesSearch(guest: AdminGuest, query: string): boolean {
+  const words = normalize(query).split(' ').filter(Boolean);
+  if (words.length === 0) return true;
+  const haystack = normalize(`${guest.first} ${guest.last} ${guest.nickname ?? ''}`);
+  return words.every((word) => haystack.includes(word));
+}
+
 function statusOf(guest: AdminGuest): RsvpStatus {
   return rsvpStatus({ events: guest.events, responses: guest.rsvp.responses });
 }
@@ -17,6 +35,11 @@ function statusOf(guest: AdminGuest): RsvpStatus {
 export default function Admin() {
   const { guests, loading, error, reload, create, update, remove } = useAdminGuests();
   const [editing, setEditing] = useState<Editing>(null);
+  const [query, setQuery] = useState('');
+  const visibleGuests = useMemo(
+    () => (guests ?? []).filter((guest) => matchesSearch(guest, query)),
+    [guests, query],
+  );
 
   const summary = useMemo(() => {
     const counts = { yes: 0, partial: 0, no: 0, pending: 0 };
@@ -48,13 +71,53 @@ export default function Admin() {
         )}
 
         <div className="admin__toolbar">
+          <div className="admin__search-wrap">
+            <svg
+              className="admin__search-icon"
+              viewBox="0 0 16 16"
+              width="14"
+              height="14"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <circle cx="7" cy="7" r="4.75" />
+              <path d="M10.5 10.5 14 14" />
+            </svg>
+            <input
+              type="search"
+              className="admin__search"
+              placeholder="Search"
+              aria-label="Search guests by name"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              disabled={!guests}
+            />
+          </div>
           <button
             type="button"
-            className="rsvp-button rsvp-button--primary"
+            className="admin__add"
+            aria-label="Add guest"
+            title="Add guest"
             onClick={() => setEditing({ mode: 'add' })}
             disabled={!guests}
           >
-            Add guest
+            <svg
+              viewBox="0 0 16 16"
+              width="16"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path d="M8 3v10M3 8h10" />
+            </svg>
           </button>
         </div>
 
@@ -83,7 +146,7 @@ export default function Admin() {
               </tr>
             </thead>
             <tbody>
-              {guests.map((guest) => (
+              {visibleGuests.map((guest) => (
                 <tr key={guest.slug}>
                   <td data-label="Guest">
                     <span className="admin-table__name">{displayName(guest)}</span>
@@ -116,6 +179,15 @@ export default function Admin() {
               ))}
             </tbody>
           </table>
+        )}
+
+        {guests && guests.length > 0 && visibleGuests.length === 0 && (
+          <p className="admin__message">
+            No guests match “{query.trim()}”.{' '}
+            <button type="button" className="admin-link" onClick={() => setQuery('')}>
+              Clear search
+            </button>
+          </p>
         )}
       </section>
 

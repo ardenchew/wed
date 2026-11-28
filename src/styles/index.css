@@ -695,6 +695,17 @@ body:has(.home-page--schedule) {
   text-align: left;
 }
 
+.home-menu__action--icon {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.home-menu__icon {
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+
 .home-menu__action:hover {
   background: rgba(255, 255, 255, 0.12);
 }
@@ -2456,8 +2467,91 @@ body:has(.home-page--schedule) {
 
 .admin__toolbar {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
+  gap: 12px;
   margin: 24px 0 12px;
+}
+
+.admin__search-wrap {
+  position: relative;
+  flex: 1;
+  max-width: 260px;
+  margin-right: auto;
+  color: rgba(17, 17, 17, 0.4);
+}
+
+.admin__search-icon {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.admin__search {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  padding: 0.4rem 0 0.4rem 22px;
+  border: 0;
+  border-bottom: 1px solid rgba(17, 17, 17, 0.2);
+  border-radius: 0;
+  background: transparent;
+  font: 14px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #111;
+}
+
+/* 16px stops iOS Safari zooming in on focus, so touch screens keep it. */
+@media (pointer: coarse) {
+  .admin__search {
+    font-size: 16px;
+  }
+}
+
+.admin__search::placeholder {
+  color: rgba(17, 17, 17, 0.4);
+}
+
+.admin__search::-webkit-search-cancel-button,
+.admin__search::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.admin__search:focus {
+  outline: none;
+  border-bottom-color: rgba(17, 17, 17, 0.6);
+}
+
+.admin__add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #111;
+  color: var(--parchment-primary);
+  cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.admin__add:hover:not(:disabled) {
+  background: #333;
+}
+
+.admin__add:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.admin__add:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
 }
 
 .admin__message {
