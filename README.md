@@ -77,7 +77,9 @@ npm run api:deploy
   polaroids. Removing a guest also deletes their RSVP. Admins can't be removed from the page; to
   make someone an admin, set `is_admin = 1` on their row in the D1 console.
 - A **party** is everyone sharing a `party_id`; any member can RSVP for the others. In the admin
-  form, "Party" puts a guest with an existing party (or with someone on their own, starting one).
+  form, tick everyone who belongs in a guest's party: the party becomes exactly that guest plus
+  the people ticked. Ticking someone from another party moves them over (the form says so), and
+  anyone left on their own is simply solo again.
 
 ## RSVPs
 

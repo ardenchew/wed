@@ -50,10 +50,11 @@ export interface GuestInput {
   polaroids: GuestPolaroid[];
   events: string[];
   /**
-   * Party to put this guest in, named by any guest already in it (joining a guest who is on
-   * their own starts a new party with them). null = on their own.
+   * Everyone else in this guest's party (any of them can RSVP for the others). The party becomes
+   * exactly this guest plus these people: anyone left out leaves it, and anyone added moves over
+   * from whatever party they were in. Empty = on their own.
    */
-  partyWith: string | null;
+  partyMembers: string[];
 }
 
 export const GUEST_LIMITS = {
@@ -65,6 +66,7 @@ export const GUEST_LIMITS = {
   welcomeBody: 4000,
   welcomeSignature: 200,
   polaroids: 12,
+  partyMembers: 30,
   publicId: 200,
   dateText: 40,
 } as const;
@@ -136,7 +138,10 @@ export function validateGuestInput(input: GuestInput): { value: GuestInput } | {
     polaroids.push({ publicId, dateText });
   }
 
-  const partyWith = typeof input.partyWith === 'string' && input.partyWith ? input.partyWith : null;
+  if (!Array.isArray(input.partyMembers)) return { error: 'Invalid party.' };
+  const partyMembers = [...new Set(input.partyMembers)];
+  if (partyMembers.some((slug) => typeof slug !== 'string' || !slug)) return { error: 'Invalid party.' };
+  if (partyMembers.length > L.partyMembers) return { error: `Up to ${L.partyMembers} people per party.` };
 
   return {
     value: {
@@ -149,7 +154,7 @@ export function validateGuestInput(input: GuestInput): { value: GuestInput } | {
       welcomeSignatureText,
       polaroids,
       events,
-      partyWith,
+      partyMembers,
     },
   };
 }

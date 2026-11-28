@@ -5,7 +5,7 @@ import {
   type GuestInput,
 } from '../src/guests/shared';
 import { loadGuest, loadGuests, toProfile, type GuestRecord } from './guests';
-import { HttpError } from './http';
+import { HttpError, placeholders } from './http';
 import { loadRsvps } from './rsvp';
 
 export function requireAdmin(guest: GuestRecord): void {
@@ -35,28 +35,43 @@ function cleanInput(body: GuestInput): GuestInput {
 }
 
 /**
- * Works out the party id for `slug` from `partyWith` (any guest already in the target party).
- * Joining someone who's on their own starts a new party, so they get moved into it too.
+ * Makes `slug`'s party exactly `slug` + `members`. Keeps the guest's current party id when they
+ * have one (otherwise starts a new party), moves the chosen members into it, and takes anyone
+ * else out of it. Returns the party id for `slug` (null = on their own) and the statements that
+ * update everyone else; run them after the guest's own row is written.
  */
 async function resolveParty(
   db: D1Database,
   slug: string,
-  partyWith: string | null,
+  currentPartyId: string | null,
+  members: string[],
 ): Promise<{ partyId: string | null; statements: D1PreparedStatement[] }> {
-  if (!partyWith) return { partyId: null, statements: [] };
-  if (partyWith === slug) throw new HttpError(400, 'A guest can’t be in a party with themselves.');
+  const others = members.filter((member) => member !== slug);
+  if (others.length === 0) return { partyId: null, statements: [] };
 
-  const other = await db
-    .prepare('SELECT slug, party_id FROM guests WHERE slug = ?')
-    .bind(partyWith)
-    .first<{ slug: string; party_id: string | null }>();
-  if (!other) throw new HttpError(400, 'That party no longer exists. Reload and try again.');
-  if (other.party_id) return { partyId: other.party_id, statements: [] };
+  const { results } = await db
+    .prepare(`SELECT slug FROM guests WHERE slug IN (${placeholders(others.length)})`)
+    .bind(...others)
+    .all<{ slug: string }>();
+  if (results.length !== others.length) {
+    throw new HttpError(400, 'One of the chosen party members isn’t on the guest list. Reload and try again.');
+  }
 
-  const partyId = `party_${crypto.randomUUID()}`;
+  const partyId = currentPartyId ?? `party_${crypto.randomUUID()}`;
+  const everyone = [slug, ...others];
   return {
     partyId,
-    statements: [db.prepare('UPDATE guests SET party_id = ? WHERE slug = ?').bind(partyId, other.slug)],
+    statements: [
+      db
+        .prepare(
+          `UPDATE guests SET party_id = NULL
+           WHERE party_id = ? AND slug NOT IN (${placeholders(everyone.length)})`,
+        )
+        .bind(partyId, ...everyone),
+      db
+        .prepare(`UPDATE guests SET party_id = ? WHERE slug IN (${placeholders(others.length)})`)
+        .bind(partyId, ...others),
+    ],
   };
 }
 
@@ -103,7 +118,7 @@ async function uniqueSlug(db: D1Database, first: string, last: string): Promise<
 export async function createGuest(db: D1Database, body: GuestInput): Promise<AdminGuest> {
   const input = cleanInput(body);
   const slug = await uniqueSlug(db, input.first, input.last);
-  const { partyId, statements: partyStatements } = await resolveParty(db, slug, input.partyWith);
+  const { partyId, statements: partyStatements } = await resolveParty(db, slug, null, input.partyMembers);
   const now = new Date().toISOString();
 
   await db.batch([
@@ -129,6 +144,7 @@ export async function createGuest(db: D1Database, body: GuestInput): Promise<Adm
       ),
     ...partyStatements,
     ...detailStatements(db, slug, input),
+    dissolveSoloParties(db),
   ]);
 
   const [created] = await listAdminGuests(db, [slug]);
@@ -136,9 +152,15 @@ export async function createGuest(db: D1Database, body: GuestInput): Promise<Adm
 }
 
 export async function updateGuest(db: D1Database, slug: string, body: GuestInput): Promise<AdminGuest> {
-  if (!(await loadGuest(db, slug))) throw new HttpError(404, 'That guest no longer exists.');
+  const existing = await loadGuest(db, slug);
+  if (!existing) throw new HttpError(404, 'That guest no longer exists.');
   const input = cleanInput(body);
-  const { partyId, statements: partyStatements } = await resolveParty(db, slug, input.partyWith);
+  const { partyId, statements: partyStatements } = await resolveParty(
+    db,
+    slug,
+    existing.row.party_id,
+    input.partyMembers,
+  );
 
   await db.batch([
     db

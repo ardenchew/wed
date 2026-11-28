@@ -38,27 +38,14 @@ const updatedFormatter = new Intl.DateTimeFormat('en-US', {
   minute: '2-digit',
 });
 
-/** Party choices: "on their own", then one option per existing party or solo guest. */
-function partyOptions(guests: AdminGuest[], self: AdminGuest | null) {
-  const groups = new Map<string, AdminGuest[]>();
-  for (const guest of guests) {
-    if (guest.slug === self?.slug) continue;
-    const key = guest.partyId ?? `solo:${guest.slug}`;
-    groups.set(key, [...(groups.get(key) ?? []), guest]);
-  }
-  return [...groups.values()]
-    .map((members) => ({
-      value: members[0].slug,
-      label: `With ${members.map(displayName).join(', ')}`,
-      members,
-    }))
-    .sort((a, b) => a.label.localeCompare(b.label));
+/** Everyone except this guest, by first name, for the party checklist. */
+function partyCandidates(guests: AdminGuest[], self: AdminGuest | null): AdminGuest[] {
+  return guests
+    .filter((guest) => guest.slug !== self?.slug)
+    .sort((a, b) => displayName(a).localeCompare(displayName(b)));
 }
 
 function initialInput(guest: AdminGuest | null, guests: AdminGuest[]): GuestInput {
-  const partner = guest?.partyId
-    ? guests.find((other) => other.partyId === guest.partyId && other.slug !== guest.slug)
-    : undefined;
   return {
     first: guest?.first ?? '',
     last: guest?.last ?? '',
@@ -69,7 +56,11 @@ function initialInput(guest: AdminGuest | null, guests: AdminGuest[]): GuestInpu
     welcomeSignatureText: guest?.welcomeSignatureText ?? '',
     polaroids: guest?.polaroids.length ? guest.polaroids : [],
     events: guest?.events ?? [],
-    partyWith: partner?.slug ?? null,
+    partyMembers: guest?.partyId
+      ? guests
+          .filter((other) => other.partyId === guest.partyId && other.slug !== guest.slug)
+          .map((other) => other.slug)
+      : [],
   };
 }
 
@@ -79,7 +70,7 @@ export function AdminGuestDialog({ guest, guests, onSave, onDelete, onClose }: A
   const [input, setInput] = useState<GuestInput>(() => initialInput(guest, guests));
   const [busy, setBusy] = useState<'save' | 'delete' | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const parties = useMemo(() => partyOptions(guests, guest), [guests, guest]);
+  const candidates = useMemo(() => partyCandidates(guests, guest), [guests, guest]);
   const name = guest ? displayName(guest) : 'New guest';
 
   useEffect(() => {
@@ -225,20 +216,51 @@ export function AdminGuestDialog({ guest, guests, onSave, onDelete, onClose }: A
                   />
                 </label>
               </div>
-              <label className="admin-field">
-                <span>Party</span>
-                <select
-                  value={input.partyWith ?? ''}
-                  onChange={(e) => set('partyWith', e.target.value || null)}
-                >
-                  <option value="">On their own</option>
-                  {parties.map((party) => (
-                    <option key={party.value} value={party.value}>
-                      {party.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <fieldset className="admin-party">
+                <legend>Party</legend>
+                <p className="admin-form__note">
+                  {input.partyMembers.length === 0
+                    ? 'On their own. Tick anyone who should be in their party — party members can RSVP for each other.'
+                    : `With ${input.partyMembers.length} other${input.partyMembers.length === 1 ? '' : 's'} — party members can RSVP for each other.`}
+                </p>
+                <div className="admin-party__list">
+                  {candidates.map((candidate) => {
+                    const ticked = input.partyMembers.includes(candidate.slug);
+                    // Someone in a different party moves over when ticked.
+                    const elsewhere =
+                      candidate.partyId && (!guest || candidate.partyId !== guest.partyId)
+                        ? guests
+                            .filter((g) => g.partyId === candidate.partyId && g.slug !== candidate.slug)
+                            .map(displayName)
+                        : [];
+                    return (
+                      <label key={candidate.slug} className="admin-check">
+                        <input
+                          type="checkbox"
+                          checked={ticked}
+                          onChange={(e) =>
+                            set(
+                              'partyMembers',
+                              e.target.checked
+                                ? [...input.partyMembers, candidate.slug]
+                                : input.partyMembers.filter((slug) => slug !== candidate.slug),
+                            )
+                          }
+                        />
+                        <span>
+                          {displayName(candidate)}
+                          {elsewhere.length > 0 && (
+                            <span className="admin-check__meta">
+                              {ticked ? ' · moves from ' : ' · with '}
+                              {elsewhere.join(', ')}
+                            </span>
+                          )}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </fieldset>
               {guest?.isAdmin && <p className="admin-form__note">Admin — can open this page.</p>}
             </section>
 
