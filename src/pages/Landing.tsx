@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { useUser } from '../hooks/useUser';
-import { GUESTS } from '../config/guests';
-import { getAllDisplayNames, getGuestSlugForDisplayName } from '../config/users';
-import { validatePassword } from '../services/store';
+import { ApiError } from '../api/client';
+import { fetchGuestNames, fetchMe } from '../api/guests';
+import type { GuestName } from '../guests/shared';
 import { searchDisplayName } from '../utils/search';
 import { Button } from '../components/Button';
 import { HeroImage } from '../components/HeroImage';
@@ -16,7 +16,10 @@ export default function Landing() {
   const [isAuthVisible, setIsAuthVisible] = useState(false);
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
-  const [matchedDisplayName, setMatchedDisplayName] = useState<string | null>(null);
+  const [matchedGuest, setMatchedGuest] = useState<GuestName | null>(null);
+  const matchedDisplayName = matchedGuest?.name ?? null;
+  /** Loaded from the API on the first name search, then reused. */
+  const guestNamesRef = useRef<GuestName[] | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { user, signIn } = useUser();
@@ -105,18 +108,22 @@ export default function Landing() {
     }
 
     try {
-      const displayNames = getAllDisplayNames();
-      const matches = searchDisplayName(name.trim(), displayNames);
+      guestNamesRef.current ??= await fetchGuestNames();
+      const guestNames = guestNamesRef.current;
+      const matches = searchDisplayName(
+        name.trim(),
+        guestNames.map((guest) => guest.name),
+      );
 
       if (matches.length === 0) {
         setError('Name not found. Please check your spelling and try again.');
       } else {
         // TODO: show a selection UI when matches.length > 1
-        setMatchedDisplayName(matches[0]);
+        setMatchedGuest(guestNames.find((guest) => guest.name === matches[0]) ?? null);
         setPassword('');
       }
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      setError(err instanceof ApiError ? err.message : 'An error occurred. Please try again.');
       console.error('Search error:', err);
     } finally {
       setLoading(false);
@@ -134,45 +141,32 @@ export default function Landing() {
       return;
     }
 
-    if (!matchedDisplayName) {
+    if (!matchedGuest) {
       setError('Please enter your name first');
       setLoading(false);
       return;
     }
 
     try {
-      const guestSlug = getGuestSlugForDisplayName(matchedDisplayName);
-      if (!guestSlug) {
-        setError('Invalid user configuration');
-        setLoading(false);
-        return;
-      }
-
-      const isValid = await validatePassword(guestSlug, password.trim());
-      
-      if (isValid) {
-        const guest = GUESTS[guestSlug];
-        if (guest) {
-          deferAutoHomeNavRef.current = true;
-          signIn(guest, password.trim());
-          setExitToHome(true);
-        } else {
-          setError('Failed to load guest data. Please try again.');
-        }
-      } else {
+      const guest = await fetchMe({ slug: matchedGuest.slug, password: password.trim() });
+      deferAutoHomeNavRef.current = true;
+      signIn(guest, password.trim());
+      setExitToHome(true);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
         setError('Incorrect password. Please try again.');
         setPassword('');
+      } else {
+        setError(err instanceof ApiError ? err.message : 'An error occurred. Please try again.');
+        console.error('Sign-in error:', err);
       }
-    } catch (err) {
-      setError('An error occurred. Please try again.');
-      console.error('Password validation error:', err);
     } finally {
       setLoading(false);
     }
   };
 
   const handleBack = () => {
-    setMatchedDisplayName(null);
+    setMatchedGuest(null);
     setPassword('');
     setError('');
     setName('');

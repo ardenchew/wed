@@ -1,10 +1,7 @@
-import { GUESTS } from '../config/guests';
-import { useUser } from './useUser';
 import type { Guest } from '../types';
+import { useUser } from './useUser';
 
-/** Resolved guest record. Falls back to the user object if no GUESTS entry exists for the slug. */
+/** The signed-in guest's profile (welcome text, polaroids, invitations), or null. */
 export function useGuest(): Guest | null {
-  const { user } = useUser();
-  if (!user) return null;
-  return user.slug ? GUESTS[user.slug] ?? user : user;
+  return useUser().user;
 }

@@ -5,6 +5,7 @@ import { HomeHeader } from '../components/HomeHeader';
 import { Polaroid } from '../components/Polaroid';
 import { RsvpStatusButton } from '../components/RsvpStatusButton';
 import { HOME_WELCOME_SECTION_ID } from '../config/nav';
+import { WELCOME_DEFAULTS } from '../guests/shared';
 import { useGuest } from '../hooks/useGuest';
 import { useHomeHeroScene } from '../hooks/useHomeHeroScene';
 import { cloudinaryUrl, cloudinarySrcSet } from '../utils/cloudinary';
@@ -48,11 +49,9 @@ export default function Home() {
     galleryPinRef,
   });
 
-  const weekendGreeting = guest?.welcomeGreetingText ?? 'Welcome!';
-  const weekendBody =
-    guest?.welcomeBodyText ??
-    'We are so happy to celebrate with you. More details for the weekend are coming soon.';
-  const weekendSignature = guest?.welcomeSignatureText ?? 'Much love, Emily and Arden';
+  const weekendGreeting = guest?.welcomeGreetingText ?? WELCOME_DEFAULTS.greeting;
+  const weekendBody = guest?.welcomeBodyText ?? WELCOME_DEFAULTS.body;
+  const weekendSignature = guest?.welcomeSignatureText ?? WELCOME_DEFAULTS.signature;
   const guestWeekendPolaroid = guest?.polaroids?.[0];
   const weekendPolaroidPublicId = guestWeekendPolaroid?.publicId ?? DEFAULT_WEEKEND_POLAROID_PUBLIC_ID;
   const weekendPolaroidDate = guestWeekendPolaroid?.dateText ?? DEFAULT_WEEKEND_POLAROID_DATE;

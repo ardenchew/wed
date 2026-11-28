@@ -9,6 +9,8 @@ import { useUser } from './hooks/useUser';
 import Landing from './pages/Landing';
 import Home from './pages/Home';
 import Schedule from './pages/Schedule';
+import Admin from './pages/Admin';
+import { ADMIN_PATH } from './config/nav';
 import SplashPreview from './pages/SplashPreview';
 import './styles/index.css';
 
@@ -25,6 +27,14 @@ function ProtectedRoute({ children }: { children: React.ReactElement }) {
     return <Navigate to="/" replace />;
   }
   
+  return children;
+}
+
+/** Signed-in admins only; everyone else is sent to Home. The API enforces this too. */
+function AdminRoute({ children }: { children: React.ReactElement }) {
+  const { user } = useUser();
+  if (!user) return <Navigate to="/" replace />;
+  if (!user.isAdmin) return <Navigate to="/home" replace />;
   return children;
 }
 
@@ -98,6 +108,14 @@ function AppRoutes() {
             <ProtectedRoute>
               <Schedule />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ADMIN_PATH}
+          element={
+            <AdminRoute>
+              <Admin />
+            </AdminRoute>
           }
         />
         <Route path="/splash" element={<SplashPreview />} />
