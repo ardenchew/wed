@@ -18,7 +18,7 @@ export function Polaroid({ dateText, publicId, alt = '', className = '' }: Polar
           className="polaroid__image"
           src={cloudinaryUrl(publicId, { w: 600, c: 'limit' })}
           srcSet={cloudinarySrcSet(publicId, [400, 600, 900])}
-          sizes="(max-width: 768px) 80vw, 360px"
+          sizes="(max-width: 860px) 250px, 316px"
           alt={alt}
           loading="lazy"
           decoding="async"

@@ -6,7 +6,10 @@
  *
  * `f_auto` serves AVIF/WebP/JPEG based on the browser's Accept header.
  * `q_auto` picks a content-aware quality level.
- * `dpr_auto` reads client hints to serve 2× to retina screens.
+ *
+ * Pixel density is handled by `srcset` + `sizes`, not `dpr_auto`: Cloudinary only honours
+ * `dpr_auto` when the browser sends client hints (it usually doesn't), and when it does the
+ * returned width no longer matches the `srcset` `w` descriptor.
  *
  * In dev (no env), returns the raw publicId so missing config is loud.
  */
@@ -26,7 +29,8 @@ const CLOUD = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 
 export function cloudinaryUrl(publicId: string, opts: CloudinaryOpts = {}): string {
   if (!CLOUD) return publicId;
-  const t: string[] = ['f_auto', `q_${opts.q ?? 'auto'}`, `dpr_${opts.dpr ?? 'auto'}`];
+  const t: string[] = ['f_auto', `q_${opts.q ?? 'auto'}`];
+  if (opts.dpr) t.push(`dpr_${opts.dpr}`);
   if (opts.w) t.push(`w_${opts.w}`);
   if (opts.h) t.push(`h_${opts.h}`);
   if (opts.c) t.push(`c_${opts.c}`);
