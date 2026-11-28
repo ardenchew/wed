@@ -1,66 +1,55 @@
 # Emily & Arden
 
-A lightweight React + TypeScript wedding website with a provider-agnostic data store.  
-Development data lives in TypeScript config files so backend storage can be swapped later without changing page code.
+Wedding website for Emily & Arden. React 18 + TypeScript, built with Vite, images served from
+Cloudinary, hosted on GitHub Pages at https://ardenchew.github.io/wed/.
 
-## Features
-
-- Name + password sign-in flow
-- Store abstraction (`src/services/store`) with adapter wiring
-- Default `dev-config` adapter backed by TypeScript config data
-- Mobile-friendly UI
-- GitHub Pages deployment setup
-
-## Tech Stack
-
-- React 18 + TypeScript
-- Vite
-- React Router (HashRouter)
-- CSS
-
-## Data Architecture
-
-- App code calls only the store facade in `src/services/store/index.ts`
-- Database key structure is defined in `src/data/schema.ts`
-- Development source data is in TypeScript config files:
-  - `src/config/users.ts` (display name -> guest slug)
-  - `src/config/authUsers.ts` (guest slug -> password)
-  - `src/config/guests.ts` and `src/config/events.ts` (domain records)
-
-To add a real database later, implement a new adapter that satisfies `DataStore` in `src/services/store/contracts.ts`, then switch adapter selection in the store factory.
-
-## Setup
-
-1. Install dependencies:
+## Run locally
 
 ```bash
+cp .env.example .env
 npm install
-```
-
-2. Optional `.env` adapter override:
-
-```env
-VITE_DATA_STORE_ADAPTER=dev-config
-```
-
-If omitted, `dev-config` is used by default.
-
-3. Start development server:
-
-```bash
 npm run dev
 ```
 
-## Build
+Then open http://localhost:5173/wed/.
+
+## Deploy
 
 ```bash
-npm run build
+npm run deploy
 ```
+
+This builds the site and pushes `dist/` to the `gh-pages` branch, which GitHub Pages serves.
+Merging to `main` does **not** deploy — run this after merging.
 
 ## Scripts
 
-- `npm run dev`
-- `npm run build`
-- `npm run preview`
-- `npm run lint`
-- `npm run deploy`
+| Script            | What it does                                  |
+| ----------------- | --------------------------------------------- |
+| `npm run dev`     | Dev server with hot reload                    |
+| `npm run build`   | Type-check and build into `dist/`             |
+| `npm run preview` | Serve the built `dist/` locally               |
+| `npm run lint`    | ESLint, zero warnings allowed                 |
+| `npm run deploy`  | Build and publish to GitHub Pages             |
+
+## Where things live
+
+- `src/pages/` — Landing (sign-in), Home, Schedule, and a `/splash` preview page
+- `src/config/` — guest list, events, passwords, and nav items
+- `src/services/store/` — the data-store facade the pages call for sign-in
+- `src/utils/cloudinary.ts` — builds Cloudinary image URLs from public ids like `wed/home/...`
+- `src/styles/index.css` — all styles
+
+## Environment variables
+
+| Variable                     | Purpose                                        |
+| ---------------------------- | ---------------------------------------------- |
+| `VITE_CLOUDINARY_CLOUD_NAME` | Cloudinary cloud for image URLs (public)       |
+| `VITE_DATA_STORE_ADAPTER`    | Optional; defaults to `dev-config`             |
+
+`VITE_*` values are inlined into the public bundle, so they must never hold secrets.
+
+## Known limitation
+
+Sign-in is checked in the browser: passwords and every guest's data ship in the JS bundle, so the
+login keeps casual visitors out but is not real security.

@@ -22,7 +22,7 @@ export interface CloudinaryOpts {
   dpr?: 'auto' | number;
 }
 
-const CLOUD = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME as string | undefined;
+const CLOUD = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 
 export function cloudinaryUrl(publicId: string, opts: CloudinaryOpts = {}): string {
   if (!CLOUD) return publicId;

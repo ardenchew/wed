@@ -1,16 +1,15 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-const LANDING_EXIT_TO_HOME_MS = 620;
-/** Keep in sync with `.landing-center-content` `top` transition in index.css */
-const LANDING_CENTER_TRANSITION_MS = 720;
 import { useUser } from '../hooks/useUser';
 import { GUESTS } from '../config/guests';
 import { getAllDisplayNames, getGuestSlugForDisplayName } from '../config/users';
 import { validatePassword } from '../services/store';
 import { searchDisplayName } from '../utils/search';
 import { Button } from '../components/Button';
-import '../styles/index.css';
+
+const LANDING_EXIT_TO_HOME_MS = 620;
+/** Keep in sync with `.landing-center-content` `top` transition in index.css */
+const LANDING_CENTER_TRANSITION_MS = 720;
 
 export default function Landing() {
   const [isAuthVisible, setIsAuthVisible] = useState(false);
