@@ -21,7 +21,7 @@ export interface GuestProfile {
   isAdmin: boolean;
 }
 
-/** One entry in the public sign-in name list (`GET /guests/names`). */
+/** A guest the sign-in lookup (`POST /guests/lookup`) matched: slug and display name only. */
 export interface GuestName {
   slug: string;
   name: string;

@@ -1,5 +1,6 @@
 import type { GuestName, GuestProfile } from '../src/guests/shared';
 import { displayName } from '../src/guests/shared';
+import { matchGuests, MATCH_QUERY_MAX } from '../src/guests/match';
 import type { GuestPolaroid } from '../src/types';
 import { HttpError, placeholders } from './http';
 
@@ -101,12 +102,28 @@ export function toProfile({ row, events, polaroids }: GuestRecord): GuestProfile
   };
 }
 
-/** Everyone's display name, for the sign-in search. Public: it reveals names, nothing else. */
+/**
+ * Everyone's display name, for the old sign-in search. Public.
+ * @deprecated Kept only until the site that uses `POST /guests/lookup` is live; then remove it.
+ */
 export async function loadGuestNames(db: D1Database): Promise<GuestName[]> {
   const { results } = await db
     .prepare('SELECT slug, first, last FROM guests ORDER BY first COLLATE NOCASE, last COLLATE NOCASE')
     .all<Pick<GuestRow, 'slug' | 'first' | 'last'>>();
   return results.map((row) => ({ slug: row.slug, name: displayName(row) }));
+}
+
+/**
+ * The guests a typed sign-in name could mean (`POST /guests/lookup`). Public, so it only answers
+ * specific names — see src/guests/match.ts — and returns names and slugs, nothing else.
+ */
+export async function lookupGuests(db: D1Database, body: unknown): Promise<GuestName[]> {
+  const name = (body as { name?: unknown } | null)?.name;
+  if (typeof name !== 'string' || name.length > MATCH_QUERY_MAX) throw new HttpError(400, 'Please enter your name.');
+  const { results } = await db
+    .prepare('SELECT slug, first, last, nickname FROM guests')
+    .all<Pick<GuestRow, 'slug' | 'first' | 'last' | 'nickname'>>();
+  return matchGuests(name, results).map((row) => ({ slug: row.slug, name: displayName(row) }));
 }
 
 /** The guest named by `Authorization: Basic base64(slug:password)`, or a 401. */

@@ -1,16 +1,55 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, FormEvent } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, FormEvent, KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { useUser } from '../hooks/useUser';
 import { ApiError } from '../api/client';
-import { fetchGuestNames, fetchMe } from '../api/guests';
+import { fetchMe, lookupGuests } from '../api/guests';
 import type { GuestName } from '../guests/shared';
-import { searchDisplayName } from '../utils/search';
 import { Button } from '../components/Button';
 import { HeroImage } from '../components/HeroImage';
 
 const LANDING_EXIT_TO_HOME_MS = 620;
-/** Keep in sync with `.landing-center-content` `top` transition in index.css */
-const LANDING_CENTER_TRANSITION_MS = 720;
+
+/**
+ * The subtle submit arrow at the right end of a sign-in field. It fades in once something is
+ * typed and pulses while the request runs; Enter in the field submits too.
+ */
+function SubmitArrow({
+  visible,
+  busy,
+  label,
+  busyLabel,
+  disabled,
+}: {
+  visible: boolean;
+  busy: boolean;
+  label: string;
+  busyLabel: string;
+  disabled: boolean;
+}) {
+  return (
+    <button
+      type="submit"
+      className={`landing-submit-arrow${visible ? ' landing-submit-arrow--visible' : ''}${
+        busy ? ' landing-submit-arrow--busy' : ''
+      }`}
+      aria-label={busy ? busyLabel : label}
+      aria-hidden={!visible}
+      tabIndex={visible ? 0 : -1}
+      disabled={!visible || busy || disabled}
+    >
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+        <path
+          d="M4 12h15M13 6l6 6-6 6"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </button>
+  );
+}
 
 export default function Landing() {
   const [isAuthVisible, setIsAuthVisible] = useState(false);
@@ -18,18 +57,21 @@ export default function Landing() {
   const [password, setPassword] = useState('');
   const [matchedGuest, setMatchedGuest] = useState<GuestName | null>(null);
   const matchedDisplayName = matchedGuest?.name ?? null;
-  /** Loaded from the API on the first name search, then reused. */
-  const guestNamesRef = useRef<GuestName[] | null>(null);
+  /** Set when the typed name matched several guests: the step that lists them to pick from. */
+  const [candidates, setCandidates] = useState<GuestName[] | null>(null);
+  /** True while the name form (ENTER / name input) is the step on screen. */
+  const onNameStep = !matchedGuest && !candidates;
+  const hasName = name.trim().length > 0;
   const [error, setError] = useState('');
+  const [wrongPassword, setWrongPassword] = useState(false);
+  const pickerRef = useRef<HTMLUListElement>(null);
   const [loading, setLoading] = useState(false);
   const { user, signIn } = useUser();
   const navigate = useNavigate();
   const deferAutoHomeNavRef = useRef(false);
   const [exitToHome, setExitToHome] = useState(false);
-  const [nameStepReady, setNameStepReady] = useState(false);
   const enterTriggerRef = useRef<HTMLButtonElement>(null);
   const morphRef = useRef<HTMLDivElement>(null);
-  const nameStepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [enterRulePx, setEnterRulePx] = useState(0);
   const [morphWidthPx, setMorphWidthPx] = useState(0);
 
@@ -39,7 +81,7 @@ export default function Landing() {
   }, []);
 
   useLayoutEffect(() => {
-    if (matchedDisplayName) return;
+    if (!onNameStep) return;
     const node = morphRef.current;
     if (!node) return;
     const syncMorphWidth = () => setMorphWidthPx(node.getBoundingClientRect().width);
@@ -47,18 +89,23 @@ export default function Landing() {
     ro.observe(node);
     syncMorphWidth();
     return () => ro.disconnect();
-  }, [matchedDisplayName, isAuthVisible, nameStepReady]);
+  }, [onNameStep, isAuthVisible]);
 
   useLayoutEffect(() => {
-    if (isAuthVisible || matchedDisplayName) return;
+    if (isAuthVisible || !onNameStep) return;
     measureEnterRule();
-  }, [isAuthVisible, matchedDisplayName, measureEnterRule]);
+  }, [isAuthVisible, onNameStep, measureEnterRule]);
 
   useEffect(() => {
-    if (isAuthVisible || matchedDisplayName) return;
+    if (isAuthVisible || !onNameStep) return;
     window.addEventListener('resize', measureEnterRule);
     return () => window.removeEventListener('resize', measureEnterRule);
-  }, [isAuthVisible, matchedDisplayName, measureEnterRule]);
+  }, [isAuthVisible, onNameStep, measureEnterRule]);
+
+  // Move focus to the first name when the picker opens, so keyboard and screen-reader users land on it.
+  useEffect(() => {
+    if (candidates && !matchedGuest) pickerRef.current?.querySelector('button')?.focus();
+  }, [candidates, matchedGuest]);
 
   useEffect(() => {
     document.body.classList.add('landing-no-scroll');
@@ -74,15 +121,6 @@ export default function Landing() {
     if (!user || deferAutoHomeNavRef.current) return;
     navigate('/home', { replace: true });
   }, [user, navigate]);
-
-  useEffect(() => {
-    return () => {
-      if (nameStepTimerRef.current != null) {
-        window.clearTimeout(nameStepTimerRef.current);
-        nameStepTimerRef.current = null;
-      }
-    };
-  }, []);
 
   useEffect(() => {
     if (!exitToHome) return;
@@ -108,19 +146,16 @@ export default function Landing() {
     }
 
     try {
-      guestNamesRef.current ??= await fetchGuestNames();
-      const guestNames = guestNamesRef.current;
-      const matches = searchDisplayName(
-        name.trim(),
-        guestNames.map((guest) => guest.name),
-      );
+      const matches = await lookupGuests(name.trim());
 
       if (matches.length === 0) {
-        setError('Name not found. Please check your spelling and try again.');
+        setError(
+          'We couldn’t find that name. Try your full first name, or your first and last name.',
+        );
+      } else if (matches.length === 1) {
+        chooseGuest(matches[0]);
       } else {
-        // TODO: show a selection UI when matches.length > 1
-        setMatchedGuest(guestNames.find((guest) => guest.name === matches[0]) ?? null);
-        setPassword('');
+        setCandidates(matches);
       }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'An error occurred. Please try again.');
@@ -147,6 +182,7 @@ export default function Landing() {
       return;
     }
 
+    setWrongPassword(false);
     try {
       const guest = await fetchMe({ slug: matchedGuest.slug, password: password.trim() });
       deferAutoHomeNavRef.current = true;
@@ -154,7 +190,7 @@ export default function Landing() {
       setExitToHome(true);
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
-        setError('Incorrect password. Please try again.');
+        setWrongPassword(true);
         setPassword('');
       } else {
         setError(err instanceof ApiError ? err.message : 'An error occurred. Please try again.');
@@ -165,27 +201,46 @@ export default function Landing() {
     }
   };
 
+  const chooseGuest = (guest: GuestName) => {
+    setMatchedGuest(guest);
+    setPassword('');
+    setError('');
+    setWrongPassword(false);
+  };
+
+  /** Back from the password step: to the list if there was one, else to the name (kept, to edit). */
   const handleBack = () => {
     setMatchedGuest(null);
     setPassword('');
     setError('');
-    setName('');
+    setWrongPassword(false);
   };
 
+  /** Back to typing a name, from the list or from a wrong password. */
+  const handleSearchAgain = () => {
+    handleBack();
+    setCandidates(null);
+  };
+
+  /** Up/down arrows (and Home/End) move between the names in the list. */
+  const handlePickerKeyDown = (e: KeyboardEvent<HTMLUListElement>) => {
+    const buttons = Array.from(e.currentTarget.querySelectorAll('button'));
+    const current = buttons.indexOf(document.activeElement as HTMLButtonElement);
+    const next =
+      e.key === 'ArrowDown' ? current + 1
+      : e.key === 'ArrowUp' ? current - 1
+      : e.key === 'Home' ? 0
+      : e.key === 'End' ? buttons.length - 1
+      : null;
+    if (next === null) return;
+    e.preventDefault();
+    buttons[(next + buttons.length) % buttons.length]?.focus();
+  };
+
+  /** ENTER turns into the name field right where it is; its underline widens to full width. */
   const handleEnterClick = () => {
     if (isAuthVisible) return;
     setIsAuthVisible(true);
-    const reduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduced) {
-      setNameStepReady(true);
-      return;
-    }
-    nameStepTimerRef.current = window.setTimeout(() => {
-      setNameStepReady(true);
-      nameStepTimerRef.current = null;
-    }, LANDING_CENTER_TRANSITION_MS);
   };
 
   return (
@@ -200,16 +255,16 @@ export default function Landing() {
       <div className="landing-center-content">
         <div className="landing-transition-shell landing-transition-shell--compact">
           <section className="landing-panel-auth-inner" aria-label="Sign in">
-            {!matchedDisplayName ? (
+            {onNameStep ? (
               <form onSubmit={handleNameSubmit} className="sign-in-form">
                 <div className="landing-entry-morph" ref={morphRef}>
                   <div
-                    className={`landing-entry-morph__stack${nameStepReady ? ' landing-entry-morph__stack--expanded' : ''}`}
+                    className={`landing-entry-morph__stack${isAuthVisible ? ' landing-entry-morph__stack--expanded' : ''}`}
                   >
                     <div
-                      className={`landing-entry-morph__text-slot${nameStepReady ? ' landing-entry-morph__text-slot--expanded' : ''}`}
+                      className={`landing-entry-morph__text-slot${isAuthVisible ? ' landing-entry-morph__text-slot--expanded' : ''}`}
                     >
-                      {!nameStepReady ? (
+                      {!isAuthVisible ? (
                         <button
                           ref={enterTriggerRef}
                           type="button"
@@ -220,21 +275,31 @@ export default function Landing() {
                           ENTER
                         </button>
                       ) : (
-                        <input
-                          type="text"
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          placeholder="Enter guest name"
-                          className="landing-entry-morph__input"
-                          disabled={loading || exitToHome}
-                          autoFocus
-                        />
+                        <>
+                          <input
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="Enter guest name"
+                            aria-label="Your name"
+                            className="landing-entry-morph__input"
+                            disabled={loading || exitToHome}
+                            autoFocus
+                          />
+                          <SubmitArrow
+                            visible={hasName}
+                            busy={loading}
+                            label="Search"
+                            busyLabel="Searching"
+                            disabled={exitToHome}
+                          />
+                        </>
                       )}
                     </div>
                     <div
                       className="landing-entry-morph__rule"
                       style={{
-                        transform: nameStepReady
+                        transform: isAuthVisible
                           ? 'scaleX(1)'
                           : `scaleX(${
                               morphWidthPx > 0 && enterRulePx > 0
@@ -246,36 +311,68 @@ export default function Landing() {
                   </div>
                 </div>
 
-                {error && <div className="error-message">{error}</div>}
-
-                <Button
-                  type="submit"
-                  variant="text"
-                  disabled={!nameStepReady || loading || exitToHome || !name.trim()}
-                  className={!nameStepReady ? 'landing-search-submit--concealed' : undefined}
-                  aria-hidden={!nameStepReady}
-                >
-                  {loading ? 'Searching...' : 'Search'}
-                </Button>
+                {error && <div className="error-message" role="alert">{error}</div>}
               </form>
+            ) : !matchedGuest && candidates ? (
+              <div className="landing-picker">
+                <ul
+                  ref={pickerRef}
+                  className="landing-picker__list"
+                  aria-label="Which one are you?"
+                  onKeyDown={handlePickerKeyDown}
+                >
+                  {candidates.map((guest) => (
+                    <li key={guest.slug}>
+                      <button
+                        type="button"
+                        className="landing-picker__option"
+                        onClick={() => chooseGuest(guest)}
+                      >
+                        {guest.name}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                <Button type="button" variant="text" onClick={handleSearchAgain}>
+                  Back
+                </Button>
+              </div>
             ) : (
               <>
                 <p className="landing-auth-title">{matchedDisplayName}</p>
 
                 <form onSubmit={handlePasswordSubmit} className="sign-in-form">
-                  <div className="form-group">
+                  <div className="form-group landing-field">
                     <input
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Password"
-                      className="name-input name-input--plain"
+                      aria-label="Password"
+                      className="name-input name-input--plain landing-field__input"
                       disabled={loading || exitToHome}
                       autoFocus
                     />
+                    <SubmitArrow
+                      visible={password.trim().length > 0}
+                      busy={loading}
+                      label="Sign in"
+                      busyLabel="Signing in"
+                      disabled={exitToHome}
+                    />
                   </div>
 
-                  {error && <div className="error-message">{error}</div>}
+                  {wrongPassword ? (
+                    <div className="error-message" role="alert">
+                      That password doesn’t match {matchedDisplayName}. Try again, or{' '}
+                      <button type="button" className="error-message__link" onClick={handleSearchAgain}>
+                        choose a different name
+                      </button>
+                      .
+                    </div>
+                  ) : (
+                    error && <div className="error-message" role="alert">{error}</div>
+                  )}
 
                   <div className="form-actions form-actions--inline">
                     <Button
@@ -285,9 +382,6 @@ export default function Landing() {
                       disabled={loading || exitToHome}
                     >
                       Back
-                    </Button>
-                    <Button type="submit" variant="text" disabled={loading || exitToHome}>
-                      {loading ? 'Signing in...' : 'Sign In'}
                     </Button>
                   </div>
                 </form>

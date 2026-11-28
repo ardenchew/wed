@@ -80,6 +80,12 @@ the Worker deployed.)
 
 ## Guests and admin
 
+- Sign-in starts with a name. The site sends it to `POST /guests/lookup`, which matches it
+  against first, last and nicknames (ignoring case, spacing and accents; word order doesn't
+  matter; one typo forgiven in words of 5+ letters) and returns at most five names. At least one
+  typed word must be a whole name ("Kwan", "emily k"), so short fragments like "a" or "em" return
+  nothing and the guest list can't be read from it. Several matches show a "Which one are you?"
+  list. The rules live in `src/guests/match.ts`.
 - Every guest has a password; sign-in sends it to the API (HTTP Basic auth), which checks it
   against the `guests` table. The site keeps it in the browser's saved session for later calls.
 - Guests marked `is_admin` (Emily and Arden) get an **Admin** item in the menu. The admin page

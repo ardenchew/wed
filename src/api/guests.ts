@@ -1,8 +1,8 @@
 import type { AdminGuest, GuestInput, GuestName, GuestProfile } from '../guests/shared';
 import { apiRequest, type Credentials } from './client';
 
-/** Everyone's display name, for the sign-in search. */
-export const fetchGuestNames = () => apiRequest<GuestName[]>('GET', '/guests/names');
+/** The guests a typed sign-in name could mean: none, one, or a few to choose from. */
+export const lookupGuests = (name: string) => apiRequest<GuestName[]>('POST', '/guests/lookup', { body: { name } });
 
 /** The signed-in guest's profile. A 401 means the slug/password pair is wrong. */
 export const fetchMe = (credentials: Credentials) => apiRequest<GuestProfile>('GET', '/me', { credentials });
