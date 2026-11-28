@@ -1805,8 +1805,13 @@ body:has(.home-page--schedule) {
    a sealed envelope in the middle holding the guest's letter and polaroids. */
 .letter-home {
   /* Border thickness: top and bottom carry the header, the sides are slimmer on phones. */
-  --band-y: 56px;
+  --band-y: 60px;
   --band-x: 28px;
+  /* The outer of the two ivory hairlines sits this far inside the band's inner edge. */
+  --hairline: 13px;
+  /* The green outside the hairlines, where the logo, menu and vines live. */
+  --band-clear-y: calc(var(--band-y) - var(--hairline));
+  --band-clear-x: calc(var(--band-x) - var(--hairline));
   --band-color: #56684c;
   --band-ink: #fbf8ef;
   --page: #fafafa;
@@ -1853,7 +1858,7 @@ body:has(.home-page--schedule) {
 }
 
 .letter-home__frame::before {
-  inset: -13px;
+  inset: calc(-1 * var(--hairline));
   border-color: color-mix(in srgb, var(--band-ink) 70%, transparent);
 }
 
@@ -1862,7 +1867,8 @@ body:has(.home-page--schedule) {
   border-color: color-mix(in srgb, var(--band-ink) 42%, transparent);
 }
 
-/* The site's vine, centred on each side of the band. */
+/* The site's vine, centred in the green outside the hairlines on each side. Phones have no side
+   vines: their side bands are too slim to hold one clear of the lines. */
 .letter-home__vine {
   position: absolute;
   aspect-ratio: 229 / 80;
@@ -1874,33 +1880,51 @@ body:has(.home-page--schedule) {
 .letter-home__vine--top,
 .letter-home__vine--bottom {
   left: 50%;
-  width: calc(var(--band-y) * 2.1);
+  height: calc(var(--band-clear-y) * 0.72);
 }
 
 .letter-home__vine--top {
-  top: calc(var(--band-y) / -2);
+  top: calc((var(--band-y) + var(--hairline)) / -2);
   transform: translate(-50%, -50%);
 }
 
 .letter-home__vine--bottom {
-  bottom: calc(var(--band-y) / -2);
+  bottom: calc((var(--band-y) + var(--hairline)) / -2);
   transform: translate(-50%, 50%) rotate(180deg);
 }
 
+/* Rotated a quarter turn, so their height is the thickness across the band. */
 .letter-home__vine--left,
 .letter-home__vine--right {
   top: 50%;
-  width: calc(var(--band-x) * 2.1);
+  height: calc(var(--band-clear-x) * 0.72);
 }
 
 .letter-home__vine--left {
-  left: calc(var(--band-x) / -2);
+  left: calc((var(--band-x) + var(--hairline)) / -2);
   transform: translate(-50%, -50%) rotate(-90deg);
 }
 
 .letter-home__vine--right {
-  right: calc(var(--band-x) / -2);
+  right: calc((var(--band-x) + var(--hairline)) / -2);
   transform: translate(50%, -50%) rotate(90deg);
+}
+
+@media (max-width: 639px) {
+  .letter-home__vine--left,
+  .letter-home__vine--right {
+    display: none;
+  }
+}
+
+/* The header sits in the green above the hairlines, its logo sized to fit there. */
+.letter-home .home-header {
+  height: var(--band-clear-y);
+  padding-block: 0;
+}
+
+.letter-home .home-logo__img {
+  width: calc(var(--band-clear-y) - 12px);
 }
 
 .letter-home__header {
