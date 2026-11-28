@@ -3041,15 +3041,10 @@ body:has(.gifts),
   font-family: 'Bacasime Antique', Georgia, 'Times New Roman', serif;
 }
 
-.gifts__vine {
+.gifts__flowers {
   display: block;
-  width: clamp(110px, 28vw, 160px);
+  width: clamp(80px, 24vw, 110px);
   height: auto;
-}
-
-.gifts__lead {
-  font-size: clamp(1.35rem, 2.4vw, 1.75rem);
-  line-height: 1.35;
 }
 
 .gifts__body {
