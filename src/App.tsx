@@ -8,6 +8,7 @@ import { useRsvp } from './hooks/useRsvp';
 import { useUser } from './hooks/useUser';
 import Landing from './pages/Landing';
 import Home from './pages/Home';
+import HomeV2 from './pages/HomeV2';
 import Schedule from './pages/Schedule';
 import Admin from './pages/Admin';
 import Gifts from './pages/Gifts';
@@ -107,7 +108,7 @@ function AppRoutes() {
           path={HOME_V2_PATH}
           element={
             <ProtectedRoute>
-              <Home key="v2" welcome="envelope" />
+              <HomeV2 />
             </ProtectedRoute>
           }
         />

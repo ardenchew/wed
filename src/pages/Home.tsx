@@ -2,11 +2,14 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { HeroImage } from '../components/HeroImage';
 import { HomeHeader } from '../components/HomeHeader';
-import { PhotoStack, type StackPhoto } from '../components/PhotoStack';
 import { Polaroid } from '../components/Polaroid';
 import { RsvpStatusButton } from '../components/RsvpStatusButton';
-import { WelcomeEnvelope } from '../components/WelcomeEnvelope';
-import { HOME_V2_PATH, HOME_WELCOME_SECTION_ID } from '../config/nav';
+import {
+  DEFAULT_WEEKEND_POLAROID_DATE,
+  DEFAULT_WEEKEND_POLAROID_PUBLIC_ID,
+  HOME_GALLERY_PUBLIC_IDS,
+} from '../config/homePhotos';
+import { HOME_WELCOME_SECTION_ID } from '../config/nav';
 import { WELCOME_DEFAULTS } from '../guests/shared';
 import { useGuest } from '../hooks/useGuest';
 import { useHomeHeroScene } from '../hooks/useHomeHeroScene';
@@ -20,9 +23,6 @@ const SNAP_IDLE_MS = 300;
 /** How long a visitor can sit on the hero before the "Scroll" cue fades in to nudge them. */
 const SCROLL_HINT_DELAY_MS = 5000;
 
-const DEFAULT_WEEKEND_POLAROID_PUBLIC_ID = 'wed/home/emily_arden_stony_hill';
-const DEFAULT_WEEKEND_POLAROID_DATE = '9 5 2025';
-const HOME_GALLERY_PUBLIC_IDS = ['wed/home/home1', 'wed/home/home2', 'wed/home/home3'];
 
 /**
  * Gallery tiles crop with `object-fit: cover`, so a 3:2 landscape photo has to be wider than the
@@ -31,15 +31,7 @@ const HOME_GALLERY_PUBLIC_IDS = ['wed/home/home1', 'wed/home/home2', 'wed/home/h
  */
 const GALLERY_SIZES = '(max-width: 640px) 90vh, 47vw';
 
-interface HomeProps {
-  /**
-   * How the welcome letter is shown: `fade` (Home) fades it in beside the polaroid; `envelope`
-   * (Home V2, a side-by-side preview) opens it out of an envelope as the guest scrolls.
-   */
-  welcome?: 'fade' | 'envelope';
-}
-
-export default function Home({ welcome = 'fade' }: HomeProps) {
+export default function Home() {
   const guest = useGuest();
   const location = useLocation();
   const navigate = useNavigate();
@@ -86,17 +78,6 @@ export default function Home({ welcome = 'fade' }: HomeProps) {
       return true;
     });
   }, [guestGalleryPublicIds, hasGuestWeekendPolaroid]);
-
-  /** Home V2 piles the weekend polaroid on top of the gallery photos instead of a marquee. */
-  const stackPhotos = useMemo<StackPhoto[]>(
-    () => [
-      { publicId: weekendPolaroidPublicId, dateText: weekendPolaroidDate, alt: 'Emily and Arden' },
-      ...galleryPublicIds
-        .filter((id) => id !== weekendPolaroidPublicId)
-        .map((publicId) => ({ publicId, alt: '' })),
-    ],
-    [galleryPublicIds, weekendPolaroidDate, weekendPolaroidPublicId],
-  );
 
   const galleryLoopPublicIds = useMemo(
     () => [...galleryPublicIds, ...galleryPublicIds],
@@ -259,86 +240,57 @@ export default function Home({ welcome = 'fade' }: HomeProps) {
 
       <div className="home__mount-scope">
         <div className="home__fixed-header-wrap">
-          <HomeHeader
-            activePath={welcome === 'envelope' ? HOME_V2_PATH : '/home'}
-            activeSectionId={activeSectionId}
-          />
+          <HomeHeader activePath="/home" activeSectionId={activeSectionId} />
         </div>
 
         <div className="home__scroll-track">
-          {welcome === 'envelope' ? (
-            <section
-              id={HOME_WELCOME_SECTION_ID}
-              className="home__scroll home__scroll--envelope"
-              aria-label="Weekend details"
-            >
-              <WelcomeEnvelope
-                greeting={weekendGreeting}
-                body={weekendBody}
-                signature={weekendSignature}
-              />
-              <div className="home__reveal">
-                <PhotoStack
-                  key={stackPhotos.map((photo) => photo.publicId).join()}
-                  className="home__photo-stack"
-                  photos={stackPhotos}
-                />
+          <section id={HOME_WELCOME_SECTION_ID} className="home__scroll" aria-label="Weekend details">
+            <div className="home__scroll-inner">
+              <div className="home__weekend-content">
+                <div className="home__weekend-text">
+                  <p className="home__weekend-greeting home__reveal">{weekendGreeting}</p>
+                  <p className="home__weekend-body home__reveal home__reveal--step-1">
+                    {weekendBody}
+                  </p>
+                  <p className="home__weekend-signature home__reveal home__reveal--step-2">
+                    {weekendSignature}
+                  </p>
+                </div>
+                <div className="home__weekend-image-wrap home__reveal home__reveal--step-3">
+                  <Polaroid
+                    className="home__weekend-polaroid"
+                    dateText={weekendPolaroidDate}
+                    publicId={weekendPolaroidPublicId}
+                    alt="Emily and Arden"
+                  />
+                </div>
               </div>
-              <div className="home__rsvp home__rsvp--inline">
+            </div>
+          </section>
+          <section ref={gallerySectionRef} className="home__gallery" aria-label="Photo gallery">
+            <div ref={galleryPinRef} className="home__gallery-pin">
+              <div className="home__gallery-viewport">
+                <div className="home__gallery-track">
+                  {galleryLoopPublicIds.map((publicId, index) => (
+                    <figure key={`${publicId}-${index}`} className="home__gallery-item">
+                      <img
+                        className="home__gallery-image"
+                        src={cloudinaryUrl(publicId, { w: 1200, c: 'limit' })}
+                        srcSet={cloudinarySrcSet(publicId, [600, 900, 1200, 1800, 2400])}
+                        sizes={GALLERY_SIZES}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </figure>
+                  ))}
+                </div>
+              </div>
+              <div className="home__rsvp">
                 <RsvpStatusButton />
               </div>
-            </section>
-          ) : (
-            <section id={HOME_WELCOME_SECTION_ID} className="home__scroll" aria-label="Weekend details">
-              <div className="home__scroll-inner">
-                <div className="home__weekend-content">
-                  <div className="home__weekend-text">
-                    <p className="home__weekend-greeting home__reveal">{weekendGreeting}</p>
-                    <p className="home__weekend-body home__reveal home__reveal--step-1">
-                      {weekendBody}
-                    </p>
-                    <p className="home__weekend-signature home__reveal home__reveal--step-2">
-                      {weekendSignature}
-                    </p>
-                  </div>
-                  <div className="home__weekend-image-wrap home__reveal home__reveal--step-3">
-                    <Polaroid
-                      className="home__weekend-polaroid"
-                      dateText={weekendPolaroidDate}
-                      publicId={weekendPolaroidPublicId}
-                      alt="Emily and Arden"
-                    />
-                  </div>
-                </div>
-              </div>
-            </section>
-          )}
-          {welcome !== 'envelope' && (
-            <section ref={gallerySectionRef} className="home__gallery" aria-label="Photo gallery">
-              <div ref={galleryPinRef} className="home__gallery-pin">
-                <div className="home__gallery-viewport">
-                  <div className="home__gallery-track">
-                    {galleryLoopPublicIds.map((publicId, index) => (
-                      <figure key={`${publicId}-${index}`} className="home__gallery-item">
-                        <img
-                          className="home__gallery-image"
-                          src={cloudinaryUrl(publicId, { w: 1200, c: 'limit' })}
-                          srcSet={cloudinarySrcSet(publicId, [600, 900, 1200, 1800, 2400])}
-                          sizes={GALLERY_SIZES}
-                          alt=""
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      </figure>
-                    ))}
-                  </div>
-                </div>
-                <div className="home__rsvp">
-                  <RsvpStatusButton />
-                </div>
-              </div>
-            </section>
-          )}
+            </div>
+          </section>
         </div>
       </div>
     </main>

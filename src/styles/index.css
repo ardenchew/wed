@@ -1710,33 +1710,11 @@ body:has(.home-page--schedule) {
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.38);
 }
 
-/* Home V2: the welcome letter comes out of an envelope; the polaroid follows below it. */
-.home__scroll--envelope {
-  min-height: 0;
-  padding: 0 0 clamp(3rem, 10vw, 5rem);
-}
-
-.home__scroll--envelope {
-  /* Cards swinging out of the photo stack may pass the page edge; never let them scroll it. */
-  overflow-x: clip;
-}
-
-.home__photo-stack {
-  margin: clamp(3rem, 10vw, 4.5rem) auto 0;
-}
-
-.home__rsvp.home__rsvp--inline {
-  position: static;
-  transform: none;
-  /* Clears the tilted cards hanging below the stack's box. */
-  margin-top: clamp(4.5rem, 16vw, 6rem);
-}
-
 /* ── Photo stack: polaroids piled at angles; the top one swings out and tucks in at the back ── */
 .photo-stack {
   position: relative;
   display: block;
-  width: min(calc(100% - 5rem), 19rem);
+  width: 100%;
   aspect-ratio: 5 / 6;
   padding: 0;
   border: 0;
@@ -1820,13 +1798,138 @@ body:has(.home-page--schedule) {
   }
 }
 
-/* ── Home: welcome envelope ─────────────────────────────────────────────────
-   A tall scene whose sticky stage holds the envelope and the letter. useEnvelopeScene turns scroll
-   progress into the custom properties below; everything moves with transform and opacity only.
-   The defaults are the settled state, so without JS (or with reduced motion) the letter is just a
-   card on the page and the envelope isn't drawn. */
-.envelope-scene {
-  --env-w: min(calc(100vw - 3rem), 30rem);
+/* ── Home V2 ─────────────────────────────────────────────────────────────────
+   A botanical green border fixed around the screen (thick enough to carry the logo and menu), and
+   a sealed envelope in the middle holding the guest's letter and polaroids. */
+.home-v2 {
+  /* Border thickness: top and bottom carry the header, the sides are slimmer on phones. */
+  --band-y: 56px;
+  --band-x: 28px;
+  --band-color: #56684c;
+  --band-ink: #fbf8ef;
+  --page: #fafafa;
+  position: relative;
+  min-height: 100vh;
+  min-height: 100svh;
+  background: var(--page);
+}
+
+@media (min-width: 640px) {
+  .home-v2 {
+    --band-x: 56px;
+  }
+}
+
+@media (min-width: 900px) {
+  .home-v2 {
+    --band-y: 68px;
+    --band-x: 68px;
+  }
+}
+
+.home-v2__frame {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  border-style: solid;
+  border-color: var(--band-color);
+  border-width: var(--band-y) var(--band-x);
+  /* A soft shadow where the band meets the paper, as if the page sits under a mat. */
+  box-shadow:
+    inset 0 0 0 1px rgba(30, 40, 25, 0.22),
+    inset 0 2px 12px rgba(30, 40, 25, 0.16);
+}
+
+/* Double ivory hairline just inside the band's inner edge, like the Schedule card frame. */
+.home-v2__frame::before,
+.home-v2__frame::after {
+  content: '';
+  position: absolute;
+  border-style: solid;
+  border-width: 1px;
+}
+
+.home-v2__frame::before {
+  inset: -13px;
+  border-color: color-mix(in srgb, var(--band-ink) 70%, transparent);
+}
+
+.home-v2__frame::after {
+  inset: -8px;
+  border-color: color-mix(in srgb, var(--band-ink) 42%, transparent);
+}
+
+/* The site's vine, centred on each side of the band. */
+.home-v2__vine {
+  position: absolute;
+  aspect-ratio: 229 / 80;
+  background-color: var(--band-ink);
+  opacity: 0.85;
+  mask: var(--vine-mask) center / contain no-repeat;
+}
+
+.home-v2__vine--top,
+.home-v2__vine--bottom {
+  left: 50%;
+  width: calc(var(--band-y) * 2.1);
+}
+
+.home-v2__vine--top {
+  top: calc(var(--band-y) / -2);
+  transform: translate(-50%, -50%);
+}
+
+.home-v2__vine--bottom {
+  bottom: calc(var(--band-y) / -2);
+  transform: translate(-50%, 50%) rotate(180deg);
+}
+
+.home-v2__vine--left,
+.home-v2__vine--right {
+  top: 50%;
+  width: calc(var(--band-x) * 2.1);
+}
+
+.home-v2__vine--left {
+  left: calc(var(--band-x) / -2);
+  transform: translate(-50%, -50%) rotate(-90deg);
+}
+
+.home-v2__vine--right {
+  right: calc(var(--band-x) / -2);
+  transform: translate(50%, -50%) rotate(90deg);
+}
+
+.home-v2__header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+}
+
+.home-v2 .home-logo__img {
+  filter: brightness(0) invert(1);
+}
+
+.home-v2 .home-menu__line {
+  background: var(--band-ink);
+}
+
+.home-v2 .home-menu__trigger:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.home-v2 .home-menu__trigger:focus-visible {
+  outline-color: var(--band-ink);
+}
+
+/* The letter, the photos and the envelope they start in. The letter and photos are laid out
+   where they end up (stacked on phones, side by side from 900px); useLetterEnvelope tucks them
+   into the envelope until it's opened. */
+.letter-envelope {
+  --env-w: min(calc(100vw - 2 * var(--band-x) - 3rem), 28rem);
   --env-h: calc(var(--env-w) / 1.42);
   --env-paper: #f6f1e3;
   --env-liner: #e1e6d7;
@@ -1842,47 +1945,44 @@ body:has(.home-page--schedule) {
     radial-gradient(140% 100% at 20% 0%, rgba(255, 255, 255, 0.55), transparent 55%),
     var(--paper-grain), var(--env-paper);
   --env-liner-texture: var(--paper-grain), var(--env-liner);
-
-  --letter-x: 0px;
-  --letter-y: 0px;
-  --letter-s: 1;
-  --letter-r: 0deg;
-  --letter-shade: 0;
-  --env-y: 0px;
-  --env-o: 1;
-  --flap-rot: 0deg;
-  --flap-shade: 0;
-  --flap-inner-shade: 0;
-  --seal-crack: 0;
   position: relative;
-}
-
-.envelope-scene__stage {
-  position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: clamp(3rem, 9vw, 4.5rem) 1rem 0;
+  gap: clamp(3rem, 12vw, 4.5rem);
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: calc(var(--band-y) + 1.25rem) calc(var(--band-x) + 0.75rem) calc(var(--band-y) + 2.5rem);
+  /* Photos swinging round in the stack may pass the edge; never let them scroll the page. */
+  overflow-x: clip;
+}
+
+/* Nothing to scroll to until the envelope is open. */
+.letter-envelope:not([data-phase='open']) {
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+}
+
+@media (min-width: 900px) {
+  .letter-envelope {
+    flex-direction: row-reverse;
+    justify-content: center;
+    gap: clamp(3rem, 6vw, 6rem);
+    height: 100vh;
+    height: 100svh;
+    overflow: hidden;
+  }
+}
+
+.letter-envelope[data-phase='opening'] .letter,
+.letter-envelope[data-phase='opening'] .letter-envelope__photos,
+.letter-envelope[data-phase='opening'] .envelope__layer {
+  will-change: transform, opacity;
 }
 
 .envelope {
-  display: none;
-}
-
-.envelope-scene.is-animated .envelope-scene__stage {
-  position: sticky;
-  top: 0;
-  min-height: 100vh;
-  min-height: 100svh;
-  padding: 4.5rem 1rem 2.5rem;
-  /* Clips the flap's 3D swing and the pocket mask; never scrolls (nothing overflows sideways). */
-  overflow: hidden;
-  isolation: isolate;
-}
-
-.envelope-scene.is-animated .envelope {
-  display: block;
   position: absolute;
   left: calc(50% - var(--env-w) / 2);
   top: calc(50vh - var(--env-h) / 2);
@@ -1892,18 +1992,11 @@ body:has(.home-page--schedule) {
   pointer-events: none;
 }
 
-.envelope-scene.is-animated .envelope-scene__runway {
-  height: 220vh;
-  height: 220svh;
-}
-
-/* The envelope is three layers so the letter (z-index 2) can sit between them. */
+/* The envelope is three layers so the letter (2) and photos (3) can sit between them. */
 .envelope__layer {
   position: absolute;
   inset: 0;
-  transform: translate3d(0, var(--env-y), 0);
-  opacity: var(--env-o);
-  will-change: transform, opacity;
+  transition: transform 260ms ease;
 }
 
 .envelope__layer--back {
@@ -1911,11 +2004,50 @@ body:has(.home-page--schedule) {
 }
 
 .envelope__layer--front {
-  z-index: 3;
+  z-index: 4;
 }
 
 .envelope__layer--flap {
-  z-index: 4;
+  z-index: 5;
+}
+
+.letter-envelope__open {
+  position: absolute;
+  z-index: 6;
+  left: calc(50% - var(--env-w) / 2);
+  top: calc(50vh - var(--env-h) / 2);
+  top: calc(50svh - var(--env-h) / 2);
+  width: var(--env-w);
+  height: var(--env-h);
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.letter-envelope__open:focus-visible {
+  outline: 2px solid var(--seal);
+  outline-offset: 8px;
+}
+
+/* A little lift under the pointer, so it reads as something to open. */
+.letter-envelope__open:hover + .envelope .envelope__layer {
+  transform: translateY(-4px);
+}
+
+.envelope__hint {
+  position: absolute;
+  top: calc(100% + 1.5rem);
+  left: 0;
+  right: 0;
+  margin: 0;
+  text-align: center;
+  font-family: 'Reenie Beanie', cursive;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: #6f7d62;
 }
 
 .envelope__back {
@@ -1939,7 +2071,14 @@ body:has(.home-page--schedule) {
   position: absolute;
   inset: 0;
   transform-origin: 50% 0;
-  transform: rotateX(var(--flap-rot));
+  transform: rotateX(0deg);
+  /* Each part hides its own back, so nothing (the seal especially) shows once it flips over. */
+  transform-style: preserve-3d;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.envelope__flap > * {
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
@@ -1965,7 +2104,7 @@ body:has(.home-page--schedule) {
 
 .envelope__flap-shade {
   background: linear-gradient(to bottom, rgba(45, 35, 15, 0.08), rgba(45, 35, 15, 0.42));
-  opacity: var(--flap-shade);
+  opacity: 0;
 }
 
 /* Inside of the flap, standing above the envelope once it's open: the liner. */
@@ -1976,7 +2115,7 @@ body:has(.home-page--schedule) {
   bottom: 100%;
   height: 59%;
   transform-origin: 50% 100%;
-  transform: rotateX(calc(var(--flap-rot) - 180deg));
+  transform: rotateX(-180deg);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   clip-path: polygon(0 100%, 100% 100%, 52.6% 2.6%, 50% 0, 47.4% 2.6%);
@@ -1989,7 +2128,7 @@ body:has(.home-page--schedule) {
   position: absolute;
   inset: 0;
   background: linear-gradient(to top, rgba(45, 35, 15, 0.5), rgba(45, 35, 15, 0.2));
-  opacity: var(--flap-inner-shade);
+  opacity: 0;
 }
 
 /* The pocket: two side flaps under a bottom flap. Its top edges cast a hairline onto the letter. */
@@ -2037,7 +2176,7 @@ body:has(.home-page--schedule) {
   position: absolute;
   inset: 0;
   filter: blur(calc(var(--env-w) * 0.012));
-  opacity: var(--flap-cast, 0);
+  opacity: 0;
 }
 
 .envelope__flap-cast::before {
@@ -2065,7 +2204,7 @@ body:has(.home-page--schedule) {
   right: calc((var(--env-w) - 100vw) / 2);
   height: 100vh;
   height: 100lvh;
-  background: var(--home-page-bg, var(--background));
+  background: var(--page, #fafafa);
 }
 
 /* Wax seal, straddling the flap tip. Each half is a full seal clipped along the same crack. */
@@ -2083,17 +2222,11 @@ body:has(.home-page--schedule) {
   /* Overlaps the lower half by a hair, so the seal shows no seam until it cracks. */
   clip-path: polygon(-20% -20%, 120% -20%, 120% 52%, 100% 52%, 86% 57%, 74% 49%, 61% 58%, 50% 51%,
       39% 58%, 27% 50%, 14% 57%, 0 52%, -20% 52%);
-  transform:
-    translate(calc(var(--seal-crack) * -0.5px), calc(var(--seal-crack) * -1.5px))
-    rotate(calc(var(--seal-crack) * -2.5deg));
 }
 
 .envelope__seal--lower {
   clip-path: polygon(-20% 50%, 0 50%, 14% 55%, 27% 48%, 39% 56%, 50% 49%, 61% 56%, 74% 47%, 86% 55%,
       100% 50%, 120% 50%, 120% 120%, -20% 120%);
-  transform:
-    translate(calc(var(--seal-crack) * 1px), calc(var(--seal-crack) * 2.5px))
-    rotate(calc(var(--seal-crack) * 3deg));
 }
 
 .envelope__seal-face {
@@ -2140,13 +2273,16 @@ body:has(.home-page--schedule) {
     -0.5px -0.5px 0 rgba(0, 0, 0, 0.25);
 }
 
+
 /* The letter: real text, laid out where it ends up. */
 .letter {
   position: relative;
   z-index: 2;
-  width: min(100%, 38rem);
-  margin: 0;
-  padding: clamp(2rem, 7vw, 3.25rem) clamp(1.6rem, 6.5vw, 3.25rem) clamp(1.75rem, 6vw, 2.5rem);
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  width: min(100%, 36rem);
+  margin: auto 0 0;
   border-radius: 2px;
   background:
     radial-gradient(130% 70% at 25% 0%, rgba(255, 255, 255, 0.75), transparent 60%),
@@ -2159,18 +2295,6 @@ body:has(.home-page--schedule) {
     0 1px 2px rgba(60, 48, 25, 0.12),
     0 16px 36px -14px rgba(60, 48, 25, 0.32);
   transform-origin: 50% 0;
-  transform:
-    translate3d(var(--letter-x), var(--letter-y), 0)
-    scale(var(--letter-s))
-    rotate(var(--letter-r));
-}
-
-.envelope-scene.is-animated .letter {
-  will-change: transform;
-}
-
-.envelope-scene[data-letter-front] .letter {
-  z-index: 5;
 }
 
 /* Hairline frame, like the Schedule cards. */
@@ -2182,15 +2306,24 @@ body:has(.home-page--schedule) {
   pointer-events: none;
 }
 
-/* Shade of the envelope's inside, lifting as the letter comes out. */
-.letter::after {
-  content: '';
+.letter__scroll {
+  padding: clamp(2rem, 7vw, 3rem) clamp(1.4rem, 6vw, 3rem) clamp(1.75rem, 6vw, 2.5rem);
+}
+
+/* Shade of the envelope's inside, lifting as the letter and photos come out. */
+.letter__shade,
+.letter-envelope__photos-shade {
   position: absolute;
   inset: 0;
   border-radius: inherit;
   background: linear-gradient(rgba(45, 35, 15, 0.3), rgba(45, 35, 15, 0.14));
-  opacity: var(--letter-shade);
+  opacity: 0;
   pointer-events: none;
+}
+
+.letter-envelope:not([data-phase='open']) .letter__shade,
+.letter-envelope:not([data-phase='open']) .letter-envelope__photos-shade {
+  opacity: 1;
 }
 
 .letter__ornament {
@@ -2225,6 +2358,47 @@ body:has(.home-page--schedule) {
   font-size: clamp(1.7rem, 1.35rem + 1.4vw, 2.3rem);
   line-height: 1.1;
   color: #2b2b27;
+}
+
+/* The polaroids: below the letter on phones, to its left from 900px. */
+.letter-envelope__photos {
+  position: relative;
+  z-index: 3;
+  flex: none;
+  width: min(72vw, 17rem);
+  margin: 0 0 auto;
+  transform-origin: 50% 0;
+}
+
+@media (min-width: 900px) {
+  .letter {
+    width: min(36rem, 46vw);
+    max-height: calc(100vh - 2 * var(--band-y) - 5rem);
+    max-height: calc(100svh - 2 * var(--band-y) - 5rem);
+    margin: 0;
+  }
+
+  /* A long letter scrolls inside the card; the page itself never does. */
+  .letter__scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    /* Lines fade out at the bottom edge rather than being cut (only the padding fades when the
+       letter fits). */
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 2.5rem), transparent);
+  }
+
+  .letter-envelope__photos {
+    width: min(22rem, 28vw);
+    margin: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .envelope__layer {
+    transition: none;
+  }
 }
 
 .home__reveal {
