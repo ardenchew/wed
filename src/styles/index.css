@@ -695,6 +695,17 @@ body:has(.home-page--schedule) {
   text-align: left;
 }
 
+.home-menu__action--icon {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.home-menu__icon {
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+
 .home-menu__action:hover {
   background: rgba(255, 255, 255, 0.12);
 }

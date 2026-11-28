@@ -143,7 +143,29 @@ export function HomeHeader({ activePath, activeSectionId }: HomeHeaderProps) {
               )}
             </div>
             <div className="home-menu__divider" aria-hidden="true" />
-            <button type="button" className="home-menu__action" role="menuitem" onClick={signOut}>
+            <button
+              type="button"
+              className="home-menu__action home-menu__action--icon"
+              role="menuitem"
+              onClick={signOut}
+            >
+              <svg
+                className="home-menu__icon"
+                viewBox="0 0 16 16"
+                width="14"
+                height="14"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="M6 2.5H3.5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1H6" />
+                <path d="M10.5 5 13.5 8l-3 3" />
+                <path d="M13.5 8H6.5" />
+              </svg>
               Sign Out
             </button>
           </div>
