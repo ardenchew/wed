@@ -978,10 +978,42 @@ body:has(.home-page--schedule) {
 }
 
 .schedule__event-image-wrap {
+  position: relative;
+  isolation: isolate;
   flex: 0 0 auto;
   width: 230px;
   aspect-ratio: 3 / 2;
-  overflow: hidden;
+  /* Holds the 3:2 box without overflow: hidden (which would clip the ground shadow). */
+  min-height: 0;
+  /*
+   * The ground shadow's centre line, centre and width as fractions of the box, measured from the
+   * drawing on load (fitGroundShadow). The defaults put it along the box's bottom edge.
+   */
+  --ground-y: 1;
+  --ground-x: 0.5;
+  --ground-w: 0.9;
+}
+
+/*
+ * A soft ground shadow, as if the drawing rests on the paper: a flat blurred ellipse centred on
+ * the drawing's base, behind its lines. It is a child of the event, so it fades in with it.
+ */
+.schedule__event-image-wrap::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: calc(var(--ground-y) * 100% - 7px);
+  left: calc(var(--ground-x) * 100%);
+  width: calc(var(--ground-w) * 100%);
+  height: 14px;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    closest-side,
+    rgba(72, 78, 60, var(--ground-shadow, 0.2)),
+    rgba(72, 78, 60, 0)
+  );
+  filter: blur(2px);
+  pointer-events: none;
 }
 
 .schedule__event-image {

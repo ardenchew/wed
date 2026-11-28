@@ -68,6 +68,71 @@ function formatDateHeading(date: Date): { weekday: string; date: string } {
   return { weekday, date: `${month} ${day}, ${year}` };
 }
 
+/** Width-to-height ratio of `.schedule__event-image-wrap` (its CSS `aspect-ratio`). */
+const IMAGE_BOX_RATIO = 3 / 2;
+
+/**
+ * Where the drawing's ink sits in its image, as fractions of the image: the lowest inked row
+ * (`base`) and the horizontal extent of the ink near that base (`left`..`right`). Read from the
+ * alpha channel of a small copy; null if the pixels can't be read.
+ */
+function measureInk(img: HTMLImageElement) {
+  const w = 120;
+  const h = Math.max(1, Math.round((w * img.naturalHeight) / img.naturalWidth));
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  if (!ctx) return null;
+  ctx.drawImage(img, 0, 0, w, h);
+  let data: Uint8ClampedArray;
+  try {
+    data = ctx.getImageData(0, 0, w, h).data;
+  } catch {
+    return null; // cross-origin pixels without CORS
+  }
+  const inked = (x: number, y: number) => data[(y * w + x) * 4 + 3] > 60;
+  // Lowest row with a real run of ink (ignores stray specks).
+  let base = -1;
+  for (let y = h - 1; y >= 0 && base < 0; y--) {
+    let count = 0;
+    for (let x = 0; x < w; x++) if (inked(x, y)) count++;
+    if (count >= 3) base = y;
+  }
+  if (base < 0) return null;
+  // Width of the ink across the bottom tenth of the drawing.
+  let left = w;
+  let right = -1;
+  for (let y = Math.max(0, base - Math.round(h * 0.1)); y <= base; y++) {
+    for (let x = 0; x < w; x++) {
+      if (!inked(x, y)) continue;
+      left = Math.min(left, x);
+      right = Math.max(right, x);
+    }
+  }
+  return { base: (base + 1) / h, left: left / w, right: (right + 1) / w };
+}
+
+/**
+ * Places the ground shadow (`::after` on the wrap) under the drawing's base, at its width. The
+ * drawings are `object-fit: contain` in a 3:2 box, so a wide one is letterboxed and a narrow one
+ * pillarboxed, and many have empty space inside the image too; both are accounted for here.
+ */
+function fitGroundShadow(e: React.SyntheticEvent<HTMLImageElement>) {
+  const img = e.currentTarget;
+  const wrap = img.parentElement;
+  if (!wrap || !img.naturalWidth || !img.naturalHeight) return;
+  const ratio = img.naturalWidth / img.naturalHeight;
+  const fillW = ratio >= IMAGE_BOX_RATIO ? 1 : ratio / IMAGE_BOX_RATIO;
+  const fillH = ratio >= IMAGE_BOX_RATIO ? IMAGE_BOX_RATIO / ratio : 1;
+  const ink = measureInk(img) ?? { base: 1, left: 0.04, right: 0.96 };
+  const offsetX = (1 - fillW) / 2;
+  const offsetY = (1 - fillH) / 2;
+  wrap.style.setProperty('--ground-y', (offsetY + fillH * ink.base).toFixed(4));
+  wrap.style.setProperty('--ground-x', (offsetX + (fillW * (ink.left + ink.right)) / 2).toFixed(4));
+  wrap.style.setProperty('--ground-w', (fillW * (ink.right - ink.left)).toFixed(4));
+}
+
 function formatDateShort(date: Date): string {
   return dateShortFormatter.format(date);
 }
@@ -409,6 +474,8 @@ export default function Schedule() {
                                 : resolveAsset(event.image)
                             }
                             alt={event.name}
+                            crossOrigin="anonymous"
+                            onLoad={fitGroundShadow}
                           />
                         </div>
                       )}
