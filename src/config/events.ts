@@ -7,11 +7,24 @@ import type { Event } from '../types';
  */
 export const EVENT_TIME_ZONE = 'America/Los_Angeles';
 
+/**
+ * Revision of `EVENTS` as seen by calendar apps. When you change anything a guest may have
+ * exported (a time, name, place or description; adding or removing an event), bump `sequence`
+ * by one and set `updated` to now. A re-downloaded `.ics` then replaces the old entries (matched
+ * by UID, `<slug>@emily-arden-wedding`) instead of being ignored as stale, where the calendar
+ * supports updates. Never rename a slug: that changes the UID and duplicates the entry.
+ */
+export const EVENTS_REVISION = {
+  sequence: 0,
+  updated: new Date('2026-11-28T00:00:00Z'),
+};
+
 export const EVENTS: Record<string, Event> = {
   courthouse: {
     slug: 'courthouse',
     name: 'Courthouse Ceremony',
     start_time: new Date('2027-05-13T17:00:00-07:00'),
+    end_time: new Date('2027-05-13T19:00:00-07:00'),
     location: 'San Francisco City Hall',
     description:
       'An intimate immediate family only gathering to formalize Emily and Arden’s marriage. Transportation will not be provided so please be sure to arrive on time. A photographer will be present.',
@@ -23,6 +36,7 @@ export const EVENTS: Record<string, Event> = {
     slug: 'immediate_family_dinner',
     name: 'Dinner',
     start_time: new Date('2027-05-13T20:00:00-07:00'),
+    end_time: new Date('2027-05-13T22:00:00-07:00'),
     location: 'Rich Table',
     description:
       'Dinner at an Emily and Arden favorite with immediate family and significant others. We’ll head here straight from the courthouse ceremony, no need to change.',
@@ -43,6 +57,7 @@ export const EVENTS: Record<string, Event> = {
     slug: 'wine_tasting',
     name: 'Wine Tasting',
     start_time: new Date('2027-05-14T11:00:00-07:00'),
+    end_time: new Date('2027-05-14T14:00:00-07:00'),
     location: 'Stony Hill Vineyard',
     description: 'Tasty napa chardonay and cabernet.',
     attire: 'Napa Summer Semi-Formal',
@@ -53,6 +68,7 @@ export const EVENTS: Record<string, Event> = {
     slug: 'vineyard_dinner',
     name: 'Vineyard Dinner',
     start_time: new Date('2027-05-14T16:00:00-07:00'),
+    end_time: new Date('2027-05-14T19:00:00-07:00'),
     location: 'Brix',
     description: 'Tasty napa chardonay and cabernet.',
     attire: 'Napa Summer Semi-Formal',

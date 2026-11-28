@@ -12,6 +12,8 @@ export interface Event {
   slug: string;
   name: string;
   start_time: Date;
+  /** Omit for an event with no set end; the calendar export then gives it no duration. */
+  end_time?: Date;
   location: string;
   description: string;
   attire?: string;
