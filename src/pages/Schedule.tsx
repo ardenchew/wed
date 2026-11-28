@@ -11,8 +11,8 @@ import { cloudinaryUrl, isCloudinaryId } from '../utils/cloudinary';
 
 const HERO_PUBLIC_ID = 'wed/schedule/hero';
 
-/** vine.svg as a CSS mask, so the vine takes the frame's color (see `.schedule__day-card-vine`). */
-const vineMask = { '--vine-mask': `url(${resolveAsset('/vine.svg')})` } as CSSProperties;
+/** vine-frame.svg as a CSS mask, so the vine takes the frame's color (see `.schedule__day-card-vine`). */
+const vineMask = { '--vine-mask': `url(${resolveAsset('/vine-frame.svg')})` } as CSSProperties;
 
 /*
  * Every formatter below pins `timeZone` to the venue: a guest reading the schedule from another

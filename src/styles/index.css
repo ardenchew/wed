@@ -762,11 +762,11 @@ body:has(.home-page--schedule) {
   font-family: 'Bacasime Antique', Georgia, 'Times New Roman', serif;
   padding: 0 32px 96px;
   /* The one accent color, used sparingly: times, the card frame, the map icon, hovers. */
-  --accent: #a8654a; /* dusty terracotta */
+  --accent: #6f7d62; /* muted sage */
   /* Opaque so the vine, drawn in the same color, matches the hairlines exactly. */
   --frame-color: color-mix(in srgb, var(--accent) 80%, var(--parchment-secondary));
   /* Darker shade of the accent for text, for contrast on parchment. */
-  --accent-text: #8a4a33;
+  --accent-text: #56644a; /* 5.46:1 on the card parchment (#f3eee0) */
 }
 
 .schedule__title {
@@ -900,12 +900,11 @@ body:has(.home-page--schedule) {
 }
 
 /*
- * The vines continue the frame: drawn in the hairline color (vine.svg as a mask) with the stem
- * centred between the two hairlines, which run straight into the stem ends.
- *
- * Geometry: the art is 100px wide (229x80 viewBox, so ~34.9px tall) and its stem ends sit 16px from
- * its top. Offsets are from the card's padding box: the outer hairline is the 1px border just
- * outside it, the inner one the inset shadow 4px inside it, so the pair is centred 2px in.
+ * The vines continue the frame: vine-frame.svg (a CSS mask, so it takes the hairline color) has
+ * its stem ends redrawn so the hairlines flow into them. In its own units the upper hairline is
+ * centred at y 33.8 and the lower at 45.25; at 100px wide (~34.9px tall) that is 14.76px and
+ * 19.76px from its top. Offsets are from the card's padding box, where the outer hairline is
+ * centred 0.5px outside and the inner one 4.5px inside.
  */
 .schedule__day-card-vine {
   position: absolute;
@@ -916,34 +915,36 @@ body:has(.home-page--schedule) {
   pointer-events: none;
 }
 
+/* Upper hairline = outer line (-0.5px), so the art starts 15.26px above the padding edge. */
 .schedule__day-card-vine--top {
-  top: -14px;
+  top: -15.26px;
 }
 
+/* Upper hairline = inner line (4.5px in), so the art ends 15.67px below the padding edge. */
 .schedule__day-card-vine--bottom {
-  bottom: -17px;
+  bottom: -15.67px;
 }
 
 /*
- * Breaks both hairlines exactly between the stem ends, with no fade. It spans from the outer line
- * to just past the inner one and never reaches outside the card, so no light patch shows there.
+ * Hides both hairlines across the vine (local 14.26px to 20.26px); the art redraws their ends.
+ * It overshoots by ~1px into the card, never outside it, so no antialiased fringe of the inner
+ * line shows and no light patch appears over the card's shadow.
  */
 .schedule__day-card-vine::before {
   content: '';
   position: absolute;
-  /* Inset 1px so the hairlines tuck under the stem tips instead of stopping short of them. */
   left: 1px;
   right: 1px;
-  height: 7px;
+  height: 7.5px;
   background: var(--parchment-secondary);
 }
 
 .schedule__day-card-vine--top::before {
-  top: 13px;
+  top: 14.1px;
 }
 
 .schedule__day-card-vine--bottom::before {
-  top: 12px;
+  top: 12.95px;
 }
 
 .schedule__day-card-vine-art {
