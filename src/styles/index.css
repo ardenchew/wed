@@ -2440,12 +2440,16 @@ body:has(.home-page--schedule) {
     linear-gradient(#eef1e7, #e1e6d7);
   color: #3f4a36;
   text-align: center;
+  /* The label is sized to the stamp, not the screen. */
+  container-type: inline-size;
 }
 
 .rsvp-stamp__label {
   font-family: 'Bacasime Antique', Georgia, 'Times New Roman', serif;
-  font-size: clamp(1.2rem, 5vw, 1.5rem);
-  letter-spacing: 0.08em;
+  font-size: 1rem;
+  /* Fills about 70% of the frame, leaving a clear margin either side. */
+  font-size: 26cqi;
+  letter-spacing: 0.04em;
   line-height: 1;
 }
 
