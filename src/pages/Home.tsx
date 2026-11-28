@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
+import { HeroImage } from '../components/HeroImage';
 import { HomeHeader } from '../components/HomeHeader';
 import { Polaroid } from '../components/Polaroid';
 import { HOME_WELCOME_SECTION_ID } from '../config/nav';
@@ -18,7 +19,13 @@ const SCROLL_HINT_DELAY_MS = 5000;
 const DEFAULT_WEEKEND_POLAROID_PUBLIC_ID = 'wed/home/emily_arden_stony_hill';
 const DEFAULT_WEEKEND_POLAROID_DATE = '9 5 2025';
 const HOME_GALLERY_PUBLIC_IDS = ['wed/home/home1', 'wed/home/home2', 'wed/home/home3'];
-const HERO_PUBLIC_ID = 'wed/home/hero_crater_lake';
+
+/**
+ * Gallery tiles crop with `object-fit: cover`, so a 3:2 landscape photo has to be wider than the
+ * tile to fill its height. Phones: tiles are 60vh tall → 1.5 × 60vh = 90vh. Above 640px: tiles
+ * are 3:4 at 23.5vw wide → 2 × 23.5vw = 47vw. See `.home__gallery-item`.
+ */
+const GALLERY_SIZES = '(max-width: 640px) 90vh, 47vw';
 
 export default function Home() {
   const guest = useGuest();
@@ -208,16 +215,7 @@ export default function Home() {
       <div className="home__scroll-sink" aria-hidden="true" />
       <div ref={heroShellRef} className="home__hero-shell home__hero-shell--fixed">
         <div ref={imageWrapRef} className="home__hero-image-wrap">
-          <img
-            className="home__hero-img"
-            src={cloudinaryUrl(HERO_PUBLIC_ID, { w: 1800, c: 'limit', q: 95 })}
-            srcSet={cloudinarySrcSet(HERO_PUBLIC_ID, [768, 1200, 1800, 2400], 95)}
-            sizes="100vw"
-            alt=""
-            decoding="async"
-            loading="eager"
-            fetchPriority="high"
-          />
+          <HeroImage className="home__hero-img" priority />
         </div>
         <button
           type="button"
@@ -276,8 +274,8 @@ export default function Home() {
                       <img
                         className="home__gallery-image"
                         src={cloudinaryUrl(publicId, { w: 1200, c: 'limit' })}
-                        srcSet={cloudinarySrcSet(publicId, [600, 1200, 1800])}
-                        sizes="(max-width: 768px) 90vw, 60vw"
+                        srcSet={cloudinarySrcSet(publicId, [600, 900, 1200, 1800, 2400])}
+                        sizes={GALLERY_SIZES}
                         alt=""
                         loading="lazy"
                         decoding="async"

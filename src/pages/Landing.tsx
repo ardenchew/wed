@@ -6,6 +6,7 @@ import { getAllDisplayNames, getGuestSlugForDisplayName } from '../config/users'
 import { validatePassword } from '../services/store';
 import { searchDisplayName } from '../utils/search';
 import { Button } from '../components/Button';
+import { HeroImage } from '../components/HeroImage';
 
 const LANDING_EXIT_TO_HOME_MS = 620;
 /** Keep in sync with `.landing-center-content` `top` transition in index.css */
@@ -199,7 +200,7 @@ export default function Landing() {
         exitToHome ? ' landing-hero--exit-to-home' : ''
       }`}
     >
-      <div className="landing-cover-image" aria-hidden="true" />
+      <HeroImage className="landing-cover-image" priority />
       <div className="landing-cover-gradient" aria-hidden="true" />
 
       <div className="landing-center-content">
