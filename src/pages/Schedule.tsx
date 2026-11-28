@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState, useMemo, type CSSProperties }
 import { Button } from '../components/Button';
 import { HomeHeader } from '../components/HomeHeader';
 import { RsvpStatusButton } from '../components/RsvpStatusButton';
-import { EVENT_TIME_ZONE, EVENTS } from '../config/events';
+import { buildCalendar, CALENDAR_FILENAME } from '../calendar/ics';
+import { EVENT_TIME_ZONE, EVENTS, EVENTS_REVISION } from '../config/events';
 import { useGuest } from '../hooks/useGuest';
 import { useReveal } from '../hooks/useReveal';
 import type { Event } from '../types';
@@ -139,6 +140,20 @@ function formatDateShort(date: Date): string {
 
 function dateKey(date: Date): string {
   return dateKeyFormatter.format(date);
+}
+
+/** Saves the guest's events as an `.ics` file (iOS Safari offers to add it to Calendar). */
+function downloadCalendar(events: Event[]) {
+  const ics = buildCalendar(events, EVENTS_REVISION, new Date());
+  const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar;charset=utf-8' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = CALENDAR_FILENAME;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  // Revoking right away can cancel the download in some browsers.
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
 type DateGroup = {
@@ -286,13 +301,11 @@ function ScheduleTimeline({
 export default function Schedule() {
   const guest = useGuest();
 
-  const dateGroups = useMemo(() => {
+  const accessibleEvents = useMemo(() => {
     const guestEventSlugs = new Set(guest?.events ?? []);
-    const accessible = Object.values(EVENTS).filter((e) =>
-      guestEventSlugs.has(e.slug),
-    );
-    return groupEventsByDate(accessible);
+    return Object.values(EVENTS).filter((e) => guestEventSlugs.has(e.slug));
   }, [guest?.events]);
+  const dateGroups = useMemo(() => groupEventsByDate(accessibleEvents), [accessibleEvents]);
 
   const heroUrl = cloudinaryUrl(HERO_PUBLIC_ID, { w: 1200, c: 'limit' });
 
@@ -407,7 +420,12 @@ export default function Schedule() {
         <span className="schedule__action-sep" aria-hidden="true">
           •
         </span>
-        <Button variant="text" className="schedule__action">
+        <Button
+          variant="text"
+          className="schedule__action"
+          disabled={accessibleEvents.length === 0}
+          onClick={() => downloadCalendar(accessibleEvents)}
+        >
           Export Calendar
         </Button>
       </div>
@@ -488,18 +506,19 @@ export default function Schedule() {
                         </time>
                         <p className="schedule__event-name">{event.name}</p>
                         <p className="schedule__event-meta">
-                          <span className="schedule__event-location">
-                            {event.location}
-                          </span>
-                          {event.map_link && (
+                          {event.map_link ? (
                             <a
-                              className="schedule__event-map-link"
+                              className="schedule__event-location-link"
                               href={event.map_link}
                               target="_blank"
                               rel="noopener noreferrer"
-                              aria-label={`Open ${event.location} in maps`}
+                              aria-label={`${event.location} (opens map in a new tab)`}
                             >
+                              <span className="schedule__event-location">
+                                {event.location}
+                              </span>
                               <svg
+                                className="schedule__event-map-icon"
                                 viewBox="0 0 24 24"
                                 width="14"
                                 height="14"
@@ -515,6 +534,10 @@ export default function Schedule() {
                                 <line x1="10" y1="14" x2="21" y2="3" />
                               </svg>
                             </a>
+                          ) : (
+                            <span className="schedule__event-location">
+                              {event.location}
+                            </span>
                           )}
                         </p>
                         {event.attire && (
