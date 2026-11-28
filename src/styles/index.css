@@ -317,8 +317,17 @@ body.splash-active {
   padding: 0 2.25rem;
 }
 
-/* Subtle arrow at the right end of the name field; fades in once something is typed. */
-.landing-entry-morph__submit {
+.landing-field {
+  position: relative;
+}
+
+.landing-field__input {
+  padding-left: 2.25rem;
+  padding-right: 2.25rem;
+}
+
+/* Subtle arrow at the right end of the name and password fields; fades in once something is typed. */
+.landing-submit-arrow {
   position: absolute;
   top: 50%;
   right: 0;
@@ -339,23 +348,23 @@ body.splash-active {
   transition: opacity 220ms ease, transform 220ms ease, color 150ms ease;
 }
 
-.landing-entry-morph__submit--visible {
+.landing-submit-arrow--visible {
   opacity: 1;
   pointer-events: auto;
   transform: translate(0, -50%);
 }
 
-.landing-entry-morph__submit--visible:hover,
-.landing-entry-morph__submit--visible:focus-visible {
+.landing-submit-arrow--visible:hover,
+.landing-submit-arrow--visible:focus-visible {
   color: #111111;
 }
 
-.landing-entry-morph__submit:focus-visible {
+.landing-submit-arrow:focus-visible {
   outline: 1.5px solid rgba(17, 17, 17, 0.55);
   outline-offset: 0;
 }
 
-.landing-entry-morph__submit--busy {
+.landing-submit-arrow--busy {
   animation: landing-submit-busy 900ms ease-in-out infinite alternate;
 }
 
@@ -365,11 +374,11 @@ body.splash-active {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .landing-entry-morph__submit {
+  .landing-submit-arrow {
     transition-duration: 1ms;
   }
 
-  .landing-entry-morph__submit--busy {
+  .landing-submit-arrow--busy {
     animation: none;
   }
 }

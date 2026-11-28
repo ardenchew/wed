@@ -9,6 +9,48 @@ import { HeroImage } from '../components/HeroImage';
 
 const LANDING_EXIT_TO_HOME_MS = 620;
 
+/**
+ * The subtle submit arrow at the right end of a sign-in field. It fades in once something is
+ * typed and pulses while the request runs; Enter in the field submits too.
+ */
+function SubmitArrow({
+  visible,
+  busy,
+  label,
+  busyLabel,
+  disabled,
+}: {
+  visible: boolean;
+  busy: boolean;
+  label: string;
+  busyLabel: string;
+  disabled: boolean;
+}) {
+  return (
+    <button
+      type="submit"
+      className={`landing-submit-arrow${visible ? ' landing-submit-arrow--visible' : ''}${
+        busy ? ' landing-submit-arrow--busy' : ''
+      }`}
+      aria-label={busy ? busyLabel : label}
+      aria-hidden={!visible}
+      tabIndex={visible ? 0 : -1}
+      disabled={!visible || busy || disabled}
+    >
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+        <path
+          d="M4 12h15M13 6l6 6-6 6"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </button>
+  );
+}
+
 export default function Landing() {
   const [isAuthVisible, setIsAuthVisible] = useState(false);
   const [name, setName] = useState('');
@@ -244,28 +286,13 @@ export default function Landing() {
                             disabled={loading || exitToHome}
                             autoFocus
                           />
-                          {/* Appears once a name is typed; Enter in the field submits too. */}
-                          <button
-                            type="submit"
-                            className={`landing-entry-morph__submit${
-                              hasName ? ' landing-entry-morph__submit--visible' : ''
-                            }${loading ? ' landing-entry-morph__submit--busy' : ''}`}
-                            aria-label={loading ? 'Searching' : 'Search'}
-                            aria-hidden={!hasName}
-                            tabIndex={hasName ? 0 : -1}
-                            disabled={!hasName || loading || exitToHome}
-                          >
-                            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
-                              <path
-                                d="M4 12h15M13 6l6 6-6 6"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          </button>
+                          <SubmitArrow
+                            visible={hasName}
+                            busy={loading}
+                            label="Search"
+                            busyLabel="Searching"
+                            disabled={exitToHome}
+                          />
                         </>
                       )}
                     </div>
@@ -315,15 +342,23 @@ export default function Landing() {
                 <p className="landing-auth-title">{matchedDisplayName}</p>
 
                 <form onSubmit={handlePasswordSubmit} className="sign-in-form">
-                  <div className="form-group">
+                  <div className="form-group landing-field">
                     <input
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Password"
-                      className="name-input name-input--plain"
+                      aria-label="Password"
+                      className="name-input name-input--plain landing-field__input"
                       disabled={loading || exitToHome}
                       autoFocus
+                    />
+                    <SubmitArrow
+                      visible={password.trim().length > 0}
+                      busy={loading}
+                      label="Sign in"
+                      busyLabel="Signing in"
+                      disabled={exitToHome}
                     />
                   </div>
 
@@ -347,9 +382,6 @@ export default function Landing() {
                       disabled={loading || exitToHome}
                     >
                       Back
-                    </Button>
-                    <Button type="submit" variant="text" disabled={loading || exitToHome}>
-                      {loading ? 'Signing in...' : 'Sign In'}
                     </Button>
                   </div>
                 </form>
