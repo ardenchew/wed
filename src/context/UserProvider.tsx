@@ -6,12 +6,24 @@ import { UserContext } from './UserContext';
 
 const STORAGE_KEY = 'wed_user';
 
-function loadInitialUser(): Guest | null {
+interface Session {
+  user: Guest;
+  /**
+   * Kept so the RSVP API can authenticate requests. It adds no exposure: every password is
+   * already in the public bundle (`src/config/authUsers.ts`).
+   */
+  password: string;
+}
+
+function loadInitialSession(): Session | null {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return null;
-    const parsed = JSON.parse(stored) as { slug?: string } | null;
-    if (parsed?.slug && GUESTS[parsed.slug]) return GUESTS[parsed.slug];
+    const parsed = JSON.parse(stored) as { slug?: string; password?: string } | null;
+    // Sessions saved before the RSVP API have no password; those guests sign in again once.
+    if (parsed?.slug && parsed.password && GUESTS[parsed.slug]) {
+      return { user: GUESTS[parsed.slug], password: parsed.password };
+    }
   } catch (error) {
     console.error('Failed to load user from localStorage:', error);
   }
@@ -25,27 +37,32 @@ interface UserProviderProps {
 export function UserProvider({ children }: UserProviderProps) {
   const [signOutSplashKey, setSignOutSplashKey] = useState(0);
   const [signOutSplashActive, setSignOutSplashActive] = useState(false);
-  const [user, setUser] = useState<Guest | null>(loadInitialUser);
+  const [session, setSession] = useState<Session | null>(loadInitialSession);
+  const user = session?.user ?? null;
+  const password = session?.password ?? null;
 
   useEffect(() => {
-    if (user) {
+    if (session) {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ slug: user.slug }));
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({ slug: session.user.slug, password: session.password }),
+        );
       } catch (error) {
         console.error('Failed to save user to localStorage:', error);
       }
     } else {
       localStorage.removeItem(STORAGE_KEY);
     }
-  }, [user]);
+  }, [session]);
 
-  const signIn = useCallback((guest: Guest) => {
-    setUser(guest);
+  const signIn = useCallback((guest: Guest, guestPassword: string) => {
+    setSession({ user: guest, password: guestPassword });
   }, []);
 
   const signOut = useCallback(() => {
     setSignOutSplashKey((key) => key + 1);
-    setUser(null);
+    setSession(null);
     setSignOutSplashActive(true);
   }, []);
 
@@ -54,8 +71,8 @@ export function UserProvider({ children }: UserProviderProps) {
   }, []);
 
   const value = useMemo<UserContextType>(
-    () => ({ user, signIn, signOut }),
-    [user, signIn, signOut],
+    () => ({ user, password, signIn, signOut }),
+    [user, password, signIn, signOut],
   );
 
   return (

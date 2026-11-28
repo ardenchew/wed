@@ -1,6 +1,8 @@
 export interface UserContextType {
   user: Guest | null;
-  signIn: (guest: Guest) => void;
+  /** The signed-in guest's password, sent to the RSVP API. */
+  password: string | null;
+  signIn: (guest: Guest, password: string) => void;
   signOut: () => void;
 }
 

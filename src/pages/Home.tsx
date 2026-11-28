@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router';
 import { HeroImage } from '../components/HeroImage';
 import { HomeHeader } from '../components/HomeHeader';
 import { Polaroid } from '../components/Polaroid';
+import { RsvpStatusButton } from '../components/RsvpStatusButton';
 import { HOME_WELCOME_SECTION_ID } from '../config/nav';
 import { useGuest } from '../hooks/useGuest';
 import { useHomeHeroScene } from '../hooks/useHomeHeroScene';
@@ -284,10 +285,8 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-              <div className="home__rsvp-placeholder">
-                <button type="button" className="ui-button ui-button--text" disabled>
-                  RSVP
-                </button>
+              <div className="home__rsvp">
+                <RsvpStatusButton />
               </div>
             </div>
           </section>

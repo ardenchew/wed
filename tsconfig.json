@@ -5,6 +5,8 @@
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
+    /* Browser code only: keep Wrangler's @types/node from changing globals like setTimeout. */
+    "types": ["vite/client"],
 
     /* Bundler mode */
     "moduleResolution": "bundler",
