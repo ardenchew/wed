@@ -8,10 +8,11 @@ import { useRsvp } from './hooks/useRsvp';
 import { useUser } from './hooks/useUser';
 import Landing from './pages/Landing';
 import Home from './pages/Home';
+import HomeV2 from './pages/HomeV2';
 import Schedule from './pages/Schedule';
 import Admin from './pages/Admin';
 import Gifts from './pages/Gifts';
-import { ADMIN_PATH, GIFTS_PATH } from './config/nav';
+import { ADMIN_PATH, GIFTS_PATH, HOME_PATH, HOME_V2_PATH } from './config/nav';
 import SplashPreview from './pages/SplashPreview';
 import './styles/index.css';
 
@@ -96,10 +97,18 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route
-          path="/home"
+          path={HOME_PATH}
           element={
             <ProtectedRoute>
               <Home />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={HOME_V2_PATH}
+          element={
+            <ProtectedRoute>
+              <HomeV2 />
             </ProtectedRoute>
           }
         />

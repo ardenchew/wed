@@ -1,0 +1,171 @@
+import { useCallback, useImperativeHandle, useRef, useState, type CSSProperties, type Ref } from 'react';
+import { useLetterEnvelope, type EnvelopePhase } from '../hooks/useLetterEnvelope';
+import { resolveAsset } from '../utils/asset';
+import { PhotoStack, type StackPhoto } from './PhotoStack';
+import { RsvpStamp } from './RsvpStamp';
+
+/** A sketch of the Golden Gate Bridge heading the letter (transparent PNG, used as a mask). */
+const ornamentMask = {
+  '--ornament-mask': `url(${resolveAsset('/golden-gate.png')})`,
+} as CSSProperties;
+
+export interface LetterEnvelopeHandle {
+  /** Puts the letter and photos back in the envelope and reseals it (when it's open). */
+  close: () => void;
+}
+
+interface LetterEnvelopeProps {
+  greeting: string;
+  body: string;
+  signature: string;
+  photos: StackPhoto[];
+  /**
+   * Who the letter is for. Once they've opened it, it stays open when they come back to the page
+   * (until they reseal it, reload, or someone else signs in).
+   */
+  recipient: string;
+  ref?: Ref<LetterEnvelopeHandle>;
+}
+
+/**
+ * Recipients who have opened their envelope in this tab. Kept in memory on purpose: navigating
+ * around the site keeps it open, but a fresh visit starts sealed so the opening plays again.
+ */
+const openedBy = new Set<string>();
+
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/** The wax seal's face. Rendered twice (one per half) so it can crack along a jagged line. */
+function SealFace() {
+  return (
+    <span className="envelope__seal-face">
+      <span className="envelope__seal-monogram">E&amp;A</span>
+    </span>
+  );
+}
+
+/**
+ * A sealed envelope holding the guest's welcome letter and, behind it, a stack of polaroids. A tap
+ * or click opens it: the seal cracks, the flap lifts, and the letter and photos come out and settle
+ * side by side (letter right, photos left; on phones the photos go below the letter). `close()`
+ * on the ref plays it backwards.
+ *
+ * The envelope is decoration. The letter is ordinary text laid out where it ends up, so it reads
+ * the same to screen readers before and after opening. With reduced motion it starts open, and it
+ * also starts open for a recipient who has already opened it in this tab.
+ */
+export function LetterEnvelope({
+  greeting,
+  body,
+  signature,
+  photos,
+  recipient,
+  ref,
+}: LetterEnvelopeProps) {
+  const [phase, setPhase] = useState<EnvelopePhase>(() =>
+    prefersReducedMotion() || openedBy.has(recipient) ? 'open' : 'closed',
+  );
+  const contentRef = useRef<HTMLDivElement>(null);
+  const envelopeRef = useRef<HTMLDivElement>(null);
+  const letterRef = useRef<HTMLElement>(null);
+  const photosRef = useRef<HTMLDivElement>(null);
+
+  const onSettled = useCallback((settled: 'open' | 'closed') => setPhase(settled), []);
+  useLetterEnvelope({ contentRef, envelopeRef, letterRef, photosRef }, phase, onSettled);
+
+  const open = () => {
+    if (phase !== 'closed') return;
+    openedBy.add(recipient);
+    setPhase(prefersReducedMotion() ? 'open' : 'opening');
+  };
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      close: () => {
+        if (phase !== 'open') return;
+        openedBy.delete(recipient);
+        // Back to the top first: the closed envelope sits in the first screenful.
+        window.scrollTo({ top: 0 });
+        letterRef.current?.querySelector('.letter__scroll')?.scrollTo({ top: 0 });
+        setPhase(prefersReducedMotion() ? 'closed' : 'closing');
+      },
+    }),
+    [phase, recipient],
+  );
+
+  return (
+    <div ref={contentRef} className="letter-envelope" data-phase={phase}>
+      <article ref={letterRef} className="letter" aria-label="Welcome letter">
+        <div className="letter__scroll">
+          <div className="letter__ornament" style={ornamentMask} aria-hidden="true" />
+          <p className="letter__greeting">{greeting}</p>
+          <p className="letter__body">{body}</p>
+          <p className="letter__signature">{signature}</p>
+        </div>
+        <div className="letter__shade" aria-hidden="true" />
+      </article>
+
+      <div ref={photosRef} className="letter-envelope__photos">
+        <PhotoStack key={photos.map((photo) => photo.publicId).join()} photos={photos} />
+        <div className="letter-envelope__photos-shade" aria-hidden="true" />
+        <RsvpStamp interactive={phase === 'open'} />
+      </div>
+
+      {phase === 'closed' && (
+        <button type="button" className="letter-envelope__open" onClick={open}>
+          <span className="visually-hidden">Open your letter</span>
+        </button>
+      )}
+      {phase !== 'open' && (
+        <div ref={envelopeRef} className="envelope" aria-hidden="true">
+          {/* Behind the letter: the open flap's lined inside, and the envelope's back panel. */}
+          <div className="envelope__layer envelope__layer--back">
+            <div className="envelope__hinge">
+              <div className="envelope__flap-inner">
+                <div className="envelope__flap-inner-shade" />
+              </div>
+            </div>
+            <div className="envelope__back" />
+          </div>
+
+          {/* In front of the letter and photos: the pocket, with the lower half of the seal. */}
+          <div className="envelope__layer envelope__layer--front">
+            <div className="envelope__mask" />
+            <div className="envelope__shadow" />
+            <div className="envelope__pocket">
+              <div className="envelope__side envelope__side--left" />
+              <div className="envelope__side envelope__side--right" />
+              <div className="envelope__bottom-edge">
+                <div className="envelope__bottom" />
+              </div>
+            </div>
+            <div className="envelope__flap-cast" />
+            <div className="envelope__seal envelope__seal--lower">
+              <SealFace />
+            </div>
+          </div>
+
+          {/* On top while closed: the flap, carrying the upper half of the seal. */}
+          <div className="envelope__layer envelope__layer--flap">
+            <div className="envelope__hinge">
+              <div className="envelope__flap">
+                <div className="envelope__flap-edge">
+                  <div className="envelope__flap-paper" />
+                </div>
+                <div className="envelope__flap-shade" />
+                <div className="envelope__seal envelope__seal--upper">
+                  <SealFace />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p className="envelope__hint">Tap to open</p>
+        </div>
+      )}
+
+    </div>
+  );
+}

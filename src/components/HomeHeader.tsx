@@ -14,6 +14,8 @@ type HomeHeaderProps = {
   activePath: string;
   /** Id of the in-page section currently scrolled to, if any (e.g. the homepage's welcome blurb). */
   activeSectionId?: string;
+  /** Replaces the logo's usual "go to Home" (Home uses it to reseal its envelope). */
+  onLogoClick?: () => void;
 };
 
 /**
@@ -21,7 +23,7 @@ type HomeHeaderProps = {
  * `.home-menu__trigger` class names are queried by useHomeHeroScene to compute the hero's
  * minimum compressed scale — keep them stable.
  */
-export function HomeHeader({ activePath, activeSectionId }: HomeHeaderProps) {
+export function HomeHeader({ activePath, activeSectionId, onLogoClick }: HomeHeaderProps) {
   const navigate = useNavigate();
   const { user, signOut } = useUser();
   const openRsvp = useOpenRsvp();
@@ -67,6 +69,10 @@ export function HomeHeader({ activePath, activeSectionId }: HomeHeaderProps) {
   }, [isMenuOpen]);
 
   const handleLogoClick = () => {
+    if (onLogoClick) {
+      onLogoClick();
+      return;
+    }
     navigate(HOME_PATH);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
