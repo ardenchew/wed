@@ -57,6 +57,9 @@ export default function Home() {
         body={guest?.welcomeBodyText ?? WELCOME_DEFAULTS.body}
         signature={guest?.welcomeSignatureText ?? WELCOME_DEFAULTS.signature}
         photos={photos}
+        recipient={guest?.slug ?? ''}
+        // A different guest gets their own envelope, sealed.
+        key={guest?.slug ?? ''}
       />
     </main>
   );

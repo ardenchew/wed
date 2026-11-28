@@ -16,8 +16,19 @@ interface LetterEnvelopeProps {
   body: string;
   signature: string;
   photos: StackPhoto[];
+  /**
+   * Who the letter is for. Once they've opened it, it stays open when they come back to the page
+   * (until they reseal it, reload, or someone else signs in).
+   */
+  recipient: string;
   ref?: Ref<LetterEnvelopeHandle>;
 }
+
+/**
+ * Recipients who have opened their envelope in this tab. Kept in memory on purpose: navigating
+ * around the site keeps it open, but a fresh visit starts sealed so the opening plays again.
+ */
+const openedBy = new Set<string>();
 
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -38,11 +49,19 @@ function SealFace() {
  * on the ref plays it backwards.
  *
  * The envelope is decoration. The letter is ordinary text laid out where it ends up, so it reads
- * the same to screen readers before and after opening. With reduced motion it starts open.
+ * the same to screen readers before and after opening. With reduced motion it starts open, and it
+ * also starts open for a recipient who has already opened it in this tab.
  */
-export function LetterEnvelope({ greeting, body, signature, photos, ref }: LetterEnvelopeProps) {
+export function LetterEnvelope({
+  greeting,
+  body,
+  signature,
+  photos,
+  recipient,
+  ref,
+}: LetterEnvelopeProps) {
   const [phase, setPhase] = useState<EnvelopePhase>(() =>
-    prefersReducedMotion() ? 'open' : 'closed',
+    prefersReducedMotion() || openedBy.has(recipient) ? 'open' : 'closed',
   );
   const contentRef = useRef<HTMLDivElement>(null);
   const envelopeRef = useRef<HTMLDivElement>(null);
@@ -54,6 +73,7 @@ export function LetterEnvelope({ greeting, body, signature, photos, ref }: Lette
 
   const open = () => {
     if (phase !== 'closed') return;
+    openedBy.add(recipient);
     setPhase(prefersReducedMotion() ? 'open' : 'opening');
   };
 
@@ -62,13 +82,14 @@ export function LetterEnvelope({ greeting, body, signature, photos, ref }: Lette
     () => ({
       close: () => {
         if (phase !== 'open') return;
+        openedBy.delete(recipient);
         // Back to the top first: the closed envelope sits in the first screenful.
         window.scrollTo({ top: 0 });
         letterRef.current?.querySelector('.letter__scroll')?.scrollTo({ top: 0 });
         setPhase(prefersReducedMotion() ? 'closed' : 'closing');
       },
     }),
-    [phase],
+    [phase, recipient],
   );
 
   return (
